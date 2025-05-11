@@ -1,16 +1,24 @@
 "use client";
 import Link from "next/link";
-import { GlitchText } from "../feed/glitch-text";
-import { NeonButton } from "../feed/neon-button";
-import { Bell, Flame, Menu, MessageSquare, User, X, Zap } from "lucide-react";
-import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { GlitchText } from "../feed/glitch-text";
+import { NeonButton } from "../feed/neon-button";
+import { Button } from "../ui/button";
+import { Bell, Flame, Menu, MessageSquare, User, X, Zap } from "lucide-react";
+
+const navLinks = [
+  { label: "FEED", icon: Zap, href: "/feed" },
+  { label: "EXPLORE", icon: Flame, href: "/explore" },
+  { label: "MESSAGES", icon: MessageSquare, href: "/messages" },
+  { label: "ALERTS", icon: Bell, href: "/alerts" },
+  { label: "PROFILE", icon: User, href: "/profile" },
+];
 
 export default function AppNavbar() {
+  const pathname = usePathname();
   const router = useRouter();
-
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -18,41 +26,28 @@ export default function AppNavbar() {
       <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-cyan-900">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/feed" className="flex items-center">
-                <GlitchText
-                  text="ALERT_SYSTEM"
-                  className="text-xl font-bold text-cyan-400"
-                />
-              </Link>
-            </div>
+            <Link href="/feed" className="flex items-center">
+              <GlitchText
+                text="ALERT_SYSTEM"
+                className="text-xl font-bold text-cyan-400"
+              />
+            </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Nav */}
             <nav className="hidden md:flex items-center space-x-4">
-              <NeonButton onClick={() => router.push("/feed")}>
-                <Zap className="h-4 w-4 mr-2" />
-                FEED
-              </NeonButton>
-              <NeonButton onClick={() => router.push("/explore")}>
-                <Flame className="h-4 w-4 mr-2" />
-                EXPLORE
-              </NeonButton>
-              <NeonButton onClick={() => router.push("/messages")}>
-                <MessageSquare className="h-4 w-4 mr-2" />
-                MESSAGES
-              </NeonButton>
-              <NeonButton onClick={() => router.push("/alerts")} active>
-                <Bell className="h-4 w-4 mr-2" />
-                ALERTS
-              </NeonButton>
-              <NeonButton onClick={() => router.push("/profile")}>
-                <User className="h-4 w-4 mr-2" />
-                PROFILE
-              </NeonButton>
+              {navLinks.map(({ label, icon: Icon, href }) => (
+                <NeonButton
+                  key={href}
+                  onClick={() => router.push(href)}
+                  active={pathname.startsWith(href)}
+                >
+                  <Icon className="h-4 w-4 mr-2" />
+                  {label}
+                </NeonButton>
+              ))}
             </nav>
 
-            {/* Mobile menu button */}
+            {/* Mobile menu toggle */}
             <div className="md:hidden">
               <Button
                 variant="ghost"
@@ -71,7 +66,7 @@ export default function AppNavbar() {
         </div>
       </header>
 
-      {/* Mobile menu */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -82,61 +77,27 @@ export default function AppNavbar() {
             className="md:hidden fixed inset-x-0 top-16 z-20 bg-black/95 backdrop-blur-md border-b border-cyan-900"
           >
             <nav className="flex flex-col p-4 space-y-3">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/feed");
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                FEED
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/explore");
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-              >
-                <Flame className="h-4 w-4 mr-2" />
-                EXPLORE
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/messages");
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                MESSAGES
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/alerts");
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start bg-cyan-950/30 text-cyan-300 border-l-2 border-cyan-500"
-              >
-                <Bell className="h-4 w-4 mr-2" />
-                ALERTS
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  router.push("/profile");
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-              >
-                <User className="h-4 w-4 mr-2" />
-                PROFILE
-              </Button>
+              {navLinks.map(({ label, icon: Icon, href }) => {
+                const isActive = pathname.startsWith(href);
+                return (
+                  <Button
+                    key={href}
+                    variant="ghost"
+                    onClick={() => {
+                      router.push(href);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`justify-start ${
+                      isActive
+                        ? "bg-cyan-950/30 text-cyan-300 border-l-2 border-cyan-500"
+                        : "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 mr-2" />
+                    {label}
+                  </Button>
+                );
+              })}
             </nav>
           </motion.div>
         )}
