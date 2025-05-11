@@ -248,13 +248,13 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="">
+    <div>
       {/* Main container */}
-      <div className="relative z-10 flex flex-col h-screen">
+      <div className=" z-10 flex flex-col  relative bg-gradient-to-b from-black/40 to-gray-900/60">
         {/* Header */}
 
         {/* Main content */}
-        <main className="flex-1 container max-w-3xl mx-auto px-4 py-6 bg-background">
+        <main className="flex-1 container max-w-3xl mx-auto px-4 py-6 ">
           {/* Page header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">

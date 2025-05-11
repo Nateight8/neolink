@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   ChevronRight,
-  ChevronLeft,
   Mail,
   User,
   Lock,
@@ -25,7 +24,11 @@ import {
   EyeOff,
   Terminal,
   Shield,
+  User2,
 } from "lucide-react";
+import { axiosInstance } from "@/lib/axios-instance";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthUser } from "@/hooks/use-auth";
 
 // Define the form schema with Zod
 const formSchema = z
@@ -49,10 +52,12 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-export default function PersonalInfoOnboardingPage() {
+export default function Home() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  //
 
   // Initialize the form
   const form = useForm<z.infer<typeof formSchema>>({
@@ -100,13 +105,53 @@ export default function PersonalInfoOnboardingPage() {
     return "STRONG";
   };
 
+  const queryClient = useQueryClient();
+
+  const { mutate } = useMutation({
+    mutationFn: async (userData: {
+      fullName: string;
+      email: string;
+      password: string;
+    }) => {
+      const response = await axiosInstance.post("/auth/signup", userData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      form.reset();
+      router.push("/");
+    },
+  });
+
   // Form submission handler
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you would send this data to your backend
-    console.log(values);
+    const userData = {
+      fullName: values.fullName,
+      email: values.email,
+      password: values.password,
+    };
 
-    // Navigate to the profile page
-    router.push("/profile");
+    mutate(userData);
+
+    // Navigate to the username page
+  }
+
+  // Check if the user is already authenticated
+  const { user, isLoading } = useAuthUser();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500 font-mono text-xs animate-pulse">
+          <span className="text-cyan-500">`&gt;`</span> loading...
+        </p>
+      </div>
+    );
+  }
+
+  if (user) {
+    router.push("/");
+    return null;
   }
 
   return (
@@ -342,23 +387,36 @@ export default function PersonalInfoOnboardingPage() {
                 </ul>
               </div>
 
-              {/* Navigation buttons */}
-              <div className="flex justify-between pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-sm border-gray-700 text-gray-400 hover:bg-gray-900 hover:text-gray-300"
-                  onClick={() => router.push("/onboarding/username")}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
-                  BACK
-                </Button>
+              <div className="">
                 <Button
                   type="submit"
-                  className="rounded-sm bg-gradient-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 text-white shadow-[0_0_10px_rgba(219,39,119,0.3)]"
+                  className="rounded-sm w-full bg-gradient-to-r from-fuchsia-600 to-cyan-600 hover:from-fuchsia-500 hover:to-cyan-500 text-white shadow-[0_0_10px_rgba(219,39,119,0.3)]"
                 >
-                  COMPLETE
+                  Explore Venus
                   <ChevronRight className="h-4 w-4 ml-2" />
+                </Button>
+
+                {/* Divider */}
+                <div className="relative my-8">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-800"></div>
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-black px-4 text-xs text-gray-500 font-mono">
+                      OR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sign up button */}
+                <Button
+                  type="button"
+                  onClick={() => router.push("/login")}
+                  variant="outline"
+                  className="w-full rounded-sm border-fuchsia-500 text-fuchsia-400 hover:bg-fuchsia-950 hover:text-fuchsia-300 font-mono tracking-wider"
+                >
+                  <User2 className="h-4 w-4 mr-2" />
+                  ACCESS_EXISITING_INDENTITY.SYS
                 </Button>
               </div>
             </form>

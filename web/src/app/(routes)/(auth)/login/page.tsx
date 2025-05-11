@@ -26,6 +26,9 @@ import {
   LogIn,
   UserPlus,
 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
+import { useAuthUser } from "@/hooks/use-auth";
 
 // Define the form schema with Zod
 const loginSchema = z.object({
@@ -52,17 +55,45 @@ export default function LoginPage() {
   });
 
   // Form submission handler
+  const queryClient = useQueryClient();
+
+  const { mutate: logInmutation } = useMutation({
+    mutationFn: async (loginData: { email: string; password: string }) => {
+      await axiosInstance.post("/auth/login", loginData);
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      router.push("/"); // Redirect to home page on successful login
+
+      // Navigate to profile page on successful login
+    },
+  });
+
+  // Form submission handler
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-
-    // Simulate API call
-    console.log(values);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    setIsLoading(false);
-
+    const loginData = { email: values.email, password: values.password };
+    logInmutation(loginData);
     // Navigate to profile page on successful login
-    router.push("/profile");
+  }
+
+  // Check if the user is already authenticated
+  const { user, isLoading: checkingAuthUser } = useAuthUser();
+
+  if (checkingAuthUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500 font-mono text-xs animate-pulse">
+          <span className="text-cyan-500">`&gt;`</span> loading...
+        </p>
+      </div>
+    );
+  }
+
+  if (user) {
+    router.push("/");
+    return null;
   }
 
   return (

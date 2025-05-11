@@ -18,13 +18,8 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Zap,
-  Flame,
   Sparkles,
   Plus,
-  Bell,
-  User,
-  Menu,
-  X,
   ChevronUp,
   Cpu,
   Radio,
@@ -38,9 +33,7 @@ import {
 import { FeedPost } from "./feed-post";
 import { ARPost } from "./ar-post";
 import { StoryCircle } from "./story-circle";
-import { GlitchText } from "./glitch-text";
 import { HackerNews } from "./hacker-news";
-import { NeonButton } from "./neon-button";
 import { CyberPanel } from "./cyber-pannel";
 
 // Mock data for stories
@@ -258,9 +251,9 @@ const POSTS = [
   },
 ];
 
-export default function FeedPage() {
+export default function FeedClient() {
   const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState("for-you");
   const [posts, setPosts] = useState(POSTS);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -385,127 +378,9 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="min-h-screen  relative bg-black text-white">
-      {/* Fixed Cyberpunk background with grid lines */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black z-0">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-      </div>
-
+    <div className="min-h-screen  relative ">
       {/* Main container */}
-      <div className="relative z-10 flex flex-col h-screen">
-        {/* Header */}
-        <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-cyan-900">
-          <div className="container max-w-6xl mx-auto px-4">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo */}
-              <div className="flex items-center">
-                <Link href="/feed" className="flex items-center">
-                  <GlitchText
-                    text="CYBER_FEED"
-                    className="text-xl font-bold text-cyan-400"
-                  />
-                </Link>
-              </div>
-
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center space-x-4">
-                <NeonButton onClick={() => router.push("/feed")} active>
-                  <Zap className="h-4 w-4 mr-2" />
-                  FEED
-                </NeonButton>
-                <NeonButton onClick={() => router.push("/explore")}>
-                  <Flame className="h-4 w-4 mr-2" />
-                  EXPLORE
-                </NeonButton>
-                <NeonButton onClick={() => router.push("/notifications")}>
-                  <Bell className="h-4 w-4 mr-2" />
-                  ALERTS
-                </NeonButton>
-                <NeonButton onClick={() => router.push("/profile")}>
-                  <User className="h-4 w-4 mr-2" />
-                  PROFILE
-                </NeonButton>
-              </nav>
-
-              {/* Mobile menu button */}
-              <div className="md:hidden">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                >
-                  {mobileMenuOpen ? (
-                    <X className="h-6 w-6" />
-                  ) : (
-                    <Menu className="h-6 w-6" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-16 z-20 bg-black/95 backdrop-blur-md border-b border-cyan-900"
-            >
-              <nav className="flex flex-col p-4 space-y-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/feed");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  FEED
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/explore");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                >
-                  <Flame className="h-4 w-4 mr-2" />
-                  EXPLORE
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/notifications");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  ALERTS
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/profile");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  PROFILE
-                </Button>
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
+      <div className="relative z-10 flex flex-col bg-gradient-to-b from-black/40 to-gray-900/60">
         {/* Main content */}
         <main className="flex-1 container max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left sidebar - Desktop only */}

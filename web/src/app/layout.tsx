@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Background from "@/components/background";
 import AppNavbar from "@/components/navigation/app-navbar";
+import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -24,12 +25,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="relative">
-            {/* Fixed Cyberpunk background with grid lines */}
-            <Background />
-            <AppNavbar />
-            {children}
-          </main>
+          <QueryClientProviderWrapper>
+            <main className="relative">
+              {/* Fixed Cyberpunk background with grid lines */}
+              <Background />
+              <AppNavbar />
+              {children}
+            </main>
+          </QueryClientProviderWrapper>
         </ThemeProvider>
       </body>
     </html>
