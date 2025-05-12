@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -18,7 +18,7 @@ import {
   MoreHorizontal,
   Bookmark,
   Repeat,
-  Shield,
+  // Shield,
 } from "lucide-react";
 import { Post } from "@/types/chat";
 import Image from "next/image";
@@ -28,9 +28,6 @@ import { axiosInstance } from "@/lib/axios-instance";
 
 interface FeedPostProps {
   post: Post;
-  // onLike: () => void;
-  // onBookmark: () => void;
-  // onReshare: () => void;
   glitchEffect: boolean;
 }
 
@@ -125,7 +122,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
               )} */}
             </div>
             <div className="flex items-center text-xs text-gray-500">
-              <span className="mr-2">@{post.author.handle}</span>
+              <span className="mr-2">@{post.author.username}</span>
               <span>• {post.updatedAt}</span>
             </div>
           </div>

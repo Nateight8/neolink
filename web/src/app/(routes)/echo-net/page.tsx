@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -331,14 +329,13 @@ export default function MessagesPage() {
     // 1. User sends a new message (last message is from self)
     // 2. User is already at the bottom (not scrolling up)
     const lastMessage = messages[messages.length - 1];
-    const shouldAutoScroll = 
-      !userIsScrolling || 
-      (lastMessage && lastMessage.sender === 'self');
+    const shouldAutoScroll =
+      !userIsScrolling || (lastMessage && lastMessage.sender === "self");
 
     if (shouldAutoScroll) {
-      messagesEndRef.current.scrollIntoView({ 
+      messagesEndRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "end"
+        block: "end",
       });
     }
   }, [messages, userIsScrolling]);

@@ -5,16 +5,11 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import {
   Zap,
   Sparkles,
@@ -25,9 +20,6 @@ import {
   Shield,
   Skull,
   Siren,
-  Bomb,
-  WormIcon as Virus,
-  CuboidIcon as Cube,
 } from "lucide-react";
 import { FeedPost } from "./feed-post";
 import { StoryCircle } from "./story-circle";
@@ -36,6 +28,7 @@ import { CyberPanel } from "./cyber-pannel";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { Post } from "@/types/chat";
+import PostInput from "./post-input";
 
 // Mock data for stories
 const STORIES = [
@@ -117,149 +110,14 @@ const TRENDING = [
   },
 ];
 
-// Mock data for posts
-// const POSTS = [
-//   {
-//     id: 1,
-//     user: {
-//       name: "CYBER_NOMAD",
-//       handle: "cyber_nomad",
-//       avatar: "/placeholder.svg?height=50&width=50&text=CN",
-//       verified: true,
-//     },
-//     content:
-//       "Just hacked into the mainframe. The firewall was pathetic. #CYBER_RIOT #NEURAL_LINK",
-//     image: "/placeholder.svg?height=400&width=600&text=CYBER_HACK_IMAGE",
-//     timestamp: "2 HOURS AGO",
-//     likes: 423,
-//     comments: 89,
-//     shares: 112,
-//     isLiked: false,
-//     isBookmarked: false,
-//     isReshared: false,
-//   },
-//   {
-//     id: 2,
-//     type: "ar",
-//     user: {
-//       name: "NEON_HUNTER",
-//       handle: "neon_hunter",
-//       avatar: "/placeholder.svg?height=50&width=50&text=NH",
-//       verified: true,
-//     },
-//     content:
-//       "Check out my new AR hologram design. You can interact with all 3 neural layers! #AR_DESIGN #HOLOGRAM",
-//     arImage:
-//       "/placeholder.svg?height=400&width=600&text=HOLOGRAM_AR_EXPERIENCE",
-//     arModel: "/ar-models/hologram.glb",
-//     arType: "hologram",
-//     arRating: 4.8,
-//     timestamp: "3 HOURS AGO",
-//     likes: 1287,
-//     comments: 342,
-//     shares: 567,
-//     isLiked: true,
-//     isBookmarked: true,
-//     isReshared: false,
-//     arTags: ["AR_DESIGN", "HOLOGRAM", "NEURAL_INTERFACE", "CYBER_ART"],
-//   },
-//   {
-//     id: 3,
-//     user: {
-//       name: "DATA_WRAITH",
-//       handle: "data_wraith",
-//       avatar: "/placeholder.svg?height=50&width=50&text=DW",
-//       verified: true,
-//     },
-//     content:
-//       "The corporations are tracking your neural implants. I've developed a new encryption algorithm to protect your thoughts. Download link in bio. #DATA_BREACH",
-//     image: null,
-//     timestamp: "YESTERDAY",
-//     likes: 3456,
-//     comments: 789,
-//     shares: 1234,
-//     isLiked: false,
-//     isBookmarked: false,
-//     isReshared: true,
-//   },
-//   {
-//     id: 4,
-//     type: "ar",
-//     user: {
-//       name: "VOID_RUNNER",
-//       handle: "void_runner",
-//       avatar: "/placeholder.svg?height=50&width=50&text=VR",
-//       verified: false,
-//     },
-//     content:
-//       "Mapped the entire NEON_DISTRICT in AR. Overlay this on your neural implant to find hidden spots and avoid corporate security. #AR_MAP #NEON_DISTRICT",
-//     arImage: "/placeholder.svg?height=400&width=600&text=NEON_DISTRICT_AR_MAP",
-//     arModel: "/ar-models/map.glb",
-//     arType: "overlay",
-//     arRating: 4.2,
-//     timestamp: "1 DAY AGO",
-//     likes: 892,
-//     comments: 156,
-//     shares: 423,
-//     isLiked: false,
-//     isBookmarked: false,
-//     isReshared: false,
-//     arTags: ["AR_MAP", "NEON_DISTRICT", "SECURITY_BYPASS", "HIDDEN_PATHS"],
-//   },
-//   {
-//     id: 5,
-//     user: {
-//       name: "CHROME_REBEL",
-//       handle: "chrome_rebel",
-//       avatar: "/placeholder.svg?height=50&width=50&text=CR",
-//       verified: true,
-//     },
-//     content:
-//       "Just upgraded my cybernetic enhancements. Vision is now 200% and I can see in the dark. The neon lights of NEON_DISTRICT never looked so good. #NEURAL_LINK",
-//     image: "/placeholder.svg?height=400&width=600&text=CYBERNETIC_VISION",
-//     timestamp: "2 DAYS AGO",
-//     likes: 7890,
-//     comments: 1234,
-//     shares: 567,
-//     isLiked: false,
-//     isBookmarked: true,
-//     isReshared: false,
-//   },
-//   {
-//     id: 6,
-//     type: "ar",
-//     user: {
-//       name: "PIXEL_PUNK",
-//       handle: "pixel_punk",
-//       avatar: "/placeholder.svg?height=50&width=50&text=PP",
-//       verified: true,
-//     },
-//     content:
-//       "Created a full immersive AR environment. Step into my digital dreamscape. Warning: May cause neural overload in outdated implants. #FULLSPACE_AR #DIGITAL_DREAMS",
-//     arImage:
-//       "/placeholder.svg?height=400&width=600&text=IMMERSIVE_AR_DREAMSCAPE",
-//     arModel: "/ar-models/dreamscape.glb",
-//     arType: "fullspace",
-//     arRating: 5.0,
-//     timestamp: "3 DAYS AGO",
-//     likes: 9876,
-//     comments: 2345,
-//     shares: 4567,
-//     isLiked: true,
-//     isBookmarked: true,
-//     isReshared: true,
-//     arTags: ["FULLSPACE_AR", "DIGITAL_DREAMS", "NEURAL_ART", "IMMERSIVE"],
-//   },
-// ];
-
 export default function FeedClient() {
   const router = useRouter();
 
   const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [glitchEffect, setGlitchEffect] = useState(false);
-  const [newPostContent, setNewPostContent] = useState("");
-  const [isARPostEnabled, setIsARPostEnabled] = useState(false);
+
+  // const [isARPostEnabled, setIsARPostEnabled] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
 
   // Handle scroll to show/hide scroll to top button
@@ -295,53 +153,6 @@ export default function FeedClient() {
     },
   });
 
-  // Handle like action
-  // const handleLike = (postId: number) => {
-  //   setPosts(
-  //     posts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isLiked: !post.isLiked,
-  //           likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
-  // };
-
-  // Handle bookmark action
-  // const handleBookmark = (postId: number) => {
-  //   setPosts(
-  //     posts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isBookmarked: !post.isBookmarked,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
-  // };
-
-  // Handle reshare action
-  // const handleReshare = (postId: number) => {
-  //   setPosts(
-  //     posts.map((post) => {
-  //       if (post.id === postId) {
-  //         return {
-  //           ...post,
-  //           isReshared: !post.isReshared,
-  //           shares: post.isReshared ? post.shares - 1 : post.shares + 1,
-  //         };
-  //       }
-  //       return post;
-  //     })
-  //   );
-  // };
-
   // Handle scroll to top
   const scrollToTop = () => {
     if (feedRef.current) {
@@ -353,39 +164,6 @@ export default function FeedClient() {
   };
 
   // Toggle AR post creation
-  const toggleARPost = () => {
-    setIsARPostEnabled(!isARPostEnabled);
-  };
-
-  // Handle new post submission
-  // const handleNewPost = () => {
-  //   if (!newPostContent.trim()) return;
-
-  //   const newPost = {
-  //     id: Date.now(),
-  //     user: {
-  //       name: "JANE_D0E",
-  //       handle: "n3on_runner",
-  //       avatar: "/placeholder.svg?height=50&width=50&text=JD",
-  //       verified: true,
-  //     },
-  //     content: newPostContent,
-  //     image: null,
-  //     timestamp: "JUST NOW",
-  //     likes: 0,
-  //     comments: 0,
-  //     shares: 0,
-  //     isLiked: false,
-  //     isBookmarked: false,
-  //     isReshared: false,
-  //   };
-
-  //   setPosts([newPost, ...posts]);
-  //   setNewPostContent("");
-  //   setIsARPostEnabled(false);
-  // };
-
-  console.log("POSTS", posts);
 
   return (
     <div className="min-h-screen  relative ">
@@ -507,161 +285,7 @@ export default function FeedClient() {
             </Tabs>
 
             {/* New post input */}
-            <div className="mb-6 bg-black border border-cyan-900 rounded-sm p-4 relative">
-              <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-30 blur-[1px] -z-10"></div>
-              <div className="flex space-x-4">
-                <Avatar className="h-10 w-10 border border-cyan-500">
-                  <AvatarImage
-                    src="/placeholder.svg?height=40&width=40&text=JD"
-                    alt="Your avatar"
-                  />
-                  <AvatarFallback className="bg-black text-cyan-400">
-                    JD
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-3">
-                  <Input
-                    placeholder={
-                      isARPostEnabled
-                        ? "DESCRIBE YOUR AR EXPERIENCE..."
-                        : "SHARE_YOUR_THOUGHTS.SYS"
-                    }
-                    value={newPostContent}
-                    onChange={(e) => setNewPostContent(e.target.value)}
-                    className="bg-black/50 border-cyan-900 text-white placeholder:text-gray-500 focus-visible:ring-cyan-500"
-                  />
-
-                  {isARPostEnabled && (
-                    <div className="p-3 border border-cyan-900 bg-cyan-950/20 rounded-sm">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge
-                          variant="outline"
-                          className="bg-black/50 border-cyan-500 text-cyan-400"
-                        >
-                          <Cube className="h-3 w-3 mr-1" />
-                          AR POST
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={toggleARPost}
-                          className="h-6 text-xs text-gray-400 hover:text-gray-300"
-                        >
-                          CANCEL AR
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-center h-32 border border-dashed border-cyan-700 rounded-sm bg-black/50">
-                        <div className="text-center">
-                          <Cube className="h-8 w-8 mx-auto mb-2 text-cyan-500 opacity-50" />
-                          <p className="text-xs text-gray-400">
-                            DRAG & DROP AR MODEL OR CLICK TO UPLOAD
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        <div>
-                          <label className="text-xs text-gray-400 block mb-1">
-                            AR TYPE
-                          </label>
-                          <select className="w-full bg-black border border-cyan-900 rounded-sm text-white text-xs p-1">
-                            <option value="hologram">HOLOGRAM</option>
-                            <option value="overlay">OVERLAY</option>
-                            <option value="fullspace">FULLSPACE</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 block mb-1">
-                            NEURAL DEPTH
-                          </label>
-                          <select className="w-full bg-black border border-cyan-900 rounded-sm text-white text-xs p-1">
-                            <option value="1">LEVEL 1</option>
-                            <option value="2">LEVEL 2</option>
-                            <option value="3">LEVEL 3</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 block mb-1">
-                            PERMISSIONS
-                          </label>
-                          <select className="w-full bg-black border border-cyan-900 rounded-sm text-white text-xs p-1">
-                            <option value="public">PUBLIC</option>
-                            <option value="allies">ALLIES ONLY</option>
-                            <option value="private">PRIVATE</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between items-center">
-                    <div className="flex space-x-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={toggleARPost}
-                              className={`h-8 w-8 rounded-sm ${
-                                isARPostEnabled
-                                  ? "bg-cyan-950/30 text-cyan-300 border border-cyan-500"
-                                  : "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                              }`}
-                            >
-                              <Cube className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Create AR Post</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-sm text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                            >
-                              <Virus className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Add Emoji</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                            >
-                              <Bomb className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Add Poll</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <Button
-                      // onClick={handleNewPost}
-                      disabled={!newPostContent.trim()}
-                      className="rounded-sm bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-[0_0_10px_rgba(0,255,255,0.3)]"
-                    >
-                      TRANSMIT
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PostInput />
 
             {/* Stories */}
             <div className="mb-6 overflow-x-auto pb-2">

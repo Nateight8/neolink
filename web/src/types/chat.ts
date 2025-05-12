@@ -21,3 +21,15 @@ export interface Chat {
   messages: Message[];
   lastMessage?: Message;
 }
+
+export interface Post {
+  _id: string;
+  content: string;
+  image: string | null;
+  author: User;
+  likedBy: string[]; // array of user IDs who liked the post
+  retweetedBy: string[]; // array of user IDs who retweeted the post
+  createdAt: string; // ISO date string
+  updatedAt: string;
+  __v: number;
+}
