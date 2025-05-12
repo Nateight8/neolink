@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,27 +14,10 @@ import {
   CuboidIcon as Cube,
 } from "lucide-react";
 
-interface Message {
-  id: number;
-  sender: "self" | "other";
-  text?: string;
-  time: string;
-  status: "sent" | "delivered" | "read";
-  type: "text" | "neural" | "ar";
-  neuralData?: {
-    type: string;
-    intensity: number;
-    description: string;
-  };
-  arData?: {
-    preview: string;
-    model: string;
-    description: string;
-  };
-}
+import type { MockMessage } from "@/types/chat";
 
 interface ChatMessageProps {
-  message: Message;
+  message: MockMessage;
   neuralLinkActive: boolean;
   neuralLinkStrength: number;
 }
@@ -193,10 +177,12 @@ export function ChatMessage({
                 expanded ? "h-64" : "h-32"
               }`}
             >
-              <img
-                src={message.arData.preview || "/placeholder.svg"}
-                alt="AR Content"
-                className="w-full h-full object-cover holographic"
+              <Image
+                src={message.arData.preview}
+                alt="AR Preview"
+                className="object-cover rounded-sm"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
               <div className="absolute inset-0 scan-lines"></div>
               <div className="absolute inset-0 flex items-center justify-center">

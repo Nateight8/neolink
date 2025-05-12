@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import type { MockMessage } from "@/types/chat";
+// import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,18 +17,18 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Search,
-  Menu,
-  X,
+  // Menu,
+  // X,
   ChevronLeft,
   MoreVertical,
   Send,
   Paperclip,
-  Zap,
+  // Zap,
   Phone,
   Video,
-  User,
-  Bell,
-  Flame,
+  // User,
+  // Bell,
+  // Flame,
   Shield,
   Brain,
   Sparkles,
@@ -35,8 +36,8 @@ import {
   Lock,
   CuboidIcon as Cube,
 } from "lucide-react";
-import { GlitchText } from "@/components/feed/glitch-text";
-import { NeonButton } from "@/components/feed/neon-button";
+// import { GlitchText } from "@/components/feed/glitch-text";
+// import { NeonButton } from "@/components/feed/neon-button";
 import { ConversationList } from "@/components/chats/conversation-list";
 import { ChatMessage } from "@/components/chats/chat-message";
 import { NeuralIndicator } from "@/components/chats/neural-indicator";
@@ -193,7 +194,7 @@ const CONVERSATIONS = [
 ];
 
 // Mock data for active conversation messages
-const ACTIVE_CONVERSATION_MESSAGES = [
+const ACTIVE_CONVERSATION_MESSAGES: MockMessage[] = [
   {
     id: 1,
     sender: "other",
@@ -277,8 +278,8 @@ const ACTIVE_CONVERSATION_MESSAGES = [
 ];
 
 export default function MessagesPage() {
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // const router = useRouter();
+  // const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState(CONVERSATIONS);
@@ -348,7 +349,7 @@ export default function MessagesPage() {
         setTimeout(() => {
           setIsTyping(false);
           // Add new message after typing
-          const newMsg = {
+          const newMsg: MockMessage = {
             id: messages.length + 1,
             sender: "other",
             text: "I got it at the CyberMed clinic in NEON_DISTRICT. Dr. Nakamura is the best neural surgeon in the city.",
@@ -357,7 +358,7 @@ export default function MessagesPage() {
               minute: "2-digit",
             }),
             status: "delivered",
-            type: "text" as const,
+            type: "text",
           };
           setMessages([...messages, newMsg]);
         }, 3000);
@@ -378,7 +379,7 @@ export default function MessagesPage() {
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
-    const newMsg = {
+    const newMsg: MockMessage = {
       id: messages.length + 1,
       sender: "self",
       text: newMessage,
@@ -387,7 +388,7 @@ export default function MessagesPage() {
         minute: "2-digit",
       }),
       status: "sent",
-      type: "text" as const,
+      type: "text",
     };
 
     setMessages([...messages, newMsg]);

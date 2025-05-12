@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Heart, MessageCircle, Zap, Shield, Cpu } from "lucide-react";
+import { Zap, Shield, Cpu } from "lucide-react";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import Posts from "@/components/profile/posts";
 

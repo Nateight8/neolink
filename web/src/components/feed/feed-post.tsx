@@ -103,7 +103,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
           <Avatar className="h-10 w-10 border border-cyan-500">
             <AvatarImage src={"/placeholder.svg"} alt={post.author.fullName} />
             <AvatarFallback className="bg-black text-cyan-400">
-              {post.author.fullName && post.author.fullName.substring(0, 2)}
+              {post.author.username && post.author.username.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
           <div>

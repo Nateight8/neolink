@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -211,10 +212,12 @@ export function AlertItem({
                 <div className="mt-3 relative">
                   <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-[1px]"></div>
                   <div className="relative overflow-hidden rounded-sm h-40">
-                    <img
+                    <Image
                       src={alert.arPreview || "/placeholder.svg"}
                       alt="AR Preview"
-                      className="w-full h-full object-cover holographic"
+                      className="object-cover holographic"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                     <div className="absolute inset-0 scan-lines"></div>
                     <div className="absolute inset-0 flex items-center justify-center">

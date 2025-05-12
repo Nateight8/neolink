@@ -15,6 +15,25 @@ export interface Message {
   timestamp: string;
 }
 
+export interface MockMessage {
+  id: number;
+  sender: "other" | "self";
+  text?: string;
+  time: string;
+  status: "read" | "delivered" | "sent";
+  type: "text" | "neural" | "ar";
+  neuralData?: {
+    type: "sensation" | "data" | "sync";
+    intensity: number;
+    description: string;
+  };
+  arData?: {
+    model: string;
+    preview: string;
+    description?: string;
+  };
+}
+
 export interface Chat {
   id: string;
   participants: User[];

@@ -29,6 +29,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { Post } from "@/types/chat";
 import PostInput from "./post-input";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 // Mock data for stories
 const STORIES = [
@@ -145,7 +146,7 @@ export default function FeedClient() {
     return () => clearInterval(glitchInterval);
   }, []);
 
-  const { data: posts } = useQuery<Post[]>({
+  const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["post-feed"], // Add a unique query key
     queryFn: async () => {
       const response = await axiosInstance.get("/posts");
@@ -287,31 +288,37 @@ export default function FeedClient() {
             {/* New post input */}
             <PostInput />
 
-            {/* Stories */}
-            <div className="mb-6 overflow-x-auto pb-2">
-              <div className="flex space-x-4">
-                {/* Add story button */}
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="relative">
-                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 opacity-75 blur-sm"></div>
-                    <button className="relative h-16 w-16 rounded-full bg-black border-2 border-cyan-500 flex items-center justify-center">
-                      <Plus className="h-6 w-6 text-cyan-400" />
-                    </button>
-                  </div>
-                  <span className="text-xs text-gray-400 font-mono">ADD</span>
-                </div>
-
-                {/* Story circles */}
-                {STORIES.map((story) => (
-                  <StoryCircle
-                    key={story.id}
-                    username={story.username}
-                    avatar={story.avatar}
-                    viewed={story.viewed}
-                  />
-                ))}
+            {/* Posts */}
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <LoadingIndicator size="lg" text="LOADING NEURAL FEED" />
               </div>
-            </div>
+            ) : (
+              <div className="space-y-6 overflow-x-auto pb-2">
+                <div className="flex space-x-4">
+                  {/* Add story button */}
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="relative">
+                      <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 opacity-75 blur-sm"></div>
+                      <button className="relative h-16 w-16 rounded-full bg-black border-2 border-cyan-500 flex items-center justify-center">
+                        <Plus className="h-6 w-6 text-cyan-400" />
+                      </button>
+                    </div>
+                    <span className="text-xs text-gray-400 font-mono">ADD</span>
+                  </div>
+
+                  {/* Story circles */}
+                  {STORIES.map((story) => (
+                    <StoryCircle
+                      key={story.id}
+                      username={story.username}
+                      avatar={story.avatar}
+                      viewed={story.viewed}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Feed posts */}
             <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}>

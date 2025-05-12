@@ -26,6 +26,7 @@ import { Bomb, WormIcon as Virus, CuboidIcon as Cube } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
+import { LoadingIndicator } from "@/components/loading-indicator";
 
 // Define the form schema with Zod
 const postFormSchema = z.object({
@@ -55,7 +56,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
   const [arModel, setArModel] = useState<File | null>(null);
 
   const queryClient = useQueryClient();
-  const { mutate: postMutation } = useMutation({
+  const { mutate: postMutation, isPending: isPosting } = useMutation({
     mutationFn: async (data: { content: string }) => {
       const response = await axiosInstance.post("/posts", {
         content: data.content,
@@ -321,10 +322,17 @@ export default function PostInput({ onSubmit }: PostInputProps) {
                 </div>
                 <Button
                   type="submit"
-                  disabled={!form.watch("postContent").trim()}
-                  className="rounded-sm bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-[0_0_10px_rgba(0,255,255,0.3)]"
+                  disabled={!form.watch("postContent").trim() || isPosting}
+                  className="rounded-sm bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-[0_0_10px_rgba(0,255,255,0.3)] relative"
                 >
-                  TRANSMIT
+                  {isPosting ? (
+                    <div className="flex items-center space-x-2">
+                      <LoadingIndicator size="sm" showText={false} />
+                      <span>TRANSMITTING...</span>
+                    </div>
+                  ) : (
+                    "TRANSMIT"
+                  )}
                 </Button>
               </div>
             </div>

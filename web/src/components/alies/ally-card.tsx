@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 // import { Badge } from "@/components/ui/badge";
-import { UserPlus, X, Shield, Users } from "lucide-react";
+import { UserPlus, X, Users } from "lucide-react";
 // import { NeuralIndicator } from "@/components/messages/neural-indicator";
 import { User } from "@/types/chat";
 import { useMutation } from "@tanstack/react-query";
@@ -77,16 +77,16 @@ export function AllyCard({ ally, onAdd, onSkip }: AllyCardProps) {
         >
           <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 opacity-75 blur-sm"></div>
           <Avatar className="h-32 w-32 border-2 border-cyan-500 relative shadow-[0_0_15px_rgba(0,255,255,0.5)]">
-            <AvatarImage src={ally.avatar} alt={ally.fullName} />
+            <AvatarImage src="" alt={ally.fullName} />
             <AvatarFallback className="bg-black text-cyan-400 text-3xl">
               {ally.handle.substring(0, 2)}
             </AvatarFallback>
           </Avatar>
-          {ally.verified && (
+          {/* {ally.verified && (
             <div className="absolute bottom-0 right-0 bg-black rounded-full p-1 border border-cyan-500">
               <Shield className="h-5 w-5 text-cyan-400" />
             </div>
-          )}
+          )} */}
         </motion.div>
 
         <h2 className="text-xl font-bold text-white mb-1">{ally.fullName}</h2>
@@ -139,9 +139,9 @@ export function AllyCard({ ally, onAdd, onSkip }: AllyCardProps) {
         <Users className="h-4 w-4 text-gray-400" />
         <span className="text-sm text-gray-400">
           {/* currently using friends */}
-          {ally.friends.length > 0
+          {(ally.friends ?? []).length > 0
             ? `${ally.friends} MUTUAL ${
-                ally.friends.length === 1 ? "ALLY" : "ALLIES"
+                (ally.friends ?? []).length === 1 ? "ALLY" : "ALLIES"
               }`
             : "NO MUTUAL ALLIES"}
         </span>

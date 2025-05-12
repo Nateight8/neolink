@@ -72,7 +72,7 @@ export default function UsernameOnboardingPage() {
   // Handle uppercase for username
   const handleUsernameChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    onChange: (...event: any[]) => void
+    onChange: (value: string) => void
   ) => {
     onChange(e.target.value.toUpperCase());
   };
@@ -80,7 +80,7 @@ export default function UsernameOnboardingPage() {
   // Handle lowercase for handle
   const handleHandleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    onChange: (...event: any[]) => void
+    onChange: (value: string) => void
   ) => {
     onChange(e.target.value.toLowerCase());
   };
@@ -120,7 +120,7 @@ export default function UsernameOnboardingPage() {
             CREATE YOUR IDENTITY
           </h1>
           <p className="text-center text-gray-400 mb-6">
-            Choose how you'll be known in the digital realm
+            Choose how you&apos;ll be known in the digital realm
           </p>
 
           {/* Avatar preview */}

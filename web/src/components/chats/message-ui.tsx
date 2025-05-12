@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
+import type { MockMessage } from "@/types/chat";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,18 +17,12 @@ import {
 } from "@/components/ui/tooltip";
 import {
   Search,
-  Menu,
-  X,
   ChevronLeft,
   MoreVertical,
   Send,
   Paperclip,
-  Zap,
   Phone,
   Video,
-  User,
-  Bell,
-  Flame,
   Shield,
   Brain,
   Sparkles,
@@ -37,8 +30,7 @@ import {
   Lock,
   CuboidIcon as Cube,
 } from "lucide-react";
-import { GlitchText } from "@/components/feed/glitch-text";
-import { NeonButton } from "@/components/feed/neon-button";
+
 import { ConversationList } from "@/components/chats/conversation-list";
 import { ChatMessage } from "@/components/chats/chat-message";
 import { NeuralIndicator } from "@/components/chats/neural-indicator";
@@ -195,7 +187,7 @@ const CONVERSATIONS = [
 ];
 
 // Mock data for active conversation messages
-const ACTIVE_CONVERSATION_MESSAGES = [
+const ACTIVE_CONVERSATION_MESSAGES: MockMessage[] = [
   {
     id: 1,
     sender: "other",
@@ -279,8 +271,7 @@ const ACTIVE_CONVERSATION_MESSAGES = [
 ];
 
 export default function MessagesPage() {
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState(CONVERSATIONS);
@@ -292,7 +283,7 @@ export default function MessagesPage() {
   const [showMobileConversation, setShowMobileConversation] = useState(false);
   const [neuralLinkActive, setNeuralLinkActive] = useState(true);
   const [neuralLinkStrength, setNeuralLinkStrength] = useState(0.85);
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Filter conversations based on search and active tab
@@ -365,7 +356,7 @@ export default function MessagesPage() {
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
-    const newMsg = {
+    const newMsg: MockMessage = {
       id: messages.length + 1,
       sender: "self",
       text: newMessage,
@@ -374,7 +365,7 @@ export default function MessagesPage() {
         minute: "2-digit",
       }),
       status: "sent",
-      type: "text" as const,
+      type: "text",
     };
 
     setMessages([...messages, newMsg]);
