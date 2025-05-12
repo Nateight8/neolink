@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -31,10 +30,12 @@ import {
   CuboidIcon as Cube,
 } from "lucide-react";
 import { FeedPost } from "./feed-post";
-import { ARPost } from "./ar-post";
 import { StoryCircle } from "./story-circle";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
+import { useQuery } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
+import { Post } from "@/types/chat";
 
 // Mock data for stories
 const STORIES = [
@@ -117,145 +118,144 @@ const TRENDING = [
 ];
 
 // Mock data for posts
-const POSTS = [
-  {
-    id: 1,
-    user: {
-      name: "CYBER_NOMAD",
-      handle: "cyber_nomad",
-      avatar: "/placeholder.svg?height=50&width=50&text=CN",
-      verified: true,
-    },
-    content:
-      "Just hacked into the mainframe. The firewall was pathetic. #CYBER_RIOT #NEURAL_LINK",
-    image: "/placeholder.svg?height=400&width=600&text=CYBER_HACK_IMAGE",
-    timestamp: "2 HOURS AGO",
-    likes: 423,
-    comments: 89,
-    shares: 112,
-    isLiked: false,
-    isBookmarked: false,
-    isReshared: false,
-  },
-  {
-    id: 2,
-    type: "ar",
-    user: {
-      name: "NEON_HUNTER",
-      handle: "neon_hunter",
-      avatar: "/placeholder.svg?height=50&width=50&text=NH",
-      verified: true,
-    },
-    content:
-      "Check out my new AR hologram design. You can interact with all 3 neural layers! #AR_DESIGN #HOLOGRAM",
-    arImage:
-      "/placeholder.svg?height=400&width=600&text=HOLOGRAM_AR_EXPERIENCE",
-    arModel: "/ar-models/hologram.glb",
-    arType: "hologram",
-    arRating: 4.8,
-    timestamp: "3 HOURS AGO",
-    likes: 1287,
-    comments: 342,
-    shares: 567,
-    isLiked: true,
-    isBookmarked: true,
-    isReshared: false,
-    arTags: ["AR_DESIGN", "HOLOGRAM", "NEURAL_INTERFACE", "CYBER_ART"],
-  },
-  {
-    id: 3,
-    user: {
-      name: "DATA_WRAITH",
-      handle: "data_wraith",
-      avatar: "/placeholder.svg?height=50&width=50&text=DW",
-      verified: true,
-    },
-    content:
-      "The corporations are tracking your neural implants. I've developed a new encryption algorithm to protect your thoughts. Download link in bio. #DATA_BREACH",
-    image: null,
-    timestamp: "YESTERDAY",
-    likes: 3456,
-    comments: 789,
-    shares: 1234,
-    isLiked: false,
-    isBookmarked: false,
-    isReshared: true,
-  },
-  {
-    id: 4,
-    type: "ar",
-    user: {
-      name: "VOID_RUNNER",
-      handle: "void_runner",
-      avatar: "/placeholder.svg?height=50&width=50&text=VR",
-      verified: false,
-    },
-    content:
-      "Mapped the entire NEON_DISTRICT in AR. Overlay this on your neural implant to find hidden spots and avoid corporate security. #AR_MAP #NEON_DISTRICT",
-    arImage: "/placeholder.svg?height=400&width=600&text=NEON_DISTRICT_AR_MAP",
-    arModel: "/ar-models/map.glb",
-    arType: "overlay",
-    arRating: 4.2,
-    timestamp: "1 DAY AGO",
-    likes: 892,
-    comments: 156,
-    shares: 423,
-    isLiked: false,
-    isBookmarked: false,
-    isReshared: false,
-    arTags: ["AR_MAP", "NEON_DISTRICT", "SECURITY_BYPASS", "HIDDEN_PATHS"],
-  },
-  {
-    id: 5,
-    user: {
-      name: "CHROME_REBEL",
-      handle: "chrome_rebel",
-      avatar: "/placeholder.svg?height=50&width=50&text=CR",
-      verified: true,
-    },
-    content:
-      "Just upgraded my cybernetic enhancements. Vision is now 200% and I can see in the dark. The neon lights of NEON_DISTRICT never looked so good. #NEURAL_LINK",
-    image: "/placeholder.svg?height=400&width=600&text=CYBERNETIC_VISION",
-    timestamp: "2 DAYS AGO",
-    likes: 7890,
-    comments: 1234,
-    shares: 567,
-    isLiked: false,
-    isBookmarked: true,
-    isReshared: false,
-  },
-  {
-    id: 6,
-    type: "ar",
-    user: {
-      name: "PIXEL_PUNK",
-      handle: "pixel_punk",
-      avatar: "/placeholder.svg?height=50&width=50&text=PP",
-      verified: true,
-    },
-    content:
-      "Created a full immersive AR environment. Step into my digital dreamscape. Warning: May cause neural overload in outdated implants. #FULLSPACE_AR #DIGITAL_DREAMS",
-    arImage:
-      "/placeholder.svg?height=400&width=600&text=IMMERSIVE_AR_DREAMSCAPE",
-    arModel: "/ar-models/dreamscape.glb",
-    arType: "fullspace",
-    arRating: 5.0,
-    timestamp: "3 DAYS AGO",
-    likes: 9876,
-    comments: 2345,
-    shares: 4567,
-    isLiked: true,
-    isBookmarked: true,
-    isReshared: true,
-    arTags: ["FULLSPACE_AR", "DIGITAL_DREAMS", "NEURAL_ART", "IMMERSIVE"],
-  },
-];
+// const POSTS = [
+//   {
+//     id: 1,
+//     user: {
+//       name: "CYBER_NOMAD",
+//       handle: "cyber_nomad",
+//       avatar: "/placeholder.svg?height=50&width=50&text=CN",
+//       verified: true,
+//     },
+//     content:
+//       "Just hacked into the mainframe. The firewall was pathetic. #CYBER_RIOT #NEURAL_LINK",
+//     image: "/placeholder.svg?height=400&width=600&text=CYBER_HACK_IMAGE",
+//     timestamp: "2 HOURS AGO",
+//     likes: 423,
+//     comments: 89,
+//     shares: 112,
+//     isLiked: false,
+//     isBookmarked: false,
+//     isReshared: false,
+//   },
+//   {
+//     id: 2,
+//     type: "ar",
+//     user: {
+//       name: "NEON_HUNTER",
+//       handle: "neon_hunter",
+//       avatar: "/placeholder.svg?height=50&width=50&text=NH",
+//       verified: true,
+//     },
+//     content:
+//       "Check out my new AR hologram design. You can interact with all 3 neural layers! #AR_DESIGN #HOLOGRAM",
+//     arImage:
+//       "/placeholder.svg?height=400&width=600&text=HOLOGRAM_AR_EXPERIENCE",
+//     arModel: "/ar-models/hologram.glb",
+//     arType: "hologram",
+//     arRating: 4.8,
+//     timestamp: "3 HOURS AGO",
+//     likes: 1287,
+//     comments: 342,
+//     shares: 567,
+//     isLiked: true,
+//     isBookmarked: true,
+//     isReshared: false,
+//     arTags: ["AR_DESIGN", "HOLOGRAM", "NEURAL_INTERFACE", "CYBER_ART"],
+//   },
+//   {
+//     id: 3,
+//     user: {
+//       name: "DATA_WRAITH",
+//       handle: "data_wraith",
+//       avatar: "/placeholder.svg?height=50&width=50&text=DW",
+//       verified: true,
+//     },
+//     content:
+//       "The corporations are tracking your neural implants. I've developed a new encryption algorithm to protect your thoughts. Download link in bio. #DATA_BREACH",
+//     image: null,
+//     timestamp: "YESTERDAY",
+//     likes: 3456,
+//     comments: 789,
+//     shares: 1234,
+//     isLiked: false,
+//     isBookmarked: false,
+//     isReshared: true,
+//   },
+//   {
+//     id: 4,
+//     type: "ar",
+//     user: {
+//       name: "VOID_RUNNER",
+//       handle: "void_runner",
+//       avatar: "/placeholder.svg?height=50&width=50&text=VR",
+//       verified: false,
+//     },
+//     content:
+//       "Mapped the entire NEON_DISTRICT in AR. Overlay this on your neural implant to find hidden spots and avoid corporate security. #AR_MAP #NEON_DISTRICT",
+//     arImage: "/placeholder.svg?height=400&width=600&text=NEON_DISTRICT_AR_MAP",
+//     arModel: "/ar-models/map.glb",
+//     arType: "overlay",
+//     arRating: 4.2,
+//     timestamp: "1 DAY AGO",
+//     likes: 892,
+//     comments: 156,
+//     shares: 423,
+//     isLiked: false,
+//     isBookmarked: false,
+//     isReshared: false,
+//     arTags: ["AR_MAP", "NEON_DISTRICT", "SECURITY_BYPASS", "HIDDEN_PATHS"],
+//   },
+//   {
+//     id: 5,
+//     user: {
+//       name: "CHROME_REBEL",
+//       handle: "chrome_rebel",
+//       avatar: "/placeholder.svg?height=50&width=50&text=CR",
+//       verified: true,
+//     },
+//     content:
+//       "Just upgraded my cybernetic enhancements. Vision is now 200% and I can see in the dark. The neon lights of NEON_DISTRICT never looked so good. #NEURAL_LINK",
+//     image: "/placeholder.svg?height=400&width=600&text=CYBERNETIC_VISION",
+//     timestamp: "2 DAYS AGO",
+//     likes: 7890,
+//     comments: 1234,
+//     shares: 567,
+//     isLiked: false,
+//     isBookmarked: true,
+//     isReshared: false,
+//   },
+//   {
+//     id: 6,
+//     type: "ar",
+//     user: {
+//       name: "PIXEL_PUNK",
+//       handle: "pixel_punk",
+//       avatar: "/placeholder.svg?height=50&width=50&text=PP",
+//       verified: true,
+//     },
+//     content:
+//       "Created a full immersive AR environment. Step into my digital dreamscape. Warning: May cause neural overload in outdated implants. #FULLSPACE_AR #DIGITAL_DREAMS",
+//     arImage:
+//       "/placeholder.svg?height=400&width=600&text=IMMERSIVE_AR_DREAMSCAPE",
+//     arModel: "/ar-models/dreamscape.glb",
+//     arType: "fullspace",
+//     arRating: 5.0,
+//     timestamp: "3 DAYS AGO",
+//     likes: 9876,
+//     comments: 2345,
+//     shares: 4567,
+//     isLiked: true,
+//     isBookmarked: true,
+//     isReshared: true,
+//     arTags: ["FULLSPACE_AR", "DIGITAL_DREAMS", "NEURAL_ART", "IMMERSIVE"],
+//   },
+// ];
 
 export default function FeedClient() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState("for-you");
-  const [posts, setPosts] = useState(POSTS);
+  const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [glitchEffect, setGlitchEffect] = useState(false);
   const [newPostContent, setNewPostContent] = useState("");
@@ -287,52 +287,60 @@ export default function FeedClient() {
     return () => clearInterval(glitchInterval);
   }, []);
 
+  const { data: posts } = useQuery<Post[]>({
+    queryKey: ["post-feed"], // Add a unique query key
+    queryFn: async () => {
+      const response = await axiosInstance.get("/posts");
+      return response.data;
+    },
+  });
+
   // Handle like action
-  const handleLike = (postId: number) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            isLiked: !post.isLiked,
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-          };
-        }
-        return post;
-      })
-    );
-  };
+  // const handleLike = (postId: number) => {
+  //   setPosts(
+  //     posts.map((post) => {
+  //       if (post.id === postId) {
+  //         return {
+  //           ...post,
+  //           isLiked: !post.isLiked,
+  //           likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+  //         };
+  //       }
+  //       return post;
+  //     })
+  //   );
+  // };
 
   // Handle bookmark action
-  const handleBookmark = (postId: number) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            isBookmarked: !post.isBookmarked,
-          };
-        }
-        return post;
-      })
-    );
-  };
+  // const handleBookmark = (postId: number) => {
+  //   setPosts(
+  //     posts.map((post) => {
+  //       if (post.id === postId) {
+  //         return {
+  //           ...post,
+  //           isBookmarked: !post.isBookmarked,
+  //         };
+  //       }
+  //       return post;
+  //     })
+  //   );
+  // };
 
   // Handle reshare action
-  const handleReshare = (postId: number) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            isReshared: !post.isReshared,
-            shares: post.isReshared ? post.shares - 1 : post.shares + 1,
-          };
-        }
-        return post;
-      })
-    );
-  };
+  // const handleReshare = (postId: number) => {
+  //   setPosts(
+  //     posts.map((post) => {
+  //       if (post.id === postId) {
+  //         return {
+  //           ...post,
+  //           isReshared: !post.isReshared,
+  //           shares: post.isReshared ? post.shares - 1 : post.shares + 1,
+  //         };
+  //       }
+  //       return post;
+  //     })
+  //   );
+  // };
 
   // Handle scroll to top
   const scrollToTop = () => {
@@ -350,32 +358,34 @@ export default function FeedClient() {
   };
 
   // Handle new post submission
-  const handleNewPost = () => {
-    if (!newPostContent.trim()) return;
+  // const handleNewPost = () => {
+  //   if (!newPostContent.trim()) return;
 
-    const newPost = {
-      id: Date.now(),
-      user: {
-        name: "JANE_D0E",
-        handle: "n3on_runner",
-        avatar: "/placeholder.svg?height=50&width=50&text=JD",
-        verified: true,
-      },
-      content: newPostContent,
-      image: null,
-      timestamp: "JUST NOW",
-      likes: 0,
-      comments: 0,
-      shares: 0,
-      isLiked: false,
-      isBookmarked: false,
-      isReshared: false,
-    };
+  //   const newPost = {
+  //     id: Date.now(),
+  //     user: {
+  //       name: "JANE_D0E",
+  //       handle: "n3on_runner",
+  //       avatar: "/placeholder.svg?height=50&width=50&text=JD",
+  //       verified: true,
+  //     },
+  //     content: newPostContent,
+  //     image: null,
+  //     timestamp: "JUST NOW",
+  //     likes: 0,
+  //     comments: 0,
+  //     shares: 0,
+  //     isLiked: false,
+  //     isBookmarked: false,
+  //     isReshared: false,
+  //   };
 
-    setPosts([newPost, ...posts]);
-    setNewPostContent("");
-    setIsARPostEnabled(false);
-  };
+  //   setPosts([newPost, ...posts]);
+  //   setNewPostContent("");
+  //   setIsARPostEnabled(false);
+  // };
+
+  console.log("POSTS", posts);
 
   return (
     <div className="min-h-screen  relative ">
@@ -642,7 +652,7 @@ export default function FeedClient() {
                       </TooltipProvider>
                     </div>
                     <Button
-                      onClick={handleNewPost}
+                      // onClick={handleNewPost}
                       disabled={!newPostContent.trim()}
                       className="rounded-sm bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-[0_0_10px_rgba(0,255,255,0.3)]"
                     >
@@ -683,31 +693,21 @@ export default function FeedClient() {
             <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}>
               <div className="space-y-6 pr-4">
                 <AnimatePresence initial={false}>
-                  {posts.map((post) => (
+                  {posts?.map((post) => (
                     <motion.div
-                      key={post.id}
+                      key={post._id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3 }}
                     >
-                      {post.type === "ar" ? (
-                        <ARPost
-                          post={post as any}
-                          onLike={() => handleLike(post.id)}
-                          onBookmark={() => handleBookmark(post.id)}
-                          onReshare={() => handleReshare(post.id)}
-                          glitchEffect={glitchEffect}
-                        />
-                      ) : (
-                        <FeedPost
-                          post={post}
-                          onLike={() => handleLike(post.id)}
-                          onBookmark={() => handleBookmark(post.id)}
-                          onReshare={() => handleReshare(post.id)}
-                          glitchEffect={glitchEffect}
-                        />
-                      )}
+                      <FeedPost
+                        post={post}
+                        // onLike={() => handleLike(post.id)}
+                        // onBookmark={() => handleBookmark(post.id)}
+                        // onReshare={() => handleReshare(post.id)}
+                        glitchEffect={glitchEffect}
+                      />
                     </motion.div>
                   ))}
                 </AnimatePresence>
