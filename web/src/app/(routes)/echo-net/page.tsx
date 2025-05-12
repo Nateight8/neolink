@@ -294,6 +294,7 @@ export default function MessagesPage() {
   const [neuralLinkStrength, setNeuralLinkStrength] = useState(0.85);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userIsScrolling, setUserIsScrolling] = useState(false);
 
   // Filter conversations based on search and active tab
   const filteredConversations = conversations.filter((conversation) => {
@@ -324,34 +325,49 @@ export default function MessagesPage() {
 
   // Scroll to bottom of messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!messagesEndRef.current) return;
+
+    // Auto-scroll in these cases:
+    // 1. User sends a new message (last message is from self)
+    // 2. User is already at the bottom (not scrolling up)
+    const lastMessage = messages[messages.length - 1];
+    const shouldAutoScroll = 
+      !userIsScrolling || 
+      (lastMessage && lastMessage.sender === 'self');
+
+    if (shouldAutoScroll) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: "smooth",
+        block: "end"
+      });
+    }
+  }, [messages, userIsScrolling]);
 
   // Simulate typing indicator
-  // useEffect(() => {
-  //   if (activeConversation === 1) {
-  //     const typingTimeout = setTimeout(() => {
-  //       setIsTyping(true);
-  //       setTimeout(() => {
-  //         setIsTyping(false);
-  //         // Add new message after typing
-  //         const newMsg = {
-  //           id: messages.length + 1,
-  //           sender: "other",
-  //           text: "I got it at the CyberMed clinic in NEON_DISTRICT. Dr. Nakamura is the best neural surgeon in the city.",
-  //           time: new Date().toLocaleTimeString([], {
-  //             hour: "2-digit",
-  //             minute: "2-digit",
-  //           }),
-  //           status: "delivered",
-  //           type: "text" as const,
-  //         };
-  //         setMessages([...messages, newMsg]);
-  //       }, 3000);
-  //     }, 5000);
-  //     return () => clearTimeout(typingTimeout);
-  //   }
-  // }, [activeConversation, messages]);
+  useEffect(() => {
+    if (activeConversation === 1) {
+      const typingTimeout = setTimeout(() => {
+        setIsTyping(true);
+        setTimeout(() => {
+          setIsTyping(false);
+          // Add new message after typing
+          const newMsg = {
+            id: messages.length + 1,
+            sender: "other",
+            text: "I got it at the CyberMed clinic in NEON_DISTRICT. Dr. Nakamura is the best neural surgeon in the city.",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            status: "delivered",
+            type: "text" as const,
+          };
+          setMessages([...messages, newMsg]);
+        }, 3000);
+      }, 5000);
+      return () => clearTimeout(typingTimeout);
+    }
+  }, [activeConversation, messages]);
 
   // Simulate neural link fluctuations
   useEffect(() => {
@@ -482,84 +498,14 @@ export default function MessagesPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-hidden relative  text-white">
+    <div className="h-screen overflow-hidden relative bg-black text-white md:py-10">
       {/* Fixed Cyberpunk background with grid lines */}
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black z-0">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+      </div>
 
       {/* Main container */}
       <div className="relative z-10 flex flex-col h-screen">
-        {/* Header */}
-
-        {/* Mobile menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden fixed inset-x-0 top-16 z-20 bg-black/95 backdrop-blur-md border-b border-cyan-900"
-            >
-              <nav className="flex flex-col p-4 space-y-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/feed");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  FEED
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/explore");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                >
-                  <Flame className="h-4 w-4 mr-2" />
-                  EXPLORE
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/messages");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start bg-cyan-950/30 text-cyan-300 border-l-2 border-cyan-500"
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  MESSAGES
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/notifications");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  ALERTS
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    router.push("/profile");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="justify-start text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  PROFILE
-                </Button>
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Main content */}
         <main className="flex-1 container max-w-6xl mx-auto px-0 md:px-4 py-0 md:py-4">
           <div className="flex h-[calc(100vh-64px)] md:h-[calc(100vh-96px)] md:rounded-sm overflow-hidden border border-cyan-900 relative">
@@ -807,7 +753,19 @@ export default function MessagesPage() {
                   )}
 
                   {/* Messages area */}
-                  <ScrollArea className="flex-1 p-4">
+                  <div
+                    className="flex-1 p-4 overflow-y-auto flex flex-col"
+                    style={{ minHeight: 0 }}
+                    onScroll={(e) => {
+                      const target = e.target as HTMLDivElement;
+                      const isAtBottom =
+                        target.scrollHeight -
+                          target.scrollTop -
+                          target.clientHeight <
+                        150;
+                      setUserIsScrolling(!isAtBottom);
+                    }}
+                  >
                     <div className="space-y-4">
                       {messages.map((message) => (
                         <ChatMessage
@@ -847,7 +805,7 @@ export default function MessagesPage() {
                       )}
                       <div ref={messagesEndRef} />
                     </div>
-                  </ScrollArea>
+                  </div>
 
                   {/* Message input */}
                   <div className="p-4 border-t border-cyan-900">

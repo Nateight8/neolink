@@ -36,9 +36,9 @@ export default function AppNavbar() {
   if (
     pathname === "/biochip" ||
     pathname === "/login" ||
-    pathname === "/init-sequence" ||
-    user?.isOnboarder === false ||
-    user?.friends.length === 0
+    pathname.includes("/init-sequence") ||
+    pathname.includes("/echo-net") ||
+    user?.isOnboarder === false
   ) {
     return null; // Don't render the navbar on the root page
   }
