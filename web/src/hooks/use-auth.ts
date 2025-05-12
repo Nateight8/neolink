@@ -3,12 +3,16 @@ import { axiosInstance } from "@/lib/axios-instance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface AuthUser {
-  id: string;
+  _id: string;
   email: string;
   fullName: string;
   isOnboarder: boolean;
+  username: string;
+  handle: string;
+  bio: string;
+  friends: User[];
 }
-
+type User = AuthUser;
 interface AuthResponse {
   user: AuthUser;
 }

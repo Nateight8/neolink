@@ -16,6 +16,12 @@ const PORT = process.env.PORT || 5001;
 
 const app = express();
 
+// Debug middleware
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.path}`);
+  next();
+});
+
 app.use(cors({
   origin: "http://localhost:3000",
   credentials: true,

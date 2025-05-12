@@ -3,13 +3,23 @@ import FeedClient from "@/components/feed/client";
 import Loader from "@/components/loader";
 import { useAuthUser } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import UsernameOnboardingPage from "./(auth)/username/page";
+import UsernameOnboarding from "./(auth)/username/page";
+import AlliesRecommendation from "@/components/alies/alies";
+import { useQuery } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
 
 export default function Home() {
   const { user, isLoading } = useAuthUser();
   const router = useRouter();
 
-  console.log("User data:", user);
+  const { data: onboardingStatus } = useQuery({
+    queryKey: ["onboardStatus"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/users/status");
+      return response.data;
+    },
+    enabled: !!user, // Only run if user exists
+  });
 
   if (isLoading) {
     return <Loader />;
@@ -20,7 +30,12 @@ export default function Home() {
   }
 
   if (user && !user.isOnboarder) {
-    return <UsernameOnboardingPage />;
+    return <UsernameOnboarding />;
+  }
+
+  // Show Allies component only if user has no friends and no pending requests
+  if (user?.friends?.length === 0 && onboardingStatus?.pendingRequests === 0) {
+    return <AlliesRecommendation />;
   }
 
   return <FeedClient />;
