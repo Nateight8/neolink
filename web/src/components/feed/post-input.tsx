@@ -26,7 +26,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { LoadingIndicator } from "@/components/loading-indicator";
-import { Textarea } from "../ui/textarea";
 import {
   AllyMentionPopover,
   type Ally,
@@ -163,100 +162,81 @@ export default function PostInput({ onSubmit }: PostInputProps) {
   };
 
   // Handle textarea input to detect @ mentions
-  const handleTextareaInput = useCallback(() => {
+  const handleTextareaInput = useCallback((value: string) => {
     if (!textareaRef.current) return;
 
-    const textarea = textareaRef.current;
-    const text = textarea.value;
-    const cursorPosition = textarea.selectionStart;
+    const cursorPosition = textareaRef.current.selectionStart;
+    const textBeforeCursor = value.slice(0, cursorPosition);
+    const lastAtSymbol = textBeforeCursor.lastIndexOf('@');
 
-    // Find the @ symbol before the cursor
-    let startPos = cursorPosition - 1;
-    while (
-      startPos >= 0 &&
-      text[startPos] !== "@" &&
-      text[startPos] !== " " &&
-      text[startPos] !== "\n"
-    ) {
-      startPos--;
-    }
-
-    if (startPos >= 0 && text[startPos] === "@") {
-      // We found an @ symbol, extract the search term
-      const searchTerm = text.substring(startPos + 1, cursorPosition);
-
-      // Calculate position for the popover
-      const textareaRect = textarea.getBoundingClientRect();
-      const lineHeight = Number.parseInt(getComputedStyle(textarea).lineHeight);
-
-      // Get the text before the cursor to calculate line number
-      const textBeforeCursor = text.substring(0, cursorPosition);
-      const lines = textBeforeCursor.split("\n");
-      const lineNumber = lines.length - 1;
-
-      // Calculate top position based on line number
-      const top =
-        textareaRect.top +
-        lineNumber * lineHeight +
-        lineHeight +
-        window.scrollY;
-
-      // For left position, we use a fixed offset from the textarea left
-      const left = textareaRect.left + 20 + window.scrollX;
-
+    // Check if we're in a mention context (after @ and no space after it)
+    if (lastAtSymbol !== -1 && !textBeforeCursor.slice(lastAtSymbol).includes(' ')) {
+      const searchTerm = textBeforeCursor.slice(lastAtSymbol + 1);
       setMentionState({
         isActive: true,
         searchTerm,
-        position: { top, left },
-        startPosition: startPos,
+        position: { top: 0, left: 0 },
+        startPosition: lastAtSymbol,
       });
     } else {
-      // Close the popover if no @ is found
-      setMentionState((prev) => ({
-        ...prev,
+      setMentionState({
         isActive: false,
+        searchTerm: '',
         position: null,
-      }));
+        startPosition: 0,
+      });
     }
   }, []);
+
+  // Handle key events in the textarea
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Close mention popover on Escape
+      if (e.key === "Escape" && mentionState.isActive) {
+        e.preventDefault();
+        setMentionState({
+          isActive: false,
+          searchTerm: "",
+          position: null,
+          startPosition: 0,
+        });
+      }
+    },
+    [mentionState.isActive]
+  );
 
   // Handle ally selection from popover
   const handleAllySelect = (ally: Ally) => {
     if (!textareaRef.current) return;
 
     const textarea = textareaRef.current;
-    const text = textarea.value;
+    const currentValue = form.getValues('postContent');
     const cursorPosition = textarea.selectionStart;
 
-    // Replace the @searchTerm with @username
+    // Insert the mention
     const newText =
-      text.substring(0, mentionState.startPosition) +
+      currentValue.substring(0, mentionState.startPosition) +
       `@${ally.username} ` +
-      text.substring(cursorPosition);
+      currentValue.substring(cursorPosition);
 
-    // Update the form value
-    form.setValue("postContent", newText);
+    // Update form and textarea
+    form.setValue('postContent', newText);
+    textarea.value = newText;
 
-    // Close the popover
+    // Calculate new cursor position
+    const newPosition = mentionState.startPosition + ally.username.length + 2;
+
+    // Update cursor position
+    textarea.setSelectionRange(newPosition, newPosition);
+    textarea.focus();
+
+    // Close popover
     setMentionState({
       isActive: false,
-      searchTerm: "",
+      searchTerm: '',
       position: null,
       startPosition: 0,
     });
-
-    // Set focus back to textarea and place cursor after the inserted mention
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        const newCursorPosition =
-          mentionState.startPosition + ally.username.length + 2; // +2 for @ and space
-        textareaRef.current.setSelectionRange(
-          newCursorPosition,
-          newCursorPosition
-        );
-      }
-    }, 0);
   };
 
   // Close the mention popover
@@ -274,12 +254,30 @@ export default function PostInput({ onSubmit }: PostInputProps) {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    textarea.addEventListener("input", handleTextareaInput);
-    textarea.addEventListener("click", handleTextareaInput);
+    // Initial check on mount, in case there's already content
+    if (textarea.value) {
+      handleTextareaInput(textarea.value);
+    }
+
+    const handleInput = () => {
+      if (textareaRef.current) {
+        handleTextareaInput(textareaRef.current.value);
+      }
+    };
+    
+    const handleClick = () => {
+      if (textareaRef.current) {
+        handleTextareaInput(textareaRef.current.value);
+      }
+    };
+
+    // These native events help catch any changes that might be missed by React's onChange
+    textarea.addEventListener("input", handleInput);
+    textarea.addEventListener("click", handleClick);
 
     return () => {
-      textarea.removeEventListener("input", handleTextareaInput);
-      textarea.removeEventListener("click", handleTextareaInput);
+      textarea.removeEventListener("input", handleInput);
+      textarea.removeEventListener("click", handleClick);
     };
   }, [handleTextareaInput]);
 
@@ -299,41 +297,47 @@ export default function PostInput({ onSubmit }: PostInputProps) {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-3 relative">
-              <FormField
-                control={form.control}
-                name="postContent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        placeholder={
-                          isARPostEnabled
-                            ? "DESCRIBE YOUR AR EXPERIENCE..."
-                            : "SHARE_YOUR_THOUGHTS.SYS"
-                        }
-                        className="bg-black/50 border-cyan-900 text-white placeholder:text-gray-500 focus-visible:ring-cyan-500"
-                        {...field}
-                        ref={(e) => {
-                          field.ref(e);
-                          // @ts-ignore - we know this is a textarea
-                          textareaRef.current = e;
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-xs text-red-400" />
-                  </FormItem>
-                )}
+              <textarea
+                {...form.register('postContent')}
+                placeholder={
+                  isARPostEnabled
+                    ? "DESCRIBE YOUR AR EXPERIENCE..."
+                    : "SHARE_YOUR_THOUGHTS.SYS"
+                }
+                className="flex min-h-[80px] w-full rounded-md bg-black/50 border border-cyan-900 px-3 py-2 text-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500"
+                ref={(e) => {
+                  textareaRef.current = e;
+                }}
+                onKeyDown={handleKeyDown}
+                onChange={(e) => {
+                  form.setValue('postContent', e.target.value);
+                  handleTextareaInput(e.target.value);
+                }}
               />
+              <FormMessage className="text-xs text-red-400" />
 
               {/* Ally Mention Popover */}
               {mentionState.isActive && (
-                <AllyMentionPopover
-                  allies={mockAllies}
-                  searchTerm={mentionState.searchTerm}
-                  position={mentionState.position}
-                  onSelect={handleAllySelect}
-                  onClose={closeMentionPopover}
-                />
+                <div className="absolute left-0 right-0 z-50">
+                  <div className="fixed max-w-sm transform -translate-x-1/2 bg-black border border-cyan-900 rounded-sm shadow-lg"
+                       style={{
+                         top: textareaRef.current ? 
+                           textareaRef.current.getBoundingClientRect().bottom + window.scrollY + 4 : 0,
+                         left: textareaRef.current ? 
+                           textareaRef.current.getBoundingClientRect().left + window.scrollX : 0
+                       }}>
+                    <AllyMentionPopover
+                      allies={mockAllies.filter(ally => 
+                        ally.username.toLowerCase().includes(mentionState.searchTerm.toLowerCase()) ||
+                        ally.name.toLowerCase().includes(mentionState.searchTerm.toLowerCase())
+                      )}
+                      searchTerm={mentionState.searchTerm}
+                      position={{ top: 0, left: 0 }}
+                      onSelect={handleAllySelect}
+                      onClose={closeMentionPopover}
+                    />
+                  </div>
+                </div>
               )}
 
               {isARPostEnabled && (
