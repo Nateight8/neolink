@@ -1,16 +1,54 @@
 import Post from "../models/post.js";
 import Notification from "../models/notifications.js";
+import User from "../models/User.js";
 
 // Create a post
 export const createPost = async (req, res) => {
   try {
+    const { content, image } = req.body;
+    const authorId = req.user._id;
+
+    // 1. Create the post
     const post = await Post.create({
-      content: req.body.content,
-      image: req.body.image || null,
-      author: req.user._id,
+      content,
+      image: image || null,
+      author: authorId,
     });
+
+    // 2. Extract mentions from content using regex
+    const mentionPattern = /@([a-zA-Z0-9_]+)/g;
+    const mentions = [...content.matchAll(mentionPattern)].map(
+      (match) => match[1]
+    );
+
+    // 3. Find mentioned users by username or handle
+    if (mentions.length > 0) {
+      const mentionedUsers = await User.find({
+        $or: [
+          { username: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
+          { handle: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
+        ],
+      });
+
+      // 4. Create a notification for each user (excluding the post author)
+      const notifications = mentionedUsers
+        .filter((user) => String(user._id) !== String(authorId))
+        .map((user) => ({
+          userId: user._id,
+          fromUserId: authorId,
+          type: "mention",
+          postId: post._id,
+        }));
+
+      if (notifications.length) {
+        await Notification.insertMany(notifications);
+        // Optionally emit socket events here
+      }
+    }
+
     res.status(201).json(post);
   } catch (err) {
+    console.error("Post creation error:", err);
     res.status(500).json({ message: err.message });
   }
 };
