@@ -147,10 +147,20 @@ export default function PostInput({ onSubmit }: PostInputProps) {
       },
       {
         onSuccess: () => {
-          // Reset form
-          form.reset(defaultValues);
+          // Reset form and clear content
+          form.reset({
+            ...defaultValues,
+            postContent: ""
+          });
+          
+          // Reset other states
           setIsARPostEnabled(false);
           setArModel(null);
+          
+          // Clear textarea
+          if (textareaRef.current) {
+            textareaRef.current.value = "";
+          }
         },
       }
     );

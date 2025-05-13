@@ -15,6 +15,8 @@ export async function getNotifications(req, res) {
         select: "content",
       });
 
+    notifications[0].id;
+
     const formatted = notifications.map((n) => ({
       id: n._id,
       type: n.type,

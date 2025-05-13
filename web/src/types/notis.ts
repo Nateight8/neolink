@@ -2,6 +2,7 @@ interface NotificationProps {
   id: string;
   type: string;
   userId: string;
+  requestId: string;
   user: {
     _id: string;
     name: string;
@@ -11,7 +12,7 @@ interface NotificationProps {
   };
   postId?: string;
   postContent?: string;
-  createdAt: string;
+  time: string;
   isRead: boolean;
   isUrgent?: boolean;
   neuralSignature?: number;

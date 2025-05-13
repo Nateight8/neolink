@@ -119,12 +119,14 @@ export function AlertItem({
     setIsExpanded(!isExpanded);
   };
 
-  const relativeTime = getCompactRelativeTime(alert.createdAt);
+  const relativeTime = getCompactRelativeTime(alert.time);
+
+  console.log("ALERTS", alert.requestId);
 
   const { mutate: respondToRequest } = useMutation({
     mutationFn: async (action: "accept" | "reject") => {
       return await axiosInstance.patch(
-        `/users/friend-request/${alert.id}/respond`,
+        `/users/friend-request/${alert.requestId}/respond`,
         {
           action,
         }
