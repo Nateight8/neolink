@@ -26,19 +26,12 @@ const formSchema = z.object({
   username: z
     .string()
     .min(3, { message: "Username must be at least 3 characters" })
-    .max(20, { message: "Username cannot exceed 20 characters" })
-    .regex(/^[A-Z0-9_]+$/, {
-      message:
-        "Username can only contain uppercase letters, numbers, and underscores",
-    }),
+    .max(20, { message: "Username cannot exceed 20 characters" }),
+
   handle: z
     .string()
     .min(3, { message: "Handle must be at least 3 characters" })
-    .max(20, { message: "Handle cannot exceed 20 characters" })
-    .regex(/^[a-z0-9_]+$/, {
-      message:
-        "Handle can only contain lowercase letters, numbers, and underscores",
-    }),
+    .max(20, { message: "Handle cannot exceed 20 characters" }),
 });
 
 export default function UsernameOnboardingPage() {
@@ -66,7 +59,7 @@ export default function UsernameOnboardingPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["user"],
+        queryKey: ["onboardStatus"],
       });
     },
     onError: (error) => {

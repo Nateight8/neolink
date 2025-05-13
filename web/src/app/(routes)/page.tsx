@@ -3,11 +3,12 @@ import FeedClient from "@/components/feed/client";
 
 import { useAuthUser } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import UsernameOnboarding from "./(auth)/username/page";
+
 import AlliesRecommendation from "@/components/alies/alies";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { LoadingScreen } from "@/components/loading-screen";
+import UsernameOnboardingPage from "@/components/auth/username-field";
 
 export default function Home() {
   const { user, isLoading } = useAuthUser();
@@ -31,7 +32,7 @@ export default function Home() {
   }
 
   if (user && !user.isOnboarder) {
-    return <UsernameOnboarding />;
+    return <UsernameOnboardingPage />;
   }
 
   // Show Allies component only if user has no friends and no pending requests

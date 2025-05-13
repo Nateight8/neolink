@@ -1,18 +1,20 @@
 interface NotificationProps {
   id: string;
   type: string;
+  userId: string;
   user: {
+    _id: string;
     name: string;
     handle: string;
     avatar: string;
-    verified: boolean; //<==comming soon
+    verified: boolean;
   };
-  postId: string;
-  postContent: string;
-  time: string;
+  postId?: string;
+  postContent?: string;
+  createdAt: string;
   isRead: boolean;
-  isUrgent: boolean; //<==not added to db
-  neuralSignature: number; //<not in db
+  isUrgent?: boolean;
+  neuralSignature?: number;
 }
 
 export type { NotificationProps };

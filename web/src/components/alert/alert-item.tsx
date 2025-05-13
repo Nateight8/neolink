@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { NotificationProps } from "@/types/notis";
 import { getCompactRelativeTime } from "@/lib/relative-time";
+import { useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
 
 interface AlertItemProps {
   alert: NotificationProps;
@@ -48,6 +50,8 @@ export function AlertItem({
   glitchEffect,
 }: AlertItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  console.log("Alert", alert);
 
   // Get icon based on alert type
   const getAlertIcon = () => {
@@ -86,7 +90,7 @@ export function AlertItem({
       case "ar":
         return "sent you an AR experience";
       case "follow":
-        return "started following you";
+        return "request to be allies";
       default:
         return "sent you a notification";
     }
@@ -101,7 +105,7 @@ export function AlertItem({
 
   // Neural effect based on link strength and alert neural signature
   const getNeuralEffect = () => {
-    if (!neuralLinkActive) return "";
+    if (!neuralLinkActive || !alert.neuralSignature) return "";
     if (neuralLinkStrength < 0.7 && alert.neuralSignature > 0.8)
       return "neural-flicker";
     return "";
@@ -115,7 +119,22 @@ export function AlertItem({
     setIsExpanded(!isExpanded);
   };
 
-  const relativeTime = getCompactRelativeTime(alert.time);
+  const relativeTime = getCompactRelativeTime(alert.createdAt);
+
+  const { mutate: respondToRequest } = useMutation({
+    mutationFn: async (action: "accept" | "reject") => {
+      return await axiosInstance.patch(
+        `/users/friend-request/${alert.id}/respond`,
+        {
+          action,
+        }
+      );
+    },
+  });
+
+  const handleFriendRequestRespons = (action: "accept" | "reject") => {
+    respondToRequest(action);
+  };
 
   return (
     <div
@@ -241,16 +260,16 @@ export function AlertItem({
               {/* Time and neural signature */}
               <div className="flex items-center mt-1 text-xs text-gray-500">
                 <span className="mr-3 uppercase">{relativeTime}</span>
-                {neuralLinkActive && (
+                {neuralLinkActive && alert.neuralSignature && (
                   <div className="flex items-center">
                     <Brain className="h-3 w-3 mr-1 text-fuchsia-400" />
                     <span
                       className={
-                        alert.neuralSignature > 0.9
+                        alert.neuralSignature >= 75
                           ? "text-fuchsia-400"
-                          : alert.neuralSignature > 0.7
-                          ? "text-cyan-400"
-                          : "text-gray-500"
+                          : alert.neuralSignature >= 50
+                          ? "text-fuchsia-500"
+                          : "text-fuchsia-600"
                       }
                     >
                       SIG: {Math.round(alert.neuralSignature * 100)}%
@@ -280,61 +299,97 @@ export function AlertItem({
 
       {/* Action buttons */}
       <div className="flex justify-end mt-3 space-x-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleAlertClick}
-                className="h-8 w-8 p-0 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{isExpanded ? "Collapse" : "Expand"}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {alert.type === "follow" ? (
+          // Friend request actions
+          <div className="flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      // Accept friend request
+                      handleFriendRequestRespons("accept");
+                    }}
+                    className="h-8 w-8 p-0 rounded-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Accept Request</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-        {!alert.isRead && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  // onClick={() => onMarkAsRead(alert.id)}
-                  className="h-8 w-8 p-0 rounded-sm text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Mark as Read</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      // Reject friend request
+                      handleFriendRequestRespons("reject");
+                      console.log("Reject friend request:", alert.user._id);
+                    }}
+                    className="h-8 w-8 p-0 rounded-sm text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Reject Request</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        ) : (
+          // Default actions for other notification types
+          <div className="flex gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleAlertClick}
+                    className="h-8 w-8 p-0 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isExpanded ? "Collapse" : "Expand"}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {!alert.isRead && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        // Mark notification as read
+                        console.log("Mark as read:", alert.id);
+                      }}
+                      className="h-8 w-8 p-0 rounded-sm text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mark as Read</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         )}
-
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                // onClick={() => onDismiss(alert.id)}
-                className="h-8 w-8 p-0 rounded-sm text-gray-500 hover:text-gray-400 hover:bg-gray-900"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Dismiss</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
       </div>
     </div>
   );

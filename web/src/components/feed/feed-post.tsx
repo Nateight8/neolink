@@ -105,7 +105,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
               </div>
               <div className="flex items-center text-xs text-gray-500">
                 <span className="mr-2">@{post.author.username}</span>
-                <span>• {post.updatedAt}</span>
+                <span>• {updatedAt}</span>
               </div>
             </div>
           </div>

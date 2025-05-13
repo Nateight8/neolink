@@ -1,7 +1,7 @@
 import express from "express";
 import Notification from "../models/notifications.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
-import { getNotifcations } from "../controllers/notifications.js";
+import { getNotifications } from "../controllers/notifications.js";
 
 const notificationRoute = express.Router();
 notificationRoute.use(authMiddleware);
@@ -36,7 +36,7 @@ notificationRoute.post("/", async (req, res) => {
  * @route   GET /api/notifications
  * @desc    Get all notifications for the authenticated user
  */
-notificationRoute.get("/", getNotifcations);
+notificationRoute.get("/", getNotifications);
 /**
  * @route   PATCH /api/notifications/:id/read
  * @desc    Mark a single notification as read

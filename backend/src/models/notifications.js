@@ -1,3 +1,5 @@
+// models/notifications.js
+
 import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
@@ -21,6 +23,11 @@ const notificationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
       default: null, // If the notification is related to a post
+    },
+    requestId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FriendRequest",
+      default: null, // For storing friend request ID
     },
     isRead: {
       type: Boolean,

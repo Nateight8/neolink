@@ -5,7 +5,7 @@ import {
   recommendedUsers,
   friends,
   friendRequest,
-  acceptRequest,
+  respondToFriendRequest,
 } from "../controllers/users.controlers.js";
 import { onboardingStatus, searchUsers } from "../controllers/onboarding.js";
 
@@ -17,7 +17,7 @@ usersRoute.get("/", recommendedUsers);
 usersRoute.get("/friends", friends);
 
 usersRoute.post("/friend-request/:id", friendRequest);
-usersRoute.put("/friend-request/:id/accept", acceptRequest);
+usersRoute.patch("/friend-request/:id/respond", respondToFriendRequest);
 
 usersRoute.get("/status", onboardingStatus);
 usersRoute.get("/search", searchUsers);

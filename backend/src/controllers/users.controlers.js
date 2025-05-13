@@ -1,5 +1,6 @@
 import FriendRequest from "../models/friend-request.js";
 import User from "../models/User.js";
+import Notification from "../models/notifications.js";
 
 export async function recommendedUsers(req, res) {
   try {
@@ -94,6 +95,7 @@ export async function friends(req, res) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+// controllers/friendController.js - friendRequest function
 
 export async function friendRequest(req, res) {
   try {
@@ -140,12 +142,19 @@ export async function friendRequest(req, res) {
 
     await newFriendRequest.save();
 
-    // ✅ Create a notification
+    // Create notification with the friend request ID
+    console.log("Creating notification for friend request:", {
+      recipientId: recipient._id,
+      senderId: currentUser._id,
+      requestId: newFriendRequest._id, // Include the request ID
+    });
+
     await Notification.create({
       userId: recipient._id, // who receives the notification
       fromUserId: currentUser._id, // who triggered it
-      type: "friend_request",
-      postId: null, // optional, use null or omit if not related to a post
+      type: "follow",
+      postId: null,
+      requestId: newFriendRequest._id, // Save the request ID in the notification
     });
 
     return res.status(201).json(newFriendRequest);
@@ -155,40 +164,69 @@ export async function friendRequest(req, res) {
   }
 }
 
-export async function acceptRequest(req, res) {
+// _id
+// 6821a9910f63e07e391f4116
+// fullName
+// "Lani Cruz"
+// email
+// ""
+// password
+// "$2b$10$0isF36FTZUFtGJzhr6p8tOw1ZNSIfQZz/.a/vhShdXZm7NNvocU5q"
+// handle
+// "boots4lani!"
+// bio
+// "Mountains > men. Period. 🏔️💅 Hiking boots on, red flags off 🚩🚫"
+// isOnboarder
+// true
+
+// friends
+// Array (empty)
+// createdAt
+// 2025-05-12T07:56:01.721+00:00
+// updatedAt
+// 2025-05-12T07:56:21.978+00:00
+// username
+// "BOOTS4LANI!"
+
+// PATCH /api/friends/respond/:id
+export async function respondToFriendRequest(req, res) {
   try {
     const { id } = req.params;
+    const { action } = req.body; // "accept" or "reject"
+
     const friendRequest = await FriendRequest.findById(id);
 
     if (!friendRequest) {
       return res.status(404).json({ message: "Friend request not found" });
     }
 
-    //verify that the current user is the recipient of the request
     if (friendRequest.recipient.toString() !== req.user._id.toString()) {
       return res
         .status(403)
-        .json({ message: "You are not authorized to accept this request" });
+        .json({ message: "You are not authorized to respond to this request" });
     }
 
-    friendRequest.status = "accepted"; // Update the status of the friend request
-    await friendRequest.save();
+    if (action === "accept") {
+      friendRequest.status = "accepted";
+      await friendRequest.save();
 
-    // Add each user to the other's friends list
-    await User.findByIdAndUpdate(friendRequest.sender, {
-      $addToSet: { friends: friendRequest.recipient },
-    });
+      await User.findByIdAndUpdate(friendRequest.sender, {
+        $addToSet: { friends: friendRequest.recipient },
+      });
 
-    await User.findByIdAndUpdate(friendRequest.recipient, {
-      $addToSet: { friends: friendRequest.sender },
-    });
+      await User.findByIdAndUpdate(friendRequest.recipient, {
+        $addToSet: { friends: friendRequest.sender },
+      });
 
-    res.status(200).json({
-      message: "Friend request accepted",
-      friendRequest,
-    });
+      return res.status(200).json({ message: "Friend request accepted" });
+    } else if (action === "reject") {
+      await friendRequest.deleteOne(); // or keep it with status "rejected" if you want history
+      return res.status(200).json({ message: "Friend request rejected" });
+    } else {
+      return res.status(400).json({ message: "Invalid action" });
+    }
   } catch (error) {
-    console.error("Error in acceptRequest controller:", error);
+    console.error("Error in respondToFriendRequest controller:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }

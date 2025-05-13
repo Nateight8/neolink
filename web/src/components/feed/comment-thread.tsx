@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuthUser } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
+// import { useQueryClient } from "@tanstack/react-query";
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { cn } from "@/lib/utils";
 import { FormattedContent } from "../shared/formatted-content";
@@ -48,7 +48,7 @@ export function CommentThreadModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animationActive, setAnimationActive] = useState(true);
   const { user } = useAuthUser();
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const raysRef = useRef<HTMLDivElement>(null);
 
   // Mock comments data - in a real app, you would fetch this from your API
@@ -93,7 +93,7 @@ export function CommentThreadModal({
         author: {
           username: user.username || "anonymous",
           fullName: user.fullName || "Anonymous User",
-          avatar: user.avatar || "/placeholder.svg?height=40&width=40&text=AU",
+          avatar: "",
         },
         content: commentText,
         createdAt: "Just now",
@@ -128,56 +128,6 @@ export function CommentThreadModal({
 
   const toggleAnimation = () => {
     setAnimationActive(!animationActive);
-  };
-
-  // Render the post content with hashtags highlighted
-  const renderContent = () => {
-    // Split content into paragraphs (groups of text separated by blank lines)
-    const paragraphs = post.content.split(/\n\s*\n/);
-
-    return paragraphs.map((paragraph, paragraphIndex) => {
-      const isLastParagraph = paragraphIndex === paragraphs.length - 1;
-
-      // Process each line within a paragraph
-      const lines = paragraph.split("\n");
-
-      return (
-        <p key={paragraphIndex} className={isLastParagraph ? "mb-0" : "mb-6"}>
-          {lines.map((line, lineIndex) => {
-            const processedLine = line.split(" ").map((word, wordIndex) => {
-              if (word.startsWith("#")) {
-                return (
-                  <span
-                    key={`${lineIndex}-${wordIndex}`}
-                    className="text-cyan-400 hover:text-cyan-300 cursor-pointer hover-glitch"
-                  >
-                    {word}{" "}
-                  </span>
-                );
-              } else if (word.startsWith("@")) {
-                return (
-                  <span
-                    key={`${lineIndex}-${wordIndex}`}
-                    className="text-cyan-500 hover:text-cyan-400 cursor-pointer hover-glitch"
-                  >
-                    {word}{" "}
-                  </span>
-                );
-              }
-              return <span key={`${lineIndex}-${wordIndex}`}>{word} </span>;
-            });
-
-            // Add a line break between lines within the same paragraph (except last line)
-            return (
-              <React.Fragment key={`line-${lineIndex}`}>
-                {processedLine}
-                {lineIndex < lines.length - 1 && <br />}
-              </React.Fragment>
-            );
-          })}
-        </p>
-      );
-    });
   };
 
   return (
@@ -339,13 +289,7 @@ export function CommentThreadModal({
             <div className="p-3 border-t border-cyan-900/30 relative z-10">
               <div className="flex items-start space-x-3">
                 <Avatar className="h-8 w-8 border border-cyan-500">
-                  <AvatarImage
-                    src={
-                      user?.avatar ||
-                      "/placeholder.svg?height=32&width=32&text=ME"
-                    }
-                    alt="Your avatar"
-                  />
+                  <AvatarImage src="" alt="Your avatar" />
                   <AvatarFallback className="bg-black text-cyan-400">
                     {user?.username?.substring(0, 2) || "ME"}
                   </AvatarFallback>
