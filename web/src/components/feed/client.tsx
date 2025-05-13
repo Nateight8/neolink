@@ -30,6 +30,7 @@ import { axiosInstance } from "@/lib/axios-instance";
 import { Post } from "@/types/chat";
 import PostInput from "./post-input";
 import { LoadingIndicator } from "@/components/loading-indicator";
+import { useAuthUser } from "@/hooks/use-auth";
 
 // Mock data for stories
 const STORIES = [
@@ -114,6 +115,8 @@ const TRENDING = [
 export default function FeedClient() {
   const router = useRouter();
 
+  const { user } = useAuthUser();
+
   const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [glitchEffect, setGlitchEffect] = useState(false);
@@ -183,14 +186,17 @@ export default function FeedClient() {
                       src="/placeholder.svg?height=50&width=50&text=JD"
                       alt="Profile"
                     />
-                    <AvatarFallback className="bg-black text-cyan-400">
-                      JD
+                    <AvatarFallback className="bg-black text-cyan-400 font-bold">
+                      {user?.fullName
+                        ?.split(" ")
+                        .map((name) => name[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <h3 className="font-bold text-white">JANE_D0E</h3>
                     <p className="text-xs text-cyan-400 font-mono">
-                      @n3on_runner
+                      @{user?.handle}
                     </p>
                   </div>
                 </div>
