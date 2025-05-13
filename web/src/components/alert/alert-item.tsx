@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+// import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,27 +27,11 @@ import {
   Brain,
   Bell,
 } from "lucide-react";
-
-interface Alert {
-  id: number;
-  type: string;
-  user?: {
-    name: string;
-    handle: string;
-    avatar: string;
-    verified: boolean;
-  };
-  content: string;
-  target?: string;
-  time: string;
-  isRead: boolean;
-  isUrgent: boolean;
-  neuralSignature: number;
-  arPreview?: string;
-}
+import { NotificationProps } from "@/types/notis";
+import { getCompactRelativeTime } from "@/lib/relative-time";
 
 interface AlertItemProps {
-  alert: Alert;
+  alert: NotificationProps;
   onMarkAsRead: (id: number) => void;
   onDismiss: (id: number) => void;
   neuralLinkActive: boolean;
@@ -57,8 +41,8 @@ interface AlertItemProps {
 
 export function AlertItem({
   alert,
-  onMarkAsRead,
-  onDismiss,
+  // onMarkAsRead,
+  // onDismiss,
   neuralLinkActive,
   neuralLinkStrength,
   glitchEffect,
@@ -87,6 +71,27 @@ export function AlertItem({
     }
   };
 
+  const getAlertMessage = () => {
+    switch (alert.type) {
+      case "like":
+        return "liked your post";
+      case "comment":
+        return "commented on your post";
+      case "mention":
+        return "mentioned you in a post";
+      case "system":
+        return "system alert";
+      case "neural":
+        return "neural insight update";
+      case "ar":
+        return "sent you an AR experience";
+      case "follow":
+        return "started following you";
+      default:
+        return "sent you a notification";
+    }
+  };
+
   // Get background color based on alert type and read status
   const getAlertBackground = () => {
     if (alert.isUrgent) return "bg-red-950/20 border-red-900";
@@ -105,10 +110,12 @@ export function AlertItem({
   // Handle click on alert
   const handleAlertClick = () => {
     if (!alert.isRead) {
-      onMarkAsRead(alert.id);
+      // onMarkAsRead(alert.id);
     }
     setIsExpanded(!isExpanded);
   };
+
+  const relativeTime = getCompactRelativeTime(alert.time);
 
   return (
     <div
@@ -192,23 +199,24 @@ export function AlertItem({
                     alert.user ? "text-gray-400" : "text-cyan-400 font-bold"
                   }`}
                 >
-                  {alert.content}
+                  {" "}
+                  {getAlertMessage()}
                 </span>
               </div>
 
               {/* Target content preview */}
-              {alert.target && (
-                <div
-                  className={`mt-1 text-sm ${
-                    alert.type === "system" ? "text-red-400" : "text-gray-300"
-                  } line-clamp-2 ${isExpanded ? "line-clamp-none" : ""}`}
-                >
-                  {alert.target}
-                </div>
-              )}
+              {/* {alert.target && ( */}
+              <div
+                className={`mt-1 text-sm ${
+                  alert.type === "system" ? "text-red-400" : "text-gray-300"
+                } line-clamp-2 ${isExpanded ? "line-clamp-none" : ""}`}
+              >
+                {alert.postContent}
+              </div>
+              {/* )} */}
 
               {/* AR preview */}
-              {alert.type === "ar" && alert.arPreview && isExpanded && (
+              {/* {alert.type === "ar" && alert.arPreview && isExpanded && (
                 <div className="mt-3 relative">
                   <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-[1px]"></div>
                   <div className="relative overflow-hidden rounded-sm h-40">
@@ -228,11 +236,11 @@ export function AlertItem({
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Time and neural signature */}
               <div className="flex items-center mt-1 text-xs text-gray-500">
-                <span className="mr-3">{alert.time}</span>
+                <span className="mr-3 uppercase">{relativeTime}</span>
                 {neuralLinkActive && (
                   <div className="flex items-center">
                     <Brain className="h-3 w-3 mr-1 text-fuchsia-400" />
@@ -297,7 +305,7 @@ export function AlertItem({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onMarkAsRead(alert.id)}
+                  // onClick={() => onMarkAsRead(alert.id)}
                   className="h-8 w-8 p-0 rounded-sm text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
                 >
                   <Check className="h-4 w-4" />
@@ -316,7 +324,7 @@ export function AlertItem({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDismiss(alert.id)}
+                // onClick={() => onDismiss(alert.id)}
                 className="h-8 w-8 p-0 rounded-sm text-gray-500 hover:text-gray-400 hover:bg-gray-900"
               >
                 <X className="h-4 w-4" />

@@ -9,6 +9,7 @@ import chatRoute from "./route/chat.route.js";
 import postRouter from "./route/post.route.js";
 
 import cors from "cors";
+import notificationRoute from "./route/notifications.js";
 
 configDotenv();
 
@@ -22,12 +23,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
@@ -35,6 +38,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
 app.use("/api/chat", chatRoute);
 app.use("/api/posts", postRouter);
+app.use("/api/notifications", notificationRoute);
 
 app.listen(PORT, () => {
   console.log("Server is running on port PORT " + PORT);

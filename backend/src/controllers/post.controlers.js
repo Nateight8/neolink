@@ -1,4 +1,5 @@
 import Post from "../models/post.js";
+import Notification from "../models/notifications.js";
 
 // Create a post
 export const createPost = async (req, res) => {
@@ -78,7 +79,7 @@ export const reactToPost = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate("author");
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     let field;
@@ -91,10 +92,24 @@ export const reactToPost = async (req, res) => {
     }
 
     const index = post[field].indexOf(userId);
-    if (index === -1) {
-      post[field].push(userId); // Add reaction
+    const isAdding = index === -1;
+
+    if (isAdding) {
+      post[field].push(userId);
+
+      // Only send notification if user is not the post author
+      if (String(userId) !== String(post.author._id)) {
+        await Notification.create({
+          userId: post.author._id,
+          fromUserId: userId,
+          type,
+          postId: post._id,
+        });
+
+        // TODO: optionally emit socket event for real-time updates
+      }
     } else {
-      post[field].splice(index, 1); // Remove reaction
+      post[field].splice(index, 1);
     }
 
     await post.save();

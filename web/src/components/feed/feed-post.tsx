@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+
 // import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -44,20 +45,44 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
   // };
 
   // Extract hashtags from content
+
   const renderContent = () => {
-    const words = post.content.split(" ");
-    return words.map((word, index) => {
-      if (word.startsWith("#")) {
-        return (
-          <span
-            key={index}
-            className="text-cyan-400 hover:text-cyan-300 cursor-pointer hover-glitch"
-          >
-            {word}{" "}
-          </span>
-        );
-      }
-      return <span key={index}>{word} </span>;
+    // Split content into paragraphs (groups of text separated by blank lines)
+    const paragraphs = post.content.split(/\n\s*\n/);
+
+    return paragraphs.map((paragraph, paragraphIndex) => {
+      const isLastParagraph = paragraphIndex === paragraphs.length - 1;
+
+      // Process each line within a paragraph
+      const lines = paragraph.split("\n");
+
+      return (
+        <p key={paragraphIndex} className={isLastParagraph ? "mb-0" : "mb-6"}>
+          {lines.map((line, lineIndex) => {
+            const processedLine = line.split(" ").map((word, wordIndex) => {
+              if (word.startsWith("#")) {
+                return (
+                  <span
+                    key={`${lineIndex}-${wordIndex}`}
+                    className="text-cyan-400 hover:text-cyan-300 cursor-pointer hover-glitch"
+                  >
+                    {word}{" "}
+                  </span>
+                );
+              }
+              return <span key={`${lineIndex}-${wordIndex}`}>{word} </span>;
+            });
+
+            // Add a line break between lines within the same paragraph (except last line)
+            return (
+              <React.Fragment key={`line-${lineIndex}`}>
+                {processedLine}
+                {lineIndex < lines.length - 1 && <br />}
+              </React.Fragment>
+            );
+          })}
+        </p>
+      );
     });
   };
 

@@ -17,6 +17,9 @@ import { Bell, Brain, CheckCheck, Trash2, Settings } from "lucide-react";
 
 import { AlertItem } from "@/components/alert/alert-item";
 import { NeuralIndicator } from "@/components/chats/neural-indicator";
+import { useQuery } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
+import { NotificationProps } from "@/types/notis";
 
 // Mock data for alerts
 const ALERTS = [
@@ -210,6 +213,14 @@ export default function AlertsPage() {
 
     return () => clearInterval(glitchInterval);
   }, []);
+
+  const { data: NOTIFICATIONS } = useQuery<NotificationProps[]>({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const response = await axiosInstance.get("/notifications");
+      return response.data;
+    },
+  });
 
   // Handle marking alert as read
   const handleMarkAsRead = (id: number) => {
@@ -448,7 +459,7 @@ export default function AlertsPage() {
                   </p>
                 </div>
               ) : (
-                filteredAlerts.map((alert) => (
+                NOTIFICATIONS?.map((alert) => (
                   <motion.div
                     key={alert.id}
                     initial={{ opacity: 0, y: 20 }}
