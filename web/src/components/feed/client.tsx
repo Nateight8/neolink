@@ -218,7 +218,7 @@ export default function FeedClient() {
 
                 <Button
                   variant="outline"
-                  onClick={() => router.push("/profile")}
+                  onClick={() => router.push("/biochip")}
                   className="w-full rounded-sm border-cyan-500 text-cyan-400 hover:bg-cyan-950/50 hover:text-cyan-300"
                 >
                   VIEW_PROFILE.SYS

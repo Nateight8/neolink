@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,8 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Shield, Cpu } from "lucide-react";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import Posts from "@/components/profile/posts";
+import { useAuthUser } from "@/hooks/use-auth";
 
 export default function ProfilePage() {
+  const { user } = useAuthUser();
+
   return (
     <div className="min-h-screen  relative">
       {/* Fixed Cyberpunk background with grid lines */}
@@ -31,15 +35,20 @@ export default function ProfilePage() {
                   src="/placeholder.svg?height=128&width=128"
                   alt="Profile picture"
                 />
-                <AvatarFallback className="bg-black text-cyan-400 text-3xl">
-                  JD
+                <AvatarFallback className="bg-black font-bold text-cyan-400 text-3xl">
+                  {user?.fullName
+                    ?.split(" ")
+                    .map((name) => name[0])
+                    .join("")}
                 </AvatarFallback>
               </Avatar>
             </div>
 
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-white mb-1">JANE_D0E</h1>
-              <p className="text-cyan-400 font-mono">@n3on_runner</p>
+              <h1 className="text-2xl font-bold text-white mb-1">
+                {user?.username}
+              </h1>
+              <p className="text-cyan-400 font-mono">@{user?.handle}</p>
             </div>
 
             <div className="flex gap-3 mt-2">
@@ -147,8 +156,11 @@ export default function ProfilePage() {
                           src={`/placeholder.svg?height=80&width=80&text=ALLY_${item}`}
                           alt={`Ally ${item}`}
                         />
-                        <AvatarFallback className="bg-black text-cyan-400">
-                          A{item}
+                        <AvatarFallback className="bg-black font-bold text-cyan-400">
+                          {user?.fullName
+                            ?.split(" ")
+                            .map((name) => name[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
                     </div>
