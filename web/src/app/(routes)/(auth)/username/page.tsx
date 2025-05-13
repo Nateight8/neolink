@@ -18,6 +18,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ChevronRight, ChevronLeft, User, Terminal } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -55,13 +57,27 @@ export default function UsernameOnboardingPage() {
   const username = form.watch("username");
   const handle = form.watch("handle");
 
+  const queryClient = useQueryClient();
+
+  const { mutate: usernameMutation } = useMutation({
+    mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const response = await axiosInstance.post("/auth/onboarding", values);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["user"],
+      });
+    },
+    onError: (error) => {
+      console.error("Error setting username:", error);
+      // Handle error appropriately
+    },
+  });
+
   // Form submission handler
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you would store this data or send it to your backend
-    console.log(values);
-
-    // Navigate to the next step
-    router.push("/onboarding/personal-info");
+    usernameMutation(values);
   }
 
   const getInitials = () => {

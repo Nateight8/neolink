@@ -16,87 +16,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { User } from "@/types/chat";
 
-// Mock data for recommended allies
-// const RECOMMENDED_ALLIES = [
-//   {
-//     id: 1,
-//     name: "CYBER_NOMAD",
-//     handle: "cyber_nomad",
-//     avatar: "/placeholder.svg?height=200&width=200&text=CN",
-//     bio: "⚡ EXPLORING THE DIGITAL FRONTIER ⚡",
-//     mutualAllies: 5,
-//     neuralCompatibility: 0.87,
-//     skills: ["HACKING", "NEURAL_IMPLANTS", "GRID_NAVIGATION"],
-//     verified: true,
-//   },
-//   {
-//     id: 2,
-//     name: "NEON_HUNTER",
-//     handle: "neon_hunter",
-//     avatar: "/placeholder.svg?height=200&width=200&text=NH",
-//     bio: "AR DESIGNER // DIGITAL DREAMER // REALITY HACKER",
-//     mutualAllies: 3,
-//     neuralCompatibility: 0.92,
-//     skills: ["AR_DESIGN", "NEURAL_INTERFACE", "HOLOGRAPHICS"],
-//     verified: true,
-//   },
-//   {
-//     id: 3,
-//     name: "DATA_WRAITH",
-//     handle: "data_wraith",
-//     avatar: "/placeholder.svg?height=200&width=200&text=DW",
-//     bio: "Securing the neural network one encryption at a time.",
-//     mutualAllies: 2,
-//     neuralCompatibility: 0.78,
-//     skills: ["ENCRYPTION", "SECURITY", "GHOST_PROTOCOLS"],
-//     verified: true,
-//   },
-//   {
-//     id: 4,
-//     name: "PIXEL_PUNK",
-//     handle: "pixel_punk",
-//     avatar: "/placeholder.svg?height=200&width=200&text=PP",
-//     bio: "Creating digital art in the neural space. Commission open.",
-//     mutualAllies: 7,
-//     neuralCompatibility: 0.85,
-//     skills: ["DIGITAL_ART", "NEURAL_DESIGN", "IMMERSIVE_EXPERIENCES"],
-//     verified: false,
-//   },
-//   {
-//     id: 5,
-//     name: "CHROME_REBEL",
-//     handle: "chrome_rebel",
-//     avatar: "/placeholder.svg?height=200&width=200&text=CR",
-//     bio: "Fighting corporate control of the neural network. Join the resistance.",
-//     mutualAllies: 1,
-//     neuralCompatibility: 0.76,
-//     skills: ["RESISTANCE", "CORPORATE_INFILTRATION", "NEURAL_FREEDOM"],
-//     verified: false,
-//   },
-//   {
-//     id: 6,
-//     name: "VOID_RUNNER",
-//     handle: "void_runner",
-//     avatar: "/placeholder.svg?height=200&width=200&text=VR",
-//     bio: "Exploring the darkest corners of the grid. Seeking the unknown.",
-//     mutualAllies: 4,
-//     neuralCompatibility: 0.81,
-//     skills: ["EXPLORATION", "GRID_MAPPING", "VOID_NAVIGATION"],
-//     verified: true,
-//   },
-//   {
-//     id: 7,
-//     name: "GHOST_WIRE",
-//     handle: "ghost_wire",
-//     avatar: "/placeholder.svg?height=200&width=200&text=GW",
-//     bio: "Invisible in the system. Watching. Waiting. Connecting.",
-//     mutualAllies: 0,
-//     neuralCompatibility: 0.95,
-//     skills: ["STEALTH", "SURVEILLANCE", "NEURAL_CONNECTIONS"],
-//     verified: true,
-//   },
-// ];
-
 export default function AlliesRecommendation() {
   const queryClient = useQueryClient();
   const { data: onboardingStatus } = useQuery({
@@ -342,7 +261,11 @@ export default function AlliesRecommendation() {
                   });
                 }}
                 disabled={onboardingStatus?.pendingRequests === 0}
-                className={`w-full rounded-sm ${onboardingStatus?.pendingRequests > 0 ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500' : 'bg-gray-500 cursor-not-allowed'} text-white shadow-[0_0_10px_rgba(0,255,255,0.3)] py-6 text-lg font-bold`}
+                className={`w-full rounded-sm ${
+                  onboardingStatus?.pendingRequests > 0
+                    ? "bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500"
+                    : "bg-gray-500 cursor-not-allowed"
+                } text-white shadow-[0_0_10px_rgba(0,255,255,0.3)] py-6 text-lg font-bold`}
               >
                 <Zap className="h-5 w-5 mr-2" />
                 {addedAllies.length > 0

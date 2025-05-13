@@ -139,3 +139,24 @@
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(to bottom, #00cccc, #cc00cc);
 }
+
+@keyframes ray-fall {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.animate-ray-fall {
+  animation: ray-fall linear infinite;
+}

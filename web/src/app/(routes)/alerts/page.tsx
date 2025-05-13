@@ -261,7 +261,7 @@ export default function AlertsPage() {
   return (
     <div>
       {/* Main container */}
-      <div className=" z-10 flex flex-col  relative bg-gradient-to-b from-black/40 to-gray-900/60">
+      <div className=" z-10 flex flex-col min-h-screen  relative bg-gradient-to-b from-black/40 to-gray-900/60">
         {/* Header */}
 
         {/* Main content */}

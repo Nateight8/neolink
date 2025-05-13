@@ -2,28 +2,28 @@
 
 import type React from "react";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "../ui/tooltip";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormMessage,
-} from "@/components/ui/form";
-import { Bomb, WormIcon as Virus, CuboidIcon as Cube } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+} from "../ui/form";
+import { CuboidIcon as Cube, Bomb, WormIcon as Virus } from "lucide-react";
 import { axiosInstance } from "@/lib/axios-instance";
 import { LoadingIndicator } from "@/components/loading-indicator";
 import {
@@ -54,44 +54,14 @@ interface PostInputProps {
   onSubmit?: (values: PostFormValues, arModel?: File) => void;
 }
 
-// Mock allies data - in a real app, this would come from an API
-const mockAllies: Ally[] = [
-  {
-    id: "1",
-    username: "neuro_hacker",
-    name: "Alex Chen",
-    avatar: "/placeholder.svg?height=40&width=40&text=AC",
-    specialization: "Neural Interface Specialist",
-  },
-  {
-    id: "2",
-    username: "cyber_ghost",
-    name: "Maya Rodriguez",
-    avatar: "/placeholder.svg?height=40&width=40&text=MR",
-    specialization: "Stealth Systems Engineer",
-  },
-  {
-    id: "3",
-    username: "quantum_flux",
-    name: "Darius Webb",
-    avatar: "/placeholder.svg?height=40&width=40&text=DW",
-    specialization: "Quantum Computing Expert",
-  },
-  {
-    id: "4",
-    username: "neon_blade",
-    name: "Kira Nakamura",
-    avatar: "/placeholder.svg?height=40&width=40&text=KN",
-    specialization: "Combat Systems Developer",
-  },
-  {
-    id: "5",
-    username: "data_wraith",
-    name: "Elijah Stone",
-    avatar: "/placeholder.svg?height=40&width=40&text=ES",
-    specialization: "Data Extraction Specialist",
-  },
-];
+interface SearchUser {
+  _id: string;
+  username: string;
+  name?: string;
+  avatar?: string;
+  specialization?: string;
+}
+
 
 export default function PostInput({ onSubmit }: PostInputProps) {
   const [isARPostEnabled, setIsARPostEnabled] = useState(false);
@@ -105,6 +75,31 @@ export default function PostInput({ onSubmit }: PostInputProps) {
     position: null as { top: number; left: number } | null,
     startPosition: 0,
   });
+
+  // User search query
+  const { data: searchResults, isLoading } = useQuery({
+    queryKey: ["userSearch", mentionState.searchTerm],
+    queryFn: async () => {
+      if (!mentionState.searchTerm || mentionState.searchTerm.length < 3) {
+        return [];
+      }
+      const response = await axiosInstance.get(`/users/search?q=${mentionState.searchTerm}`);
+      return response.data.map((user: SearchUser) => ({
+        id: user._id,
+        username: user.username,
+        name: user.name || user.username,
+        avatar: user.avatar || `/placeholder.svg?height=40&width=40&text=${user.username[0]}`,
+        specialization: user.specialization || "User"
+      }));
+    },
+    enabled: mentionState.isActive && mentionState.searchTerm.length >= 3,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  const isSearching = mentionState.isActive && 
+    (mentionState.searchTerm.length < 3 || isLoading);
+
+  const filteredAllies = searchResults || [];
 
   const queryClient = useQueryClient();
   const { mutate: postMutation, isPending: isPosting } = useMutation({
@@ -167,10 +162,13 @@ export default function PostInput({ onSubmit }: PostInputProps) {
 
     const cursorPosition = textareaRef.current.selectionStart;
     const textBeforeCursor = value.slice(0, cursorPosition);
-    const lastAtSymbol = textBeforeCursor.lastIndexOf('@');
+    const lastAtSymbol = textBeforeCursor.lastIndexOf("@");
 
     // Check if we're in a mention context (after @ and no space after it)
-    if (lastAtSymbol !== -1 && !textBeforeCursor.slice(lastAtSymbol).includes(' ')) {
+    if (
+      lastAtSymbol !== -1 &&
+      !textBeforeCursor.slice(lastAtSymbol).includes(" ")
+    ) {
       const searchTerm = textBeforeCursor.slice(lastAtSymbol + 1);
       setMentionState({
         isActive: true,
@@ -181,7 +179,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
     } else {
       setMentionState({
         isActive: false,
-        searchTerm: '',
+        searchTerm: "",
         position: null,
         startPosition: 0,
       });
@@ -210,7 +208,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
     if (!textareaRef.current) return;
 
     const textarea = textareaRef.current;
-    const currentValue = form.getValues('postContent');
+    const currentValue = form.getValues("postContent");
     const cursorPosition = textarea.selectionStart;
 
     // Insert the mention
@@ -220,7 +218,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
       currentValue.substring(cursorPosition);
 
     // Update form and textarea
-    form.setValue('postContent', newText);
+    form.setValue("postContent", newText);
     textarea.value = newText;
 
     // Calculate new cursor position
@@ -233,7 +231,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
     // Close popover
     setMentionState({
       isActive: false,
-      searchTerm: '',
+      searchTerm: "",
       position: null,
       startPosition: 0,
     });
@@ -264,7 +262,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
         handleTextareaInput(textareaRef.current.value);
       }
     };
-    
+
     const handleClick = () => {
       if (textareaRef.current) {
         handleTextareaInput(textareaRef.current.value);
@@ -298,7 +296,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
             </Avatar>
             <div className="flex-1 space-y-3 relative">
               <textarea
-                {...form.register('postContent')}
+                {...form.register("postContent")}
                 placeholder={
                   isARPostEnabled
                     ? "DESCRIBE YOUR AR EXPERIENCE..."
@@ -310,7 +308,7 @@ export default function PostInput({ onSubmit }: PostInputProps) {
                 }}
                 onKeyDown={handleKeyDown}
                 onChange={(e) => {
-                  form.setValue('postContent', e.target.value);
+                  form.setValue("postContent", e.target.value);
                   handleTextareaInput(e.target.value);
                 }}
               />
@@ -319,23 +317,39 @@ export default function PostInput({ onSubmit }: PostInputProps) {
               {/* Ally Mention Popover */}
               {mentionState.isActive && (
                 <div className="absolute left-0 right-0 z-50">
-                  <div className="fixed max-w-sm transform -translate-x-1/2 bg-black border border-cyan-900 rounded-sm shadow-lg"
-                       style={{
-                         top: textareaRef.current ? 
-                           textareaRef.current.getBoundingClientRect().bottom + window.scrollY + 4 : 0,
-                         left: textareaRef.current ? 
-                           textareaRef.current.getBoundingClientRect().left + window.scrollX : 0
-                       }}>
-                    <AllyMentionPopover
-                      allies={mockAllies.filter(ally => 
-                        ally.username.toLowerCase().includes(mentionState.searchTerm.toLowerCase()) ||
-                        ally.name.toLowerCase().includes(mentionState.searchTerm.toLowerCase())
-                      )}
-                      searchTerm={mentionState.searchTerm}
-                      position={{ top: 0, left: 0 }}
-                      onSelect={handleAllySelect}
-                      onClose={closeMentionPopover}
-                    />
+                  <div
+                    className="fixed w-[280px] transform h-fit -translate-x-1/2 bg-black border border-cyan-900 rounded-sm shadow-lg"
+                    style={{
+                      top: textareaRef.current
+                        ? textareaRef.current.getBoundingClientRect().bottom +
+                          window.scrollY +
+                          4
+                        : 0,
+                      left: textareaRef.current
+                        ? textareaRef.current.getBoundingClientRect().left +
+                          window.scrollX
+                        : 0,
+                    }}
+                  >
+                    {isSearching ? (
+                      <div className="p-4 text-center text-sm text-gray-400">
+                        <div className="w-4 h-4 mx-auto mb-2">
+                          <LoadingIndicator showText={false} />
+                        </div>
+                      </div>
+                    ) : filteredAllies.length > 0 ? (
+                      <AllyMentionPopover
+                        allies={filteredAllies}
+                        searchTerm={mentionState.searchTerm}
+                        position={{ top: 0, left: 0 }}
+                        onSelect={handleAllySelect}
+                        onClose={closeMentionPopover}
+                      />
+                    ) : mentionState.searchTerm.length >= 3 ? (
+                      <div className="p-4 text-center text-sm text-gray-400">
+                        No matches found
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               )}

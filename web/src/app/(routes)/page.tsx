@@ -1,12 +1,13 @@
 "use client";
 import FeedClient from "@/components/feed/client";
-import Loader from "@/components/loader";
+
 import { useAuthUser } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import UsernameOnboarding from "./(auth)/username/page";
 import AlliesRecommendation from "@/components/alies/alies";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
+import { LoadingScreen } from "@/components/loading-screen";
 
 export default function Home() {
   const { user, isLoading } = useAuthUser();
@@ -22,7 +23,7 @@ export default function Home() {
   });
 
   if (isLoading) {
-    return <Loader />;
+    return <LoadingScreen />;
   }
 
   if (!user) {

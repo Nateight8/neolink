@@ -32,7 +32,24 @@ export function AllyMentionPopover({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  // Filter allies based on search term - Improved search to match partial names
+  // Ensure the popover stays within viewport
+  useEffect(() => {
+    if (popoverRef.current && position) {
+      const rect = popoverRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Adjust position if popover would go off screen
+      if (position.left + rect.width > viewportWidth) {
+        popoverRef.current.style.left = `${viewportWidth - rect.width - 20}px`;
+      }
+      if (position.top + rect.height > viewportHeight) {
+        popoverRef.current.style.top = `${viewportHeight - rect.height - 20}px`;
+      }
+    }
+  }, [position]);
+
+  // Filter allies based on search term
   useEffect(() => {
     if (!searchTerm) {
       setFilteredAllies(allies.slice(0, 5)); // Show first 5 allies if no search term
@@ -66,9 +83,8 @@ export function AllyMentionPopover({
           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
           break;
         case "Enter":
-        case "Tab":
-          if (filteredAllies.length > 0 && filteredAllies[selectedIndex]) {
-            e.preventDefault();
+          e.preventDefault();
+          if (filteredAllies[selectedIndex]) {
             onSelect(filteredAllies[selectedIndex]);
           }
           break;
@@ -76,7 +92,6 @@ export function AllyMentionPopover({
           e.preventDefault();
           onClose();
           break;
-        // Don't capture Backspace key here to allow proper deletion
       }
     };
 
@@ -106,7 +121,13 @@ export function AllyMentionPopover({
   return (
     <div
       ref={popoverRef}
-      className="w-64 bg-black border border-cyan-800 rounded-sm shadow-lg shadow-cyan-900/30"
+      className="absolute z-50 left-0 top-0 w-64 bg-black border border-cyan-800 rounded-sm shadow-lg shadow-cyan-900/30"
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        maxHeight: "300px",
+        overflow: "auto",
+      }}
     >
       <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-30 blur-[1px] -z-10"></div>
 

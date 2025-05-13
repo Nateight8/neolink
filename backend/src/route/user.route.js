@@ -6,8 +6,6 @@ import {
   friends,
   friendRequest,
   acceptRequest,
-  getFriendRequests,
-  getOutgoingRequests,
 } from "../controllers/users.controlers.js";
 import { onboardingStatus, searchUsers } from "../controllers/onboarding.js";
 
