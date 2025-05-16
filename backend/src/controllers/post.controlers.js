@@ -2,26 +2,31 @@ import Post from "../models/post.js";
 import Notification from "../models/notifications.js";
 import User from "../models/User.js";
 
-// Create a post
 export const createPost = async (req, res) => {
   try {
-    const { content, image } = req.body;
+    const { content, image, pollOptions, pollExpiresAt } = req.body;
     const authorId = req.user._id;
 
-    // 1. Create the post
+    if (!content && !image && (!pollOptions || pollOptions.length === 0)) {
+      return res.status(400).json({ message: "Post cannot be empty." });
+    }
+
+    const formattedPollOptions = pollOptions?.length
+      ? pollOptions.map((option) => ({ option, votes: [] }))
+      : [];
+
     const post = await Post.create({
       content,
       image: image || null,
       author: authorId,
+      pollOptions: formattedPollOptions,
+      pollExpiresAt: pollExpiresAt ? new Date(pollExpiresAt) : null,
     });
 
-    // 2. Extract mentions from content using regex
+    // Handle mentions (same as before)
     const mentionPattern = /@([a-zA-Z0-9_]+)/g;
-    const mentions = [...content.matchAll(mentionPattern)].map(
-      (match) => match[1]
-    );
+    const mentions = [...content.matchAll(mentionPattern)].map((m) => m[1]);
 
-    // 3. Find mentioned users by username or handle
     if (mentions.length > 0) {
       const mentionedUsers = await User.find({
         $or: [
@@ -30,7 +35,6 @@ export const createPost = async (req, res) => {
         ],
       });
 
-      // 4. Create a notification for each user (excluding the post author)
       const notifications = mentionedUsers
         .filter((user) => String(user._id) !== String(authorId))
         .map((user) => ({
@@ -42,7 +46,6 @@ export const createPost = async (req, res) => {
 
       if (notifications.length) {
         await Notification.insertMany(notifications);
-        // Optionally emit socket events here
       }
     }
 

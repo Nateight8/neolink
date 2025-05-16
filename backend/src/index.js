@@ -10,6 +10,7 @@ import postRouter from "./route/post.route.js";
 
 import cors from "cors";
 import notificationRoute from "./route/notifications.js";
+import pollRouter from "./route/poll.route.js";
 
 configDotenv();
 
@@ -39,6 +40,7 @@ app.use("/api/users", usersRoute);
 app.use("/api/chat", chatRoute);
 app.use("/api/posts", postRouter);
 app.use("/api/notifications", notificationRoute);
+app.use("/api/polls", pollRouter);
 
 app.listen(PORT, () => {
   console.log("Server is running on port PORT " + PORT);

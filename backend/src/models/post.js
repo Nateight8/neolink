@@ -1,3 +1,5 @@
+// Update to your existing Post model to support polls
+
 import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
@@ -17,6 +19,16 @@ const postSchema = new mongoose.Schema(
     },
     likedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     retweetedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    // New field to link a poll to a post
+    poll: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Poll",
+    },
+    // Flag to determine if the post is a poll post
+    hasPoll: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt
