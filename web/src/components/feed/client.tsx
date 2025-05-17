@@ -8,12 +8,9 @@ import { Button } from "@/components/ui/button";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 import {
-  Zap,
-  Sparkles,
-  Plus,
+  // Plus,
   ChevronUp,
   Cpu,
   Radio,
@@ -22,7 +19,7 @@ import {
   Siren,
 } from "lucide-react";
 import { FeedPost } from "./feed-post";
-import { StoryCircle } from "./story-circle";
+// import { StoryLives } from "./story-lives";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
 import { useQuery } from "@tanstack/react-query";
@@ -31,53 +28,6 @@ import { Post } from "@/types/chat";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { useAuthUser } from "@/hooks/use-auth";
-import { CreatePostDialog } from "@/app/(routes)/mobile/_components/create-post-modal";
-
-// Mock data for stories
-const STORIES = [
-  {
-    id: 1,
-    username: "CYBER_NOMAD",
-    avatar: "/placeholder.svg?height=50&width=50&text=CN",
-    viewed: false,
-  },
-  {
-    id: 2,
-    username: "NEON_HUNTER",
-    avatar: "/placeholder.svg?height=50&width=50&text=NH",
-    viewed: false,
-  },
-  {
-    id: 3,
-    username: "GHOST_WIRE",
-    avatar: "/placeholder.svg?height=50&width=50&text=GW",
-    viewed: true,
-  },
-  {
-    id: 4,
-    username: "DATA_WRAITH",
-    avatar: "/placeholder.svg?height=50&width=50&text=DW",
-    viewed: false,
-  },
-  {
-    id: 5,
-    username: "PIXEL_PUNK",
-    avatar: "/placeholder.svg?height=50&width=50&text=PP",
-    viewed: true,
-  },
-  {
-    id: 6,
-    username: "VOID_RUNNER",
-    avatar: "/placeholder.svg?height=50&width=50&text=VR",
-    viewed: false,
-  },
-  {
-    id: 7,
-    username: "CHROME_REBEL",
-    avatar: "/placeholder.svg?height=50&width=50&text=CR",
-    viewed: false,
-  },
-];
 
 // Mock data for trending topics
 const TRENDING = [
@@ -171,9 +121,9 @@ export default function FeedClient() {
   // Toggle AR post creation
 
   return (
-    <div className="min-h-screen  relative ">
+    <div className="min-h-screen  relative md:py-16 bg-gradient-to-b  from-black/40 to-gray-900/60">
       {/* Main container */}
-      <div className="relative z-10 flex flex-col bg-gradient-to-b from-black/40 to-gray-900/60">
+      <div className="relative z-10 flex flex-col  ">
         {/* Main content */}
         <main className="flex-1 container max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left sidebar - Desktop only */}
@@ -195,7 +145,7 @@ export default function FeedClient() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold text-white">JANE_D0E</h3>
+                    <h3 className="font-bold text-white">{user?.fullName}</h3>
                     <p className="text-xs text-cyan-400 font-mono">
                       @{user?.handle}
                     </p>
@@ -204,15 +154,15 @@ export default function FeedClient() {
 
                 <div className="grid grid-cols-3 gap-2 text-center mb-4">
                   <div>
-                    <p className="text-lg font-bold text-cyan-400">248</p>
+                    <p className="text-lg font-bold text-cyan-400">0</p>
                     <p className="text-xs text-gray-400">POSTS</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-fuchsia-400">12.4K</p>
+                    <p className="text-lg font-bold text-fuchsia-400">0</p>
                     <p className="text-xs text-gray-400">ALLIES</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-cyan-400">342</p>
+                    <p className="text-lg font-bold text-cyan-400">0</p>
                     <p className="text-xs text-gray-400">POWER</p>
                   </div>
                 </div>
@@ -274,28 +224,21 @@ export default function FeedClient() {
               className="w-full mb-4"
               onValueChange={setActiveTab}
             >
-              <TabsList className="w-full grid grid-cols-2 rounded-sm bg-black border border-cyan-900">
+              <TabsList className="w-full md:w-fit grid grid-cols-2 rounded-sm bg-black border border-cyan-900">
                 <TabsTrigger
                   value="for-you"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
+                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300 px-4 md:px-6 text-sm md:text-base"
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
                   FOR_YOU.SYS
                 </TabsTrigger>
                 <TabsTrigger
                   value="following"
-                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
+                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300 px-4 md:px-6 text-sm md:text-base"
                 >
-                  <Zap className="h-4 w-4 mr-2" />
                   FOLLOWING.SYS
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-
-            {/* New post input */}
-            {/* <PostInput /> */}
-
-            <CreatePostDialog />
 
             {/* Posts */}
             {isLoading ? (
@@ -306,7 +249,7 @@ export default function FeedClient() {
               <div className="space-y-6 overflow-x-auto pb-2">
                 <div className="flex space-x-4">
                   {/* Add story button */}
-                  <div className="flex flex-col items-center space-y-2">
+                  {/* <div className="flex flex-col items-center space-y-2">
                     <div className="relative">
                       <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 opacity-75 blur-sm"></div>
                       <button className="relative h-16 w-16 rounded-full bg-black border-2 border-cyan-500 flex items-center justify-center">
@@ -314,24 +257,18 @@ export default function FeedClient() {
                       </button>
                     </div>
                     <span className="text-xs text-gray-400 font-mono">ADD</span>
-                  </div>
+                  </div> */}
 
-                  {/* Story circles */}
-                  {STORIES.map((story) => (
-                    <StoryCircle
-                      key={story.id}
-                      username={story.username}
-                      avatar={story.avatar}
-                      viewed={story.viewed}
-                    />
-                  ))}
+                  {/* Story lives */}
+
+                  {/* <StoryLives sessions={LIVE_SESSIONS} /> */}
                 </div>
               </div>
             )}
 
             {/* Feed posts */}
             {/* <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}> */}
-            <div className="space-y-6 pr-4">
+            <div className="space-y-6 ">
               <AnimatePresence initial={false}>
                 {posts?.map((post) => (
                   <motion.div
@@ -341,13 +278,7 @@ export default function FeedClient() {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <FeedPost
-                      post={post}
-                      // onLike={() => handleLike(post.id)}
-                      // onBookmark={() => handleBookmark(post.id)}
-                      // onReshare={() => handleReshare(post.id)}
-                      glitchEffect={glitchEffect}
-                    />
+                    <FeedPost post={post} glitchEffect={glitchEffect} />
                   </motion.div>
                 ))}
               </AnimatePresence>
