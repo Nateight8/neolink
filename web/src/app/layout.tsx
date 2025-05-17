@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import Background from "@/components/background";
 import AppNavbar from "@/components/navigation/app-navbar";
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
+import { FloatingDock } from "@/components/navigation/floating-dock";
+import { Home, Search, Bell, MessageSquare } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -31,6 +33,11 @@ export default function RootLayout({
               <Background />
               <AppNavbar />
               {children}
+              <FloatingDock
+                items={navItems}
+                desktopClassName="fixed bottom-6 right-6 z-50"
+                mobileClassName="fixed bottom-6 right-6 z-50"
+              />
             </main>
           </QueryClientProviderWrapper>
         </ThemeProvider>
@@ -38,3 +45,22 @@ export default function RootLayout({
     </html>
   );
 }
+
+const navItems = [
+  { title: "HOME", icon: <Home className="w-full h-full" />, href: "/" },
+  {
+    title: "SEARCH",
+    icon: <Search className="w-full h-full" />,
+    href: "/search",
+  },
+  {
+    title: "ALERTS",
+    icon: <Bell className="w-full h-full" />,
+    href: "/alerts",
+  },
+  {
+    title: "MESSAGES",
+    icon: <MessageSquare className="w-full h-full" />,
+    href: "/echo-net",
+  },
+];
