@@ -26,18 +26,20 @@ export async function signupControler(req, res) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create and save user
+    // Create and save user without username (it will be set during onboarding)
     const newUser = await User.create({
       fullName,
       email,
       password,
+      username: null, // Explicitly set to null
+      isOnboarder: false, // User needs to complete onboarding
     });
 
     // Upsert user in Stream - make sure to pass the user ID as a string
     await upsertStreamUser({
-      id: newUser._id.toString(), // This is the key part - ensure ID is properly stringified
+      id: newUser._id.toString(),
       name: newUser.fullName,
-      image: "https://example.com/default-avatar.png", // Replace with real default avatar if needed
+      image: "https://example.com/default-avatar.png",
     });
 
     // Generate token
@@ -46,7 +48,8 @@ export async function signupControler(req, res) {
     });
 
     // Set cookie
-    res.cookie("jwt", token, {
+    res.cookie("token", token, {
+      // Changed from 'jwt' to 'token' to match frontend
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -56,6 +59,11 @@ export async function signupControler(req, res) {
     return res.status(201).json({ success: true, user: newUser, token });
   } catch (error) {
     console.error("Error in signup controller:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "A user with this email or username already exists",
+      });
+    }
     return res.status(500).json({ message: "Internal server error" });
   }
 }
