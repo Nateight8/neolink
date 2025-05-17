@@ -26,6 +26,7 @@ import { axiosInstance } from "@/lib/axios-instance";
 import { CommentThreadModal } from "./comment-thread";
 import { getCompactRelativeTime } from "@/lib/relative-time";
 import { FormattedContent } from "../shared/formatted-content";
+import { FeedPoll } from "./feed-poll";
 
 interface FeedPostProps {
   post: Post;
@@ -69,6 +70,9 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
   };
 
   const updatedAt = getCompactRelativeTime(post.updatedAt);
+  // const postHasPoll = post
+
+  console.log("POST FROM FEED", post);
 
   return (
     <>
@@ -130,6 +134,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
               />
             </div>
           )}
+          {post.hasPoll && <FeedPoll poll={post.poll} />}
         </div>
 
         {/* Post actions */}

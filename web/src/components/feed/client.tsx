@@ -28,9 +28,10 @@ import { CyberPanel } from "./cyber-pannel";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { Post } from "@/types/chat";
-import PostInput from "./post-input";
+
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { useAuthUser } from "@/hooks/use-auth";
+import { CreatePostDialog } from "@/app/(routes)/mobile/_components/create-post-modal";
 
 // Mock data for stories
 const STORIES = [
@@ -292,7 +293,9 @@ export default function FeedClient() {
             </Tabs>
 
             {/* New post input */}
-            <PostInput />
+            {/* <PostInput /> */}
+
+            <CreatePostDialog />
 
             {/* Posts */}
             {isLoading ? (
@@ -327,29 +330,29 @@ export default function FeedClient() {
             )}
 
             {/* Feed posts */}
-            <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}>
-              <div className="space-y-6 pr-4">
-                <AnimatePresence initial={false}>
-                  {posts?.map((post) => (
-                    <motion.div
-                      key={post._id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <FeedPost
-                        post={post}
-                        // onLike={() => handleLike(post.id)}
-                        // onBookmark={() => handleBookmark(post.id)}
-                        // onReshare={() => handleReshare(post.id)}
-                        glitchEffect={glitchEffect}
-                      />
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </div>
-            </ScrollArea>
+            {/* <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}> */}
+            <div className="space-y-6 pr-4">
+              <AnimatePresence initial={false}>
+                {posts?.map((post) => (
+                  <motion.div
+                    key={post._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <FeedPost
+                      post={post}
+                      // onLike={() => handleLike(post.id)}
+                      // onBookmark={() => handleBookmark(post.id)}
+                      // onReshare={() => handleReshare(post.id)}
+                      glitchEffect={glitchEffect}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+            {/* </ScrollArea> */}
 
             {/* Scroll to top button */}
             <AnimatePresence>

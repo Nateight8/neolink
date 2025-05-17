@@ -62,7 +62,6 @@ interface SearchUser {
   specialization?: string;
 }
 
-
 export default function PostInput({ onSubmit }: PostInputProps) {
   const [isARPostEnabled, setIsARPostEnabled] = useState(false);
   const [arModel, setArModel] = useState<File | null>(null);
@@ -83,21 +82,25 @@ export default function PostInput({ onSubmit }: PostInputProps) {
       if (!mentionState.searchTerm || mentionState.searchTerm.length < 3) {
         return [];
       }
-      const response = await axiosInstance.get(`/users/search?q=${mentionState.searchTerm}`);
+      const response = await axiosInstance.get(
+        `/users/search?q=${mentionState.searchTerm}`
+      );
       return response.data.map((user: SearchUser) => ({
         id: user._id,
         username: user.username,
         name: user.name || user.username,
-        avatar: user.avatar || `/placeholder.svg?height=40&width=40&text=${user.username[0]}`,
-        specialization: user.specialization || "User"
+        avatar:
+          user.avatar ||
+          `/placeholder.svg?height=40&width=40&text=${user.username[0]}`,
+        specialization: user.specialization || "User",
       }));
     },
     enabled: mentionState.isActive && mentionState.searchTerm.length >= 3,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
-  const isSearching = mentionState.isActive && 
-    (mentionState.searchTerm.length < 3 || isLoading);
+  const isSearching =
+    mentionState.isActive && (mentionState.searchTerm.length < 3 || isLoading);
 
   const filteredAllies = searchResults || [];
 
@@ -150,13 +153,13 @@ export default function PostInput({ onSubmit }: PostInputProps) {
           // Reset form and clear content
           form.reset({
             ...defaultValues,
-            postContent: ""
+            postContent: "",
           });
-          
+
           // Reset other states
           setIsARPostEnabled(false);
           setArModel(null);
-          
+
           // Clear textarea
           if (textareaRef.current) {
             textareaRef.current.value = "";

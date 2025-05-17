@@ -41,14 +41,30 @@ export interface Chat {
   lastMessage?: Message;
 }
 
+export interface PollOption {
+  _id: string;
+  text: string;
+  votes: string[];
+}
+
+export interface Poll {
+  _id: string;
+  question: string;
+  options: PollOption[];
+  expiresAt: string;
+  visibility: "public" | "private";
+  totalVotes: number;
+}
+
 export interface Post {
   _id: string;
   content: string;
   image: string | null;
   author: User;
-  likedBy: string[]; // array of user IDs who liked the post
-  retweetedBy: string[]; // array of user IDs who retweeted the post
-  createdAt: string; // ISO date string
+  likedBy: string[];
+  retweetedBy: string[];
+  hasPoll: boolean;
+  createdAt: string;
   updatedAt: string;
-  __v: number;
+  poll?: Poll;
 }

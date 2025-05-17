@@ -17,12 +17,17 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["like", "comment", "follow", "mention"], // Example types
+      enum: ["like", "comment", "follow", "mention", "poll_vote"], // Added poll_vote
     },
     postId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",
       default: null, // If the notification is related to a post
+    },
+    pollId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Poll",
+      default: null, // If the notification is related to a poll
     },
     requestId: {
       type: mongoose.Schema.Types.ObjectId,

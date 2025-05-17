@@ -1,56 +1,125 @@
 import Post from "../models/post.js";
 import Notification from "../models/notifications.js";
 import User from "../models/User.js";
+import Poll from "../models/poll.model.js";
+import mongoose from "mongoose";
 
 export const createPost = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const { content, image, pollOptions, pollExpiresAt } = req.body;
+    // Handle both old and new payload formats
+    const { content, image, poll, pollOptions, pollExpiresAt } = req.body;
     const authorId = req.user._id;
 
-    if (!content && !image && (!pollOptions || pollOptions.length === 0)) {
+    // Validate that we have either content, image, or poll data
+    if (
+      !content &&
+      !image &&
+      !poll &&
+      (!pollOptions || pollOptions.length === 0)
+    ) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ message: "Post cannot be empty." });
     }
 
-    const formattedPollOptions = pollOptions?.length
-      ? pollOptions.map((option) => ({ option, votes: [] }))
-      : [];
+    // Create the post first
+    const post = await Post.create(
+      [
+        {
+          content,
+          image: image || null,
+          author: authorId,
+          hasPoll: !!(poll || pollOptions), // Set hasPoll flag if poll data exists
+        },
+      ],
+      { session }
+    );
 
-    const post = await Post.create({
-      content,
-      image: image || null,
-      author: authorId,
-      pollOptions: formattedPollOptions,
-      pollExpiresAt: pollExpiresAt ? new Date(pollExpiresAt) : null,
-    });
+    // Handle poll creation - support both formats
+    if (poll || pollOptions) {
+      // Format options based on which format was used
+      const formattedOptions = (poll?.options || pollOptions).map((option) => ({
+        text: option,
+        votes: [],
+      }));
 
-    // Handle mentions (same as before)
-    const mentionPattern = /@([a-zA-Z0-9_]+)/g;
-    const mentions = [...content.matchAll(mentionPattern)].map((m) => m[1]);
-
-    if (mentions.length > 0) {
-      const mentionedUsers = await User.find({
-        $or: [
-          { username: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
-          { handle: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
+      // Create the poll
+      const newPoll = await Poll.create(
+        [
+          {
+            question: poll?.question || content, // Use poll question or post content
+            options: formattedOptions,
+            creator: authorId,
+            post: post[0]._id, // Link to the post
+            visibility: poll?.visibility || "public",
+            showResultsBeforeVoting: poll?.showResultsBeforeVoting || false,
+            anonymousVoting: poll?.anonymousVoting || false,
+            allowMultipleVotes: poll?.allowMultipleVotes || false,
+            expiresAt:
+              poll?.expiresAt || pollExpiresAt
+                ? new Date(poll?.expiresAt || pollExpiresAt)
+                : undefined,
+          },
         ],
-      });
+        { session }
+      );
 
-      const notifications = mentionedUsers
-        .filter((user) => String(user._id) !== String(authorId))
-        .map((user) => ({
-          userId: user._id,
-          fromUserId: authorId,
-          type: "mention",
-          postId: post._id,
-        }));
+      // Update the post with the poll reference
+      post[0].poll = newPoll[0]._id;
+      await post[0].save({ session });
+    }
 
-      if (notifications.length) {
-        await Notification.insertMany(notifications);
+    // Handle mentions
+    if (content) {
+      const mentionPattern = /@([a-zA-Z0-9_]+)/g;
+      const mentions = [...content.matchAll(mentionPattern)].map((m) => m[1]);
+
+      if (mentions.length > 0) {
+        const mentionedUsers = await User.find({
+          $or: [
+            {
+              username: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) },
+            },
+            { handle: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
+          ],
+        }).session(session);
+
+        const notifications = mentionedUsers
+          .filter((user) => String(user._id) !== String(authorId))
+          .map((user) => ({
+            userId: user._id,
+            fromUserId: authorId,
+            type: "mention",
+            postId: post[0]._id,
+          }));
+
+        if (notifications.length) {
+          await Notification.insertMany(notifications, { session });
+        }
       }
     }
 
-    res.status(201).json(post);
+    // Commit the transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    // Return the complete post with poll data
+    const completePost = await Post.findById(post[0]._id)
+      .populate("author", "username fullName handle")
+      .populate({
+        path: "poll",
+        select: "question options visibility expiresAt totalVotes",
+      });
+
+    res.status(201).json(completePost);
   } catch (err) {
+    // If anything fails, abort the transaction
+    await session.abortTransaction();
+    session.endSession();
+
     console.error("Post creation error:", err);
     res.status(500).json({ message: err.message });
   }
@@ -61,6 +130,14 @@ export const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
       .populate("author", "username name avatar verified")
+      .populate({
+        path: "poll",
+        select: "question options visibility expiresAt totalVotes",
+        populate: {
+          path: "options",
+          select: "_id text votes",
+        },
+      })
       .sort({ createdAt: -1 });
 
     res.json(posts);
