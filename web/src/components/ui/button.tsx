@@ -57,3 +57,22 @@ function Button({
 }
 
 export { Button, buttonVariants };
+
+{
+  /* <Button
+          variant="outline"
+          className="relative  group border-cyan-500/50 bg-[#121620] text-cyan-400 hover:bg-[#1a1e2e] hover:text-cyan-300"
+          style={{ clipPath }}
+        >
+          <div className="absolute  inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
+          <div
+            className="absolute inset-0  bg-[radial-gradient(#3dd1c4_1px,transparent_1px)] opacity-10 mix-blend-overlay"
+            style={{ backgroundSize: "16px 16px" }}
+          ></div>
+          <div className="relative z-10 flex items-center">
+            <Send className="mr-2 h-4 w-4" />
+            Create Post
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent transform translate-y-0 group-hover:opacity-100 transition-all duration-300"></div>
+        </Button> */
+}

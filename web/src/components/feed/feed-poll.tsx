@@ -4,7 +4,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Poll } from "@/types/chat";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
@@ -26,6 +26,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
   const [isVotingAllowed, setIsVotingAllowed] = useState<boolean>(true);
   const [glitchIndex, setGlitchIndex] = useState<number>(-1);
   const [userVote, setUserVote] = useState<string | null>(null); // Track user's vote
+  const [winningOptionIndex, setWinningOptionIndex] = useState<number>(-1);
 
   // Check if user has already voted
   useEffect(() => {
@@ -74,10 +75,8 @@ export function FeedPoll({ poll }: FeedPollProps) {
     voteMutate(optionId);
   };
 
-  // Find winning option
-  const getWinningOptionIndex = () => {
-    if (!poll?.options.length || userVote === null) return -1; // Don't show winner until voted
-
+  const getWinningOptionIndex = useCallback(() => {
+    if (!poll?.options) return -1;
     let maxVotes = -1;
     let winningIndex = -1;
     let isTie = false;
@@ -94,7 +93,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
     });
 
     return isTie || maxVotes === 0 ? -1 : winningIndex;
-  };
+  }, [poll?.options]);
 
   // Glitch effect for winning option
   useEffect(() => {
@@ -110,6 +109,13 @@ export function FeedPoll({ poll }: FeedPollProps) {
     }
   }, [userVote, poll?.options]);
 
+  useEffect(() => {
+    if (poll) {
+      const winningIndex = getWinningOptionIndex();
+      setWinningOptionIndex(winningIndex);
+    }
+  }, [poll, getWinningOptionIndex]);
+
   return (
     <div className={cn("w-full mt-4")}>
       {/* Poll options */}
@@ -122,7 +128,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
                 : 0;
             const isSelected = userVote === option._id;
             const isHovered = hoveredOption === option._id;
-            const isWinning = getWinningOptionIndex() === index;
+            const isWinning = winningOptionIndex === index;
             const isGlitching = glitchIndex === index;
 
             return (
@@ -148,7 +154,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
                 {/* Border for selected option */}
                 {isSelected && !isWinning && (
                   <div
-                    className="absolute -inset-[1px] bg-cyan-500"
+                    className="absolute -inset-[1px] bg-cyan-900"
                     style={{ clipPath }}
                   />
                 )}
@@ -185,7 +191,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
                     className={cn(
                       "absolute inset-[1px]",
                       isSelected
-                        ? "bg-gradient-to-br from-[#0a1a20] to-[#0f2a30]"
+                        ? "bg-gradient-to-br from-[#0a1a20] to-[#0a1a20]"
                         : isWinning && userVote !== null
                         ? "bg-gradient-to-br from-[#1a0a20] to-[#2a0f30]"
                         : isHovered && userVote === null && isVotingAllowed
@@ -230,14 +236,14 @@ export function FeedPoll({ poll }: FeedPollProps) {
                     <div className="flex items-center">
                       {isSelected && (
                         <div className="bg-cyan-500 rounded-full p-0.5 mr-2">
-                          <Check className="h-3 w-3 text-black" />
+                          <Check className="h-3 w-3 text-cyan-100" />
                         </div>
                       )}
                       <span
                         className={cn(
                           "text-base font-medium",
                           isSelected
-                            ? "text-cyan-400 font-medium"
+                            ? "text-cyan-500 font-medium"
                             : isWinning
                             ? "text-cyan-500"
                             : "text-white"

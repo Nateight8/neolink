@@ -271,7 +271,6 @@ const ACTIVE_CONVERSATION_MESSAGES: MockMessage[] = [
 ];
 
 export default function MessagesPage() {
-
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState(CONVERSATIONS);
@@ -538,7 +537,7 @@ export default function MessagesPage() {
               <ScrollArea className="flex-1">
                 <ConversationList
                   conversations={filteredConversations}
-                  activeConversationId={activeConversation}
+                  activeConversation={activeConversation}
                   onSelectConversation={handleSelectConversation}
                 />
               </ScrollArea>

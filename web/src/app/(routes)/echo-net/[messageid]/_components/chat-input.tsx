@@ -13,23 +13,12 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 export default function ChatInput() {
-  //   const [neuralLinkActive, setNeuralLinkActive] = useState(false);
-  //   const [neuralLinkStrength, setNeuralLinkStrength] = useState(0.5);
   const [newMessage, setNewMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]); //<===move to parent component later
 
   // Message handling
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
-
-    const newMessageObj: Message = {
-      id: `msg_${Date.now()}`,
-      content: newMessage,
-      sender: "current_user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prevMessages) => [...prevMessages, newMessageObj]);
+    // TODO: Implement message sending logic
     setNewMessage("");
   };
 
@@ -40,11 +29,6 @@ export default function ChatInput() {
           <div className="relative flex-1">
             <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-[1px] -z-10"></div>
             <Input
-              //   placeholder={
-              //     neuralLinkActive
-              //       ? "TRANSMIT_NEURAL_MESSAGE..."
-              //       : "NEURAL_LINK_INACTIVE. TEXT_ONLY_MODE."
-              //   }
               placeholder="TRANSMIT_NEURAL_MESSAGE..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -84,7 +68,6 @@ export default function ChatInput() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    // disabled={!neuralLinkActive}
                     className="h-10 w-10 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 disabled:text-gray-700 disabled:hover:bg-transparent"
                   >
                     <Cube className="h-5 w-5" />
@@ -103,7 +86,6 @@ export default function ChatInput() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    // disabled={!neuralLinkActive}
                     className="h-10 w-10 rounded-sm text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30 disabled:text-gray-700 disabled:hover:bg-transparent"
                   >
                     <Sparkles className="h-5 w-5" />

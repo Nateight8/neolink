@@ -273,7 +273,9 @@ export default function AlertsPage() {
                 <Bell className="h-5 w-5 text-cyan-400" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">NEURAL ALERTS</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-white">
+                  NEURAL ALERTS
+                </h1>
                 <p className="text-sm text-gray-400">
                   {unreadCount > 0
                     ? `${unreadCount} unread notifications`
@@ -283,34 +285,36 @@ export default function AlertsPage() {
             </div>
 
             {/* Neural link toggle */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleNeuralLink}
-                    className={`rounded-sm flex items-center space-x-2 ${
-                      neuralLinkActive
-                        ? "border-cyan-500 text-cyan-400 hover:bg-cyan-950/50 hover:text-cyan-300"
-                        : "border-gray-700 text-gray-500 hover:bg-gray-900 hover:text-gray-400"
-                    }`}
-                  >
-                    <Brain className="h-4 w-4" />
-                    <span>
-                      {neuralLinkActive ? "NEURAL ACTIVE" : "NEURAL INACTIVE"}
-                    </span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {neuralLinkActive
-                      ? "Deactivate Neural Link"
-                      : "Activate Neural Link"}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="hidden md:block">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleNeuralLink}
+                      className={`rounded-sm flex items-center space-x-2 ${
+                        neuralLinkActive
+                          ? "border-cyan-500 text-cyan-400 hover:bg-cyan-950/50 hover:text-cyan-300"
+                          : "border-gray-700 text-gray-500 hover:bg-gray-900 hover:text-gray-400"
+                      }`}
+                    >
+                      <Brain className="h-4 w-4" />
+                      <span>
+                        {neuralLinkActive ? "NEURAL ACTIVE" : "NEURAL INACTIVE"}
+                      </span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {neuralLinkActive
+                        ? "Deactivate Neural Link"
+                        : "Activate Neural Link"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
 
           {/* Neural link status */}

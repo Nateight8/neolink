@@ -12,24 +12,25 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
+import { Home, Search, Bell, MessageSquare, User, Plus } from "lucide-react";
 
 import { useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+
+import { Button } from "../ui/button";
+import { CreatePostDialog } from "@/components/navigation/create-post-modal";
 
 export const FloatingDock = ({
-  items,
   desktopClassName,
   mobileClassName,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
   desktopClassName?: string;
   mobileClassName?: string;
 }) => {
   return (
     <>
-      <FloatingDockDesktop items={items} className={desktopClassName} />
-      <FloatingDockMobile items={items} className={mobileClassName} />
+      <FloatingDockDesktop items={navItems} className={desktopClassName} />
+      <FloatingDockMobile items={navItems} className={mobileClassName} />
     </>
   );
 };
@@ -38,10 +39,16 @@ const FloatingDockMobile = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    action?: () => void;
+  }[];
   className?: string;
 }) => {
   const [open, setOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -56,6 +63,10 @@ const FloatingDockMobile = ({
 
   return (
     <div className={cn("relative block md:hidden", className)}>
+      <CreatePostDialog
+        open={isCreatePostOpen}
+        onOpenChange={setIsCreatePostOpen}
+      />
       <AnimatePresence>
         {open && (
           <motion.div
@@ -79,8 +90,8 @@ const FloatingDockMobile = ({
                 }}
                 transition={{ delay: (items.length - 1 - idx) * 0.05 }}
               >
-                <Link
-                  href={item.href}
+                <Button
+                  onClick={item.action}
                   key={item.title}
                   className={cn(
                     "relative flex h-14 w-14 items-center justify-center bg-[#121212] shadow-[0_0_10px_rgba(0,0,0,0.5)] group",
@@ -89,7 +100,6 @@ const FloatingDockMobile = ({
                       : "text-gray-400 hover:text-cyan-300"
                   )}
                   style={{
-                    // Apply beveled edge to outer element
                     clipPath,
                   }}
                 >
@@ -127,9 +137,48 @@ const FloatingDockMobile = ({
                     className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                     style={{ zIndex: 6 }}
                   />
-                </Link>
+                </Button>
               </motion.div>
             ))}
+            <motion.div>
+              <Button
+                onClick={() => setIsCreatePostOpen(true)}
+                className="relative flex h-14 w-14 items-center justify-center bg-[#121212] shadow-[0_0_10px_rgba(0,0,0,0.5)] group text-gray-400 hover:text-cyan-300"
+                style={{ clipPath }}
+              >
+                {/* Gradient border */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-fuchsia-500"
+                  style={{ clipPath }}
+                />
+
+                {/* Background with beveled edge */}
+                <div
+                  className="absolute inset-[1px] bg-[#121212]"
+                  style={{ clipPath }}
+                />
+
+                {/* Icon */}
+                <div className="h-6 w-6 relative z-10">
+                  <Plus className="w-full h-full" />
+                </div>
+
+                {/* Hover state background */}
+                <div
+                  className="absolute inset-[1px] bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    clipPath,
+                    zIndex: 5,
+                  }}
+                />
+
+                {/* Scan line effect */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ zIndex: 6 }}
+                />
+              </Button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -175,36 +224,59 @@ const FloatingDockDesktop = ({
   items,
   className,
 }: {
-  items: { title: string; icon: React.ReactNode; href: string }[];
+  items: {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    action?: () => void;
+  }[];
   className?: string;
 }) => {
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const mouseX = useMotionValue(Number.POSITIVE_INFINITY);
   const clipPath =
     "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))";
 
   return (
-    <motion.div
-      onMouseMove={(e) => mouseX.set(e.pageX)}
-      onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
-      className={cn(
-        "mx-auto hidden h-16 items-end gap-4 px-4 pb-3 md:flex relative bg-[#121212] ", //<==Clipping issue is the fixed hieght
-        className
-      )}
-      //   style={{ clipPath }}
-    >
-      {/* Gradient border */}
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-fuchsia-500"
-        style={{ clipPath }}
+    <>
+      <CreatePostDialog
+        open={isCreatePostOpen}
+        onOpenChange={setIsCreatePostOpen}
       />
+      <motion.div
+        onMouseMove={(e) => mouseX.set(e.pageX)}
+        onMouseLeave={() => mouseX.set(Number.POSITIVE_INFINITY)}
+        className={cn(
+          "mx-auto hidden h-16 items-end gap-4 px-4 pb-3 md:flex relative bg-[#121212] ",
+          className
+        )}
+      >
+        {/* Gradient border */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-fuchsia-500"
+          style={{ clipPath }}
+        />
 
-      {/* Background with beveled edge */}
-      <div className="absolute inset-[1px] bg-[#121212]" style={{ clipPath }} />
+        {/* Background with beveled edge */}
+        <div
+          className="absolute inset-[1px] bg-[#121212]"
+          style={{ clipPath }}
+        />
 
-      {items.map((item) => (
-        <IconContainer mouseX={mouseX} key={item.title} {...item} />
-      ))}
-    </motion.div>
+        <>
+          {items.map((item) => (
+            <IconContainer mouseX={mouseX} key={item.title} {...item} />
+          ))}
+          <IconContainer
+            mouseX={mouseX}
+            title="Post"
+            icon={<Plus className="w-full h-full" />}
+            href="#"
+            action={() => setIsCreatePostOpen(true)}
+          />
+        </>
+      </motion.div>
+    </>
   );
 };
 
@@ -213,11 +285,13 @@ function IconContainer({
   title,
   icon,
   href,
+  action,
 }: {
   mouseX: MotionValue;
   title: string;
   icon: React.ReactNode;
   href: string;
+  action?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -270,9 +344,18 @@ function IconContainer({
   });
 
   const [hovered, setHovered] = useState(false);
+  const router = useRouter();
+
+  const handleAction = () => {
+    if (action) {
+      action();
+    } else if (href) {
+      router.push(href);
+    }
+  };
 
   return (
-    <Link href={href}>
+    <button className="hover:cursor-pointer" onClick={handleAction}>
       <motion.div
         ref={ref}
         style={{ width, height, clipPath }}
@@ -352,6 +435,35 @@ function IconContainer({
           style={{ zIndex: -1 }}
         />
       </motion.div>
-    </Link>
+    </button>
   );
 }
+
+const navItems = [
+  {
+    title: "HOME",
+    icon: <Home className="w-full h-full" />,
+    href: "/",
+  },
+  {
+    title: "SEARCH",
+    icon: <Search className="w-full h-full" />,
+    href: "/search",
+    action: () => {},
+  },
+  {
+    title: "ALERTS",
+    icon: <Bell className="w-full h-full" />,
+    href: "/alerts",
+  },
+  {
+    title: "MESSAGES",
+    icon: <MessageSquare className="w-full h-full" />,
+    href: "/echo-net",
+  },
+  {
+    title: "PROFILE",
+    icon: <User className="w-full h-full" />,
+    href: "/biochip",
+  },
+];

@@ -28,13 +28,13 @@ interface Conversation {
 
 interface ConversationListProps {
   conversations: Conversation[];
-  activeConversationId: number | null;
+  activeConversation: number | null;
   onSelectConversation: (id: number) => void;
 }
 
 export function ConversationList({
   conversations,
-  activeConversationId,
+  activeConversation,
   onSelectConversation,
 }: ConversationListProps) {
   // Sort conversations: pinned first, then by unread count, then by time (assuming time is in descending order)
@@ -58,7 +58,7 @@ export function ConversationList({
             key={conversation.id}
             onClick={() => onSelectConversation(conversation.id)}
             className={`p-4 hover:bg-cyan-950/20 cursor-pointer transition-colors ${
-              activeConversationId === conversation.id
+              activeConversation === conversation.id
                 ? "bg-cyan-950/30 border-l-2 border-cyan-500"
                 : ""
             }`}

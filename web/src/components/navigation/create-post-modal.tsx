@@ -10,7 +10,6 @@ import {
   Plus,
   Clock,
   BarChart2,
-  Send,
   Settings,
   Users,
   Globe,
@@ -18,8 +17,6 @@ import {
   ImageIcon,
   Smile,
   CuboidIcon as Cube,
-  Bomb,
-  WormIcon as Virus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,7 +93,13 @@ interface PostData {
   image: File | null;
 }
 
-export function CreatePostDialog() {
+export function CreatePostDialog({
+  open,
+  onOpenChange,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+} = {}) {
   // Existing state
   const [isPollActive, setIsPollActive] = useState(false);
   const [showPollSettings, setShowPollSettings] = useState(false);
@@ -165,6 +167,12 @@ export function CreatePostDialog() {
       setPollOptions(["", ""]);
       setPollDuration(24);
       setPollVisibility("everyone");
+      setIsARPostEnabled(false);
+      setArModel(null);
+      // Close the dialog
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
     },
   });
 
@@ -391,25 +399,7 @@ export function CreatePostDialog() {
   const visibilityInfo = getVisibilityInfo();
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="relative overflow-hidden group border-cyan-500/50 bg-[#121620] text-cyan-400 hover:bg-[#1a1e2e] hover:text-cyan-300"
-          style={{ clipPath }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
-          <div
-            className="absolute inset-0 bg-[radial-gradient(#3dd1c4_1px,transparent_1px)] opacity-10 mix-blend-overlay"
-            style={{ backgroundSize: "16px 16px" }}
-          ></div>
-          <div className="relative z-10 flex items-center">
-            <Send className="mr-2 h-4 w-4" />
-            Create Post
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent transform translate-y-0 group-hover:opacity-100 transition-all duration-300"></div>
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="sm:max-w-[500px] border-cyan-900/50 bg-[#121620] p-0 overflow-hidden"
         style={{ clipPath }}
