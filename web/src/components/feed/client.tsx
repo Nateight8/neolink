@@ -9,22 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import {
-  // Plus,
-  ChevronUp,
-  Cpu,
-  Radio,
-  Shield,
-  Skull,
-  Siren,
-} from "lucide-react";
+import { ChevronUp, Cpu, Radio, Shield, Skull, Siren } from "lucide-react";
 import { FeedPost } from "./feed-post";
 // import { StoryLives } from "./story-lives";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
+import { ChessRoomsSidebar } from "./right-sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
-import { Post } from "@/types/chat";
+import type { Post } from "@/types/chat";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { useAuthUser } from "@/hooks/use-auth";
@@ -125,9 +118,9 @@ export default function FeedClient() {
       {/* Main container */}
       <div className="relative z-10 flex flex-col  ">
         {/* Main content */}
-        <main className="flex-1 container max-w-6xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <main className="flex-1 container max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left sidebar - Desktop only */}
-          <aside className="hidden md:block">
+          <aside className="hidden lg:block">
             <div className="sticky top-20 space-y-6">
               {/* User profile card */}
               <CyberPanel title="IDENTITY">
@@ -217,7 +210,7 @@ export default function FeedClient() {
           </aside>
 
           {/* Main feed */}
-          <div className="md:col-span-2">
+          <div className="lg:col-span-2">
             {/* Feed tabs */}
             <Tabs
               defaultValue="for-you"
@@ -306,6 +299,11 @@ export default function FeedClient() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Right sidebar - Chess Rooms */}
+          <aside className="hidden lg:block">
+            <ChessRoomsSidebar />
+          </aside>
         </main>
       </div>
     </div>

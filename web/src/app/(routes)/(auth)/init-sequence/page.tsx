@@ -116,11 +116,19 @@ export default function Home() {
       const response = await axiosInstance.post("/auth/signup", userData);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    onSuccess: async () => {
+      // Invalidate the auth user query to refetch the user data
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      // Wait a small amount of time to ensure the auth state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Then redirect
       form.reset();
       router.push("/");
     },
+    onError: (error: Error) => {
+      console.error("Signup error:", error);
+      // You can add error handling here, like showing a toast notification
+    }
   });
 
   // Form submission handler

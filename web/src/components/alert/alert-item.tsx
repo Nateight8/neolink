@@ -123,18 +123,29 @@ export function AlertItem({
 
   console.log("ALERTS", alert.requestId);
 
+  const [requestStatus, setRequestStatus] = useState<'idle' | 'accepting' | 'rejecting' | 'accepted' | 'rejected'>('idle');
+
   const { mutate: respondToRequest } = useMutation({
     mutationFn: async (action: "accept" | "reject") => {
       return await axiosInstance.patch(
-        `/users/friend-request/${alert.requestId}/respond`,
-        {
-          action,
-        }
+        `/friend-request/${alert.requestId}/respond`,
+        { action }
       );
     },
+    onSuccess: (_, action) => {
+      setRequestStatus(action === 'accept' ? 'accepted' : 'rejected');
+      // Optionally, you can trigger a refresh of notifications
+      // or update the parent component's state here
+    },
+    onError: (error) => {
+      console.error('Error responding to friend request:', error);
+      setRequestStatus('idle');
+      // Optionally show an error toast/message
+    }
   });
 
-  const handleFriendRequestRespons = (action: "accept" | "reject") => {
+  const handleFriendRequestResponse = (action: "accept" | "reject") => {
+    setRequestStatus(action === 'accept' ? 'accepting' : 'rejecting');
     respondToRequest(action);
   };
 
@@ -303,49 +314,64 @@ export function AlertItem({
       <div className="flex justify-end mt-3 space-x-2">
         {alert.type === "follow" ? (
           // Friend request actions
-          <div className="flex gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      // Accept friend request
-                      handleFriendRequestRespons("accept");
-                    }}
-                    className="h-8 w-8 p-0 rounded-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30"
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Accept Request</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          <div className="flex gap-2 items-center">
+            {requestStatus === 'accepted' ? (
+              <div className="text-emerald-400 text-sm font-mono flex items-center">
+                <Check className="h-4 w-4 mr-1" /> ALLIES
+              </div>
+            ) : requestStatus === 'rejected' ? (
+              <div className="text-red-400 text-sm font-mono">
+                REJECTED
+              </div>
+            ) : (
+              <>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleFriendRequestResponse("accept")}
+                        disabled={requestStatus !== 'idle'}
+                        className="h-8 w-8 p-0 rounded-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 disabled:opacity-50"
+                      >
+                        {requestStatus === 'accepting' ? (
+                          <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Accept Request</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      // Reject friend request
-                      handleFriendRequestRespons("reject");
-                      console.log("Reject friend request:", alert.user._id);
-                    }}
-                    className="h-8 w-8 p-0 rounded-sm text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Reject Request</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleFriendRequestResponse("reject")}
+                        disabled={requestStatus !== 'idle'}
+                        className="h-8 w-8 p-0 rounded-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+                      >
+                        {requestStatus === 'rejecting' ? (
+                          <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Reject Request</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
+            )}
           </div>
         ) : (
           // Default actions for other notification types

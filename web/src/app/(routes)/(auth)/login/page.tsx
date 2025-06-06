@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -41,6 +41,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get("redirect") || "/";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,23 +61,48 @@ export default function LoginPage() {
 
   const { mutate: logInmutation } = useMutation({
     mutationFn: async (loginData: { email: string; password: string }) => {
-      await axiosInstance.post("/auth/login", loginData);
+      return await axiosInstance.post("/auth/login", loginData);
     },
+    onSuccess: async () => {
+      // Invalidate the auth user query to refetch the user data
+      await queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      // Wait a small amount of time to ensure the auth state is updated
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Then redirect to the original requested path
+      router.push(redirectPath);
+    },
+    onError: (error: {
+      response?: { data?: { message?: string } };
+      message?: string;
+    }) => {
+      console.error("Login error:", error);
+      setIsLoading(false);
 
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      router.push("/"); // Redirect to home page on successful login
+      // Extract error message from the API response or use a default message
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "An error occurred during login. Please try again.";
 
-      // Navigate to profile page on successful login
+      form.setError("root", {
+        type: "manual",
+        message: errorMessage,
+      });
     },
   });
 
   // Form submission handler
   async function onSubmit(values: LoginFormValues) {
-    setIsLoading(true);
-    const loginData = { email: values.email, password: values.password };
-    logInmutation(loginData);
-    // Navigate to profile page on successful login
+    try {
+      setIsLoading(true);
+      // Clear any previous errors
+      form.clearErrors("root");
+      const loginData = { email: values.email, password: values.password };
+      await logInmutation(loginData);
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error("Login error:", error);
+    }
   }
 
   // Check if the user is already authenticated
@@ -128,6 +155,12 @@ export default function LoginPage() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
               >
+                {form.formState.errors.root && (
+                  <div className="p-3 bg-red-900/30 border border-red-700 rounded-sm text-red-400 text-sm font-mono flex items-center">
+                    <Terminal className="h-3 w-3 mr-2 flex-shrink-0" />
+                    <span>{form.formState.errors.root.message}</span>
+                  </div>
+                )}
                 {/* Email field */}
                 <FormField
                   control={form.control}
