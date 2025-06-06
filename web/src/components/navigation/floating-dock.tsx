@@ -15,7 +15,8 @@ import {
 import { Home, Search, Bell, MessageSquare, User, Plus } from "lucide-react";
 
 import { useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useDoorTransition } from "@/hooks/use-page-transition";
 
 import { Button } from "../ui/button";
 import { CreatePostDialog } from "@/components/navigation/create-post-modal";
@@ -50,9 +51,16 @@ const FloatingDockMobile = ({
   const [open, setOpen] = useState(false);
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const pathname = usePathname();
+  const { navigateWithTransition, isTransitioning } = useDoorTransition();
 
   const isActive = (href: string) => {
     return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  };
+
+  const handleNavigation = (href: string) => {
+    if (!isTransitioning) {
+      navigateWithTransition(href);
+    }
   };
 
   // Beveled edge clip path
@@ -91,14 +99,16 @@ const FloatingDockMobile = ({
                 transition={{ delay: (items.length - 1 - idx) * 0.05 }}
               >
                 <Button
-                  onClick={item.action}
+                  onClick={() => item.href && handleNavigation(item.href)}
                   key={item.title}
                   className={cn(
                     "relative flex h-14 w-14 items-center justify-center bg-[#121212] shadow-[0_0_10px_rgba(0,0,0,0.5)] group",
                     isActive(item.href)
                       ? "text-cyan-400"
-                      : "text-gray-400 hover:text-cyan-300"
+                      : "text-gray-400 hover:text-cyan-300",
+                    isTransitioning && "opacity-50 cursor-not-allowed"
                   )}
+                  disabled={isTransitioning}
                   style={{
                     clipPath,
                   }}
@@ -182,9 +192,13 @@ const FloatingDockMobile = ({
           </motion.div>
         )}
       </AnimatePresence>
-      <button
+      <Button
         onClick={() => setOpen(!open)}
-        className="relative flex h-14 w-14 items-center justify-center bg-[#121212] shadow-[0_0_15px_rgba(0,0,0,0.7)] group"
+        disabled={isTransitioning}
+        className={cn(
+          "relative flex h-14 w-14 items-center justify-center bg-[#121212] shadow-[0_0_15px_rgba(0,0,0,0.7)] group",
+          isTransitioning && "opacity-50 cursor-not-allowed"
+        )}
         style={{ clipPath: clipPathLarge }}
       >
         {/* Gradient border */}
@@ -215,7 +229,7 @@ const FloatingDockMobile = ({
           className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
           style={{ zIndex: 6 }}
         />
-      </button>
+      </Button>
     </div>
   );
 };
@@ -295,6 +309,7 @@ function IconContainer({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+  const { navigateWithTransition, isTransitioning } = useDoorTransition();
 
   const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
   const clipPath =
@@ -344,18 +359,23 @@ function IconContainer({
   });
 
   const [hovered, setHovered] = useState(false);
-  const router = useRouter();
 
   const handleAction = () => {
+    if (isTransitioning) return;
+    
     if (action) {
       action();
     } else if (href) {
-      router.push(href);
+      navigateWithTransition(href);
     }
   };
 
   return (
-    <button className="hover:cursor-pointer" onClick={handleAction}>
+    <motion.button
+      className={cn("hover:cursor-pointer", isTransitioning && "pointer-events-none")} 
+      onClick={handleAction}
+      disabled={isTransitioning}
+    >
       <motion.div
         ref={ref}
         style={{ width, height, clipPath }}
@@ -363,7 +383,8 @@ function IconContainer({
         onMouseLeave={() => setHovered(false)}
         className={cn(
           "relative flex items-center justify-center bg-[#121212] group",
-          isActive ? "text-cyan-400" : "text-gray-400 hover:text-gray-300"
+          isActive ? "text-cyan-400" : "text-gray-400 hover:text-gray-300",
+          isTransitioning && "opacity-50"
         )}
       >
         {/* Gradient border */}
@@ -435,7 +456,7 @@ function IconContainer({
           style={{ zIndex: -1 }}
         />
       </motion.div>
-    </button>
+    </motion.button>
   );
 }
 

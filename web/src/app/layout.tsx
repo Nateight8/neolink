@@ -6,6 +6,7 @@ import Background from "@/components/background";
 // import AppNavbar from "@/components/navigation/app-navbar";
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
 import { FloatingDock } from "@/components/navigation/floating-dock";
+import { TransitionProvider } from "@/components/providers/page-transition-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -27,16 +28,17 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryClientProviderWrapper>
-            <main className="relative ">
-              {/* Fixed Cyberpunk background with grid lines */}
-              <Background />
-              {/* <AppNavbar /> */}
-              {children}
-              <FloatingDock
-                desktopClassName="fixed bottom-6 right-6 z-50"
-                mobileClassName="fixed bottom-6 right-6 z-50"
-              />
-            </main>
+            <TransitionProvider>
+              <main className="relative ">
+                {/* Fixed Cyberpunk background with grid lines */}
+                <Background />
+                {children}
+                <FloatingDock
+                  desktopClassName="fixed bottom-6 right-6 z-50"
+                  mobileClassName="fixed bottom-6 right-6 z-50"
+                />
+              </main>
+            </TransitionProvider>
           </QueryClientProviderWrapper>
         </ThemeProvider>
       </body>
