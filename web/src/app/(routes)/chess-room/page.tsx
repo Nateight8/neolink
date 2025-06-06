@@ -1,5 +1,7 @@
 "use client";
 
+// import { ChessLobby } from "./_components/v2/lobby";
+
 import { ChessLobby } from "./_components/chess-lobby";
 
 export default function ChessLobbyDemo() {
@@ -63,4 +65,6 @@ export default function ChessLobbyDemo() {
       onRandomMatch={handleRandomMatch}
     />
   );
+
+  // return <ChessLobby />;
 }

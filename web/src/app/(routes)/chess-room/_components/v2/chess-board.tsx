@@ -5,19 +5,19 @@ import { Chessboard } from "react-chessboard";
 import { Chess } from "chess.js";
 import { motion } from "motion/react";
 
-interface CyberpunkChessboardProps {
+interface ChessBoardProps {
   playerColor?: "white" | "black";
   onMove?: (move: string) => void;
   gamePosition?: string;
   isPlayerTurn?: boolean;
 }
 
-export function CyberpunkChessboard({
+export function ChessBoard({
   playerColor = "white",
   onMove,
   gamePosition,
   isPlayerTurn = true,
-}: CyberpunkChessboardProps) {
+}: ChessBoardProps) {
   const [game, setGame] = useState(new Chess());
   const [moveFrom, setMoveFrom] = useState("");
   const [moveTo, setMoveTo] = useState<string | null>(null);
