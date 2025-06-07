@@ -1,10 +1,22 @@
 "use client";
 
-import { useState, useEffect, useMemo, type JSX } from "react";
-import { motion } from "motion/react";
-
+import { useState, useEffect, useMemo, useRef, type JSX } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
+
+type PiecePosition = {
+  x: number;
+  y: number;
+  piece: string;
+  square: string;
+};
+
+const squareToPosition = (square: string) => {
+  const file = square.charCodeAt(0) - 'a'.charCodeAt(0);
+  const rank = 8 - parseInt(square[1], 10);
+  return { x: file, y: rank };
+};
 import GameController from "./game-control";
 import Spectators from "./spectators";
 import ChessHeader from "./chess-header";
@@ -50,31 +62,62 @@ export function ChessGameClean({
   }, [matchType, botSettings]);
   const [game, setGame] = useState<Chess>(new Chess());
   const [gamePosition, setGamePosition] = useState<string>(game.fen());
-  const playerColor =
-    botSettings?.color === "black" ? ("black" as const) : ("white" as const);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [lastMove, setLastMove] = useState<{from: string, to: string} | null>(null);
+  const [animatedPiece, setAnimatedPiece] = useState<PiecePosition | null>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const playerColor = botSettings?.color === "black" ? "black" as const : "white" as const;
 
   // Make bot move if it's the bot's turn
   useEffect(() => {
-    if (matchType === "bot" && botSettings) {
-      const currentTurn = game.turn();
-      const isBotTurn =
-        (currentTurn === "w" && playerColor === "black") ||
-        (currentTurn === "b" && playerColor === "white");
+    const makeBotMove = async () => {
+      if (matchType === "bot" && botSettings && !isAnimating) {
+        const currentTurn = game.turn();
+        const isBotTurn =
+          (currentTurn === "w" && playerColor === "black") ||
+          (currentTurn === "b" && playerColor === "white");
 
-      if (isBotTurn && !game.isGameOver()) {
-        // Simple bot: make a random move
-        const possibleMoves = game.moves();
-        if (possibleMoves.length > 0) {
-          const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-          const move = possibleMoves[randomIndex];
-          const gameCopy = new Chess(game.fen());
-          gameCopy.move(move);
-          setGame(gameCopy);
-          setGamePosition(gameCopy.fen());
+        if (isBotTurn && !game.isGameOver()) {
+          const possibleMoves = game.moves();
+          if (possibleMoves.length > 0) {
+            const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+            const move = possibleMoves[randomIndex];
+            const gameCopy = new Chess(game.fen());
+            const moveDetails = gameCopy.move(move);
+            
+            if (moveDetails) {
+              // Set up animation
+              setLastMove({
+                from: moveDetails.from,
+                to: moveDetails.to
+              });
+              
+              // Get piece being moved for animation
+              const fromPos = squareToPosition(moveDetails.from);
+              setAnimatedPiece({
+                ...fromPos,
+                piece: moveDetails.piece + moveDetails.color,
+                square: moveDetails.from
+              });
+              
+              // Animate the move
+              setIsAnimating(true);
+              
+              // Update game state after animation
+              setTimeout(() => {
+                setGame(gameCopy);
+                setGamePosition(gameCopy.fen());
+                setAnimatedPiece(null);
+                setIsAnimating(false);
+              }, 300); // Match this with animation duration
+            }
+          }
         }
       }
-    }
-  }, [game, matchType, botSettings, playerColor]);
+    };
+    
+    makeBotMove();
+  }, [game, matchType, botSettings, playerColor, isAnimating]);
   // Parse time control string (e.g., "5+3" = 5 minutes + 3 second increment)
   const parseTimeControl = (timeControl: string) => {
     const [minutes, increment] = timeControl.split("+").map(Number);
@@ -165,6 +208,8 @@ export function ChessGameClean({
 
   // Apply increment when a move is made
   const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
+    if (isAnimating) return false;
+    
     const gameCopy = new Chess(game.fen());
     const { increment } = parseTimeControl(timeControl);
 
@@ -176,8 +221,21 @@ export function ChessGameClean({
       });
 
       if (move) {
+        // Set last move for animation
+        setLastMove({
+          from: sourceSquare,
+          to: targetSquare
+        });
+        
+        // Get piece being moved for animation
+        const fromPos = squareToPosition(sourceSquare);
+        setAnimatedPiece({
+          ...fromPos,
+          piece: move.piece + move.color,
+          square: sourceSquare
+        });
+        
         // Apply time increment to the current player's clock
-        // (since the turn has already changed after the move)
         const currentTurn = gameCopy.turn();
         if (increment > 0) {
           setGameTime((prev) => ({
@@ -186,16 +244,24 @@ export function ChessGameClean({
               prev[currentTurn === "w" ? "white" : "black"] + increment,
           }));
         }
-
-        setGame(gameCopy);
-        setGamePosition(gameCopy.fen());
-        setMoveHistory([...moveHistory, move.san]);
+        
+        // Animate the move
+        setIsAnimating(true);
+        
+        // Update game state after animation
+        setTimeout(() => {
+          setGame(gameCopy);
+          setGamePosition(gameCopy.fen());
+          setMoveHistory([...moveHistory, move.san]);
+          setAnimatedPiece(null);
+          setIsAnimating(false);
+        }, 300); // Match this with animation duration
+        
         return true;
       }
     } catch (error) {
       console.log("Invalid move:", error);
     }
-
     return false;
   };
 
@@ -426,7 +492,10 @@ export function ChessGameClean({
               />
 
               {/* Chess Board */}
-              <div className="w-full aspect-square max-w-[600px] relative">
+              <div 
+                ref={boardRef}
+                className="w-full aspect-square max-w-[600px] relative"
+              >
                 <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-sm -z-10" />
 
                 <Chessboard
@@ -445,6 +514,34 @@ export function ChessGameClean({
                     playerColor === ("black" as PlayerColor) ? "black" : "white"
                   }
                 />
+                
+                {/* Animated piece overlay */}
+                <AnimatePresence>
+                  {animatedPiece && lastMove && (
+                    <motion.div
+                      key={`${animatedPiece.square}-${lastMove.to}`}
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        transform: `translate(${animatedPiece.x * 12.5}%, ${animatedPiece.y * 12.5}%)`,
+                        width: '12.5%',
+                        height: '12.5%',
+                        zIndex: 10,
+                      }}
+                      animate={{
+                        x: `calc(${(squareToPosition(lastMove.to).x - animatedPiece.x) * 100}%)`,
+                        y: `calc(${(squareToPosition(lastMove.to).y - animatedPiece.y) * 100}%)`,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      <div className="w-full h-full flex items-center justify-center text-4xl md:text-5xl">
+                        {getUnicodePiece(animatedPiece.piece)}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Scan line animation overlay */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-sm">
