@@ -107,7 +107,7 @@ export function FeedPoll({ poll }: FeedPollProps) {
       }, 5000);
       return () => clearInterval(glitchInterval);
     }
-  }, [userVote, poll?.options]);
+  }, [userVote, poll?.options, getWinningOptionIndex]);
 
   useEffect(() => {
     if (poll) {

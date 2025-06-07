@@ -29,7 +29,7 @@ interface ChessGameCleanProps {
 }
 
 export function ChessGameClean({
-  matchType,
+  // matchType,
   onDisconnect,
 }: ChessGameCleanProps) {
   const [game, setGame] = useState<Chess>(new Chess());
@@ -59,8 +59,8 @@ export function ChessGameClean({
     },
   ]);
 
-  // Destructure players
-  const [whitePlayer, blackPlayer] = players;
+  // Get white player (first player in the array)
+  const whitePlayer = players[0];
 
   // Spectators
   const [spectators] = useState([
@@ -76,9 +76,9 @@ export function ChessGameClean({
     },
   ]);
 
-  const playerColor: PlayerColor = "white";
+  const playerColor = "white" as const;
   const isWhiteTurn = game.turn() === "w";
-  const currentPlayer = isWhiteTurn ? ("white" as const) : ("black" as const);
+  const currentPlayer: PlayerColor = isWhiteTurn ? "white" : "black";
 
   // Timer countdown effect
   useEffect(() => {
@@ -212,15 +212,11 @@ export function ChessGameClean({
     return pieces[piece] || "";
   }
 
-  // Helper function to check if it's the current player's turn
+  // Check if it's the current player's turn
   const isPlayersTurn = (): boolean => {
     const currentTurn = game.turn();
-
-    // Use a type guard to ensure type safety
-    const isWhiteTurn = () => playerColor === "white" && currentTurn === "w";
-    const isBlackTurn = () => playerColor === "black" && currentTurn === "b";
-
-    return isWhiteTurn() || isBlackTurn();
+    const currentPlayerColor = currentTurn === "w" ? "white" : "black";
+    return playerColor === currentPlayerColor;
   };
 
   const onSquareClick = (square: string) => {
@@ -333,10 +329,7 @@ export function ChessGameClean({
               onResign={handleResign}
               onDrawOffer={handleDrawOffer}
               isGameOver={game.isGameOver()}
-              isPlayerTurn={
-                (game.turn() === "w" && playerColor === "white") ||
-                (game.turn() === "b" && playerColor === "black")
-              }
+              isPlayerTurn={isPlayersTurn()}
             />
 
             {/* Center - Game Area */}
@@ -344,7 +337,9 @@ export function ChessGameClean({
               {/* Top Player (Black/Opponent) */}
               <Player
                 player={players[0]}
-                isCurrentPlayer={playerColor === "black" && !game.isGameOver()}
+                isCurrentPlayer={
+                  playerColor === ("black" as PlayerColor) && !game.isGameOver()
+                }
                 timeRemaining={gameTime.black}
                 capturedPieces={["♘", "♙", "♖", "♗", "♕", "♔"]} // TODO: Track captured pieces
                 color="black"
@@ -367,7 +362,9 @@ export function ChessGameClean({
                   customLightSquareStyle={{ backgroundColor: "#374151" }}
                   customSquareStyles={getCustomSquareStyles()}
                   customPieces={customPieces()}
-                  boardOrientation={playerColor === "black" ? "black" : "white"}
+                  boardOrientation={
+                    playerColor === ("black" as PlayerColor) ? "black" : "white"
+                  }
                 />
 
                 {/* Scan line animation overlay */}

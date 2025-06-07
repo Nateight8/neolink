@@ -1,10 +1,10 @@
 "use client";
 
-import { useTransition } from "@/components/providers/page-transition-provider";
+import { useTransition } from "@/components/provider/page-transition-provider";
 
 export function useDoorTransition() {
   const { isTransitioning, navigateWithTransition } = useTransition();
-  
+
   return {
     isTransitioning,
     navigateWithTransition,

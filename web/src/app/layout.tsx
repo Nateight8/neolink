@@ -6,7 +6,7 @@ import Background from "@/components/background";
 // import AppNavbar from "@/components/navigation/app-navbar";
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
 import { FloatingDock } from "@/components/navigation/floating-dock";
-import { TransitionProvider } from "@/components/providers/page-transition-provider";
+import { TransitionProvider } from "@/components/provider/page-transition-provider";
 
 export const metadata: Metadata = {
   title: "Create Next App",

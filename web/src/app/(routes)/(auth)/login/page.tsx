@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -41,8 +41,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/";
+  // const searchParams = useSearchParams();
+  // const redirectPath = searchParams.get("redirect") || "/";
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
       // Wait a small amount of time to ensure the auth state is updated
       await new Promise((resolve) => setTimeout(resolve, 100));
       // Then redirect to the original requested path
-      router.push(redirectPath);
+      router.push("/");
     },
     onError: (error: {
       response?: { data?: { message?: string } };
