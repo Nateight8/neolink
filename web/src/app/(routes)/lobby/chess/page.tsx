@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChessGameClean } from "./_components/chess-lobby";
-
+import { useTransition } from "@/components/provider/page-transition-provider";
 interface BotGameSettings {
   difficulty: number;
   timeControl: string;
@@ -17,7 +17,7 @@ export default function ChessGameCleanPage() {
     // Load bot settings from localStorage
     const loadBotSettings = () => {
       try {
-        const savedSettings = localStorage.getItem('botGameSettings');
+        const savedSettings = localStorage.getItem("botGameSettings");
         if (savedSettings) {
           const parsedSettings = JSON.parse(savedSettings) as BotGameSettings;
           setBotSettings(parsedSettings);
@@ -35,9 +35,15 @@ export default function ChessGameCleanPage() {
     loadBotSettings();
   }, []);
 
+  const { navigateWithTransition, isTransitioning } = useTransition();
+
   const handleDisconnect = () => {
-    console.log("Disconnecting from game...");
-    // Handle disconnect logic here
+    localStorage.removeItem("botGameSettings");
+    setBotSettings(null);
+
+    if (!isTransitioning) {
+      navigateWithTransition("/lobby");
+    }
   };
 
   if (isLoading) {
@@ -51,14 +57,13 @@ export default function ChessGameCleanPage() {
     );
   }
 
-
   // Determine if this is a bot game based on the presence of botSettings
-  const gameType = botSettings ? "bot" as const : "friend" as const;
-  
+  const gameType = botSettings ? ("bot" as const) : ("friend" as const);
+
   return (
-    <ChessGameClean 
+    <ChessGameClean
       matchType={gameType}
-      onDisconnect={handleDisconnect} 
+      onDisconnect={handleDisconnect}
       botSettings={botSettings}
     />
   );
