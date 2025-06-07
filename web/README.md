@@ -2,21 +2,62 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Option 1: Using Docker (Recommended)
+
+1. Build the Docker image:
+   ```bash
+   docker build -t neonlink-web .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run --env-file .env -p 3000:3000 neonlink-web
+   ```
+
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Option 2: Local Development
+
+If you prefer to run the development server directly:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Run the development server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Docker Support
+
+This project includes Docker support for containerized development and production deployments.
+
+### Building the Docker Image
+
+```bash
+docker build -t neonlink-web .
+```
+
+### Running the Container
+
+```bash
+docker run --env-file .env -p 3000:3000 neonlink-web
+```
+
+This will:
+- Use the environment variables from your local `.env` file
+- Map port 3000 from the container to your host machine
+- Start the Next.js application in production mode
+
+### Environment Variables
+
+Make sure your `.env` file includes all required environment variables, including:
+- `NEXT_PUBLIC_BASE_URL`
+- `STREAM_API_KEY`
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
