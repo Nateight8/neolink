@@ -23,21 +23,75 @@ type ChessMove = {
   // Add other properties from Move that you need
 };
 
+interface BotGameSettings {
+  difficulty: number;
+  timeControl: string;
+  color: "white" | "black" | "random";
+}
+
 interface ChessGameCleanProps {
-  matchType: "friend" | "random" | null;
+  matchType: "friend" | "random" | "bot" | null;
   onDisconnect: () => void;
+  botSettings?: BotGameSettings | null;
 }
 
 export function ChessGameClean({
-  // matchType,
+  matchType,
   onDisconnect,
+  botSettings = null,
 }: ChessGameCleanProps) {
+  // Log bot settings when they change
+  useEffect(() => {
+    if (matchType === "bot" && botSettings) {
+      console.log("Bot game started with settings:", botSettings);
+      // Here you would initialize the bot with the settings
+      // For example: initializeBot(botSettings);
+    }
+  }, [matchType, botSettings]);
   const [game, setGame] = useState<Chess>(new Chess());
   const [gamePosition, setGamePosition] = useState<string>(game.fen());
+  const playerColor =
+    botSettings?.color === "black" ? ("black" as const) : ("white" as const);
+
+  // Make bot move if it's the bot's turn
+  useEffect(() => {
+    if (matchType === "bot" && botSettings) {
+      const currentTurn = game.turn();
+      const isBotTurn =
+        (currentTurn === "w" && playerColor === "black") ||
+        (currentTurn === "b" && playerColor === "white");
+
+      if (isBotTurn && !game.isGameOver()) {
+        // Simple bot: make a random move
+        const possibleMoves = game.moves();
+        if (possibleMoves.length > 0) {
+          const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+          const move = possibleMoves[randomIndex];
+          const gameCopy = new Chess(game.fen());
+          gameCopy.move(move);
+          setGame(gameCopy);
+          setGamePosition(gameCopy.fen());
+        }
+      }
+    }
+  }, [game, matchType, botSettings, playerColor]);
+  // Parse time control string (e.g., "5+3" = 5 minutes + 3 second increment)
+  const parseTimeControl = (timeControl: string) => {
+    const [minutes, increment] = timeControl.split("+").map(Number);
+    return {
+      baseTime: (minutes || 10) * 60, // Default to 10 minutes if parsing fails
+      increment: increment || 0,
+    };
+  };
+
+  // Get time control from bot settings or use default (10+0)
+  const timeControl = botSettings?.timeControl || "10+0";
+  const { baseTime } = parseTimeControl(timeControl);
+
   const [gameTime, setGameTime] = useState<{ white: number; black: number }>({
-    white: 600,
-    black: 600,
-  }); // 10 minutes each
+    white: baseTime,
+    black: baseTime,
+  });
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
@@ -76,7 +130,6 @@ export function ChessGameClean({
     },
   ]);
 
-  const playerColor = "white" as const;
   const isWhiteTurn = game.turn() === "w";
   const currentPlayer: PlayerColor = isWhiteTurn ? "white" : "black";
 
@@ -84,21 +137,36 @@ export function ChessGameClean({
   useEffect(() => {
     if (!game.isGameOver()) {
       const timer = setInterval(() => {
-        setGameTime((prev) => ({
-          ...prev,
-          [isWhiteTurn ? "white" : "black"]: Math.max(
-            0,
-            prev[isWhiteTurn ? "white" : "black"] - 1
-          ),
-        }));
+        setGameTime((prev) => {
+          const newTime = {
+            ...prev,
+            [isWhiteTurn ? "white" : "black"]: Math.max(
+              0,
+              prev[isWhiteTurn ? "white" : "black"] - 1
+            ),
+          };
+
+          // Check for time out
+          if (newTime[isWhiteTurn ? "white" : "black"] <= 0) {
+            // Handle time out (you might want to end the game here)
+            console.log(
+              `Time out! ${isWhiteTurn ? "White" : "Black"} lost on time.`
+            );
+            // game.gameOver(); // Uncomment this if you want to end the game on time out
+          }
+
+          return newTime;
+        });
       }, 1000);
 
       return () => clearInterval(timer);
     }
   }, [isWhiteTurn, game]);
 
+  // Apply increment when a move is made
   const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
     const gameCopy = new Chess(game.fen());
+    const { increment } = parseTimeControl(timeControl);
 
     try {
       const move = gameCopy.move({
@@ -108,9 +176,20 @@ export function ChessGameClean({
       });
 
       if (move) {
+        // Apply time increment to the current player's clock
+        // (since the turn has already changed after the move)
+        const currentTurn = gameCopy.turn();
+        if (increment > 0) {
+          setGameTime((prev) => ({
+            ...prev,
+            [currentTurn === "w" ? "white" : "black"]:
+              prev[currentTurn === "w" ? "white" : "black"] + increment,
+          }));
+        }
+
         setGame(gameCopy);
         setGamePosition(gameCopy.fen());
-        setMoveHistory(gameCopy.history());
+        setMoveHistory([...moveHistory, move.san]);
         return true;
       }
     } catch (error) {
