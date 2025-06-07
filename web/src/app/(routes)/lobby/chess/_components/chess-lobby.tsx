@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, type JSX } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
+import { useStockfish } from "@/hooks/use-stockfish";
 
 type PiecePosition = {
   x: number;
@@ -81,82 +82,177 @@ export function ChessGameClean({
   const playerColor =
     botSettings?.color === "black" ? ("black" as const) : ("white" as const);
 
+  // Initialize Stockfish
+  const { evaluatePosition, onBestMove, setSkillLevel } = useStockfish(
+    game.fen()
+  );
+
+  // Set bot skill level when settings change
+  useEffect(() => {
+    if (matchType === "bot" && botSettings) {
+      const difficulty = Math.min(
+        20,
+        Math.max(0, botSettings.difficulty || 10)
+      );
+      setSkillLevel(difficulty);
+    }
+  }, [matchType, botSettings, setSkillLevel]);
+
+  // Memoize game state to prevent unnecessary effect triggers
+  const gameState = useMemo(
+    () => ({
+      fen: game.fen(),
+      turn: game.turn(),
+      isGameOver: game.isGameOver(),
+    }),
+    [game]
+  );
+
   // Make bot move if it's the bot's turn
   useEffect(() => {
+    let isMounted = true;
+    const { fen: currentFen, turn: currentTurn, isGameOver } = gameState;
+
     const makeBotMove = async () => {
-      if (matchType === "bot" && botSettings && !isAnimating) {
-        const currentTurn = game.turn();
-        const isBotTurn =
-          (currentTurn === "w" && playerColor === "black") ||
-          (currentTurn === "b" && playerColor === "white");
+      if (!isMounted || matchType !== "bot" || !botSettings || isAnimating)
+        return;
 
-        if (isBotTurn && !game.isGameOver()) {
-          const possibleMoves = game.moves();
-          if (possibleMoves.length > 0) {
-            const randomIndex = Math.floor(
-              Math.random() * possibleMoves.length
-            );
-            const move = possibleMoves[randomIndex];
-            const gameCopy = new Chess(game.fen());
-            const moveDetails = gameCopy.move(move);
+      const isBotTurn =
+        (currentTurn === "w" && playerColor === "black") ||
+        (currentTurn === "b" && playerColor === "white");
 
-            if (moveDetails) {
-              // Set up animation
-              setLastMove({
-                from: moveDetails.from,
-                to: moveDetails.to,
-              });
+      if (!isBotTurn || isGameOver) return;
 
-              // Get piece being moved for animation
-              const fromPos = squareToPosition(moveDetails.from);
-              setAnimatedPiece({
-                ...fromPos,
-                piece: moveDetails.piece + moveDetails.color,
-                square: moveDetails.from,
-              });
+      console.log("Bot is thinking...");
 
-              // Animate the move
-              setIsAnimating(true);
+      try {
+        const bestMove = await new Promise<string | null>((resolve) => {
+          if (!isMounted) return resolve(null);
 
-              // Update game state after animation
-              setTimeout(() => {
-                // Update captured pieces if a piece was captured
-                if (moveDetails.captured) {
-                  // The bot's color is the opposite of the player's color
-                  const botColor = playerColor === "white" ? "black" : "white";
-                  const pieceType = moveDetails.captured;
+          const timeoutId = setTimeout(() => {
+            console.log("Stockfish move timeout");
+            resolve(null);
+          }, 10000);
 
-                  console.log(`Bot (${botColor}) captured piece: ${pieceType}`);
-
-                  setCapturedPieces((prev) => {
-                    const newPieces = {
-                      ...prev,
-                      [botColor]: [
-                        ...prev[botColor as keyof typeof prev],
-                        pieceType,
-                      ],
-                    };
-                    console.log(
-                      "Updated captured pieces after bot move:",
-                      newPieces
-                    );
-                    return newPieces;
-                  });
-                }
-
-                setGame(gameCopy);
-                setGamePosition(gameCopy.fen());
-                setAnimatedPiece(null);
-                setIsAnimating(false);
-              }, 300); // Match this with animation duration
+          const handleBestMove = ({
+            bestMove,
+          }: {
+            bestMove: string | null;
+          }) => {
+            if (bestMove && bestMove !== "(none)") {
+              console.log("Stockfish best move:", bestMove);
+              clearTimeout(timeoutId);
+              resolve(bestMove);
             }
-          }
+          };
+
+          // Set up the best move listener
+          const cleanup = onBestMove(handleBestMove);
+
+          // Start the evaluation with a depth of 15 for good move quality
+          console.log("Asking Stockfish for best move...");
+          evaluatePosition(currentFen, 15);
+
+          // Return cleanup function
+          return () => {
+            cleanup();
+            clearTimeout(timeoutId);
+          };
+        });
+
+        if (!isMounted || !bestMove) return;
+
+        console.log("Processing Stockfish move:", bestMove);
+
+        const gameCopy = new Chess(currentFen);
+        const moveDetails = gameCopy.move({
+          from: bestMove.slice(0, 2) as Square,
+          to: bestMove.slice(2, 4) as Square,
+          promotion:
+            bestMove.length > 4
+              ? (bestMove[4] as "q" | "r" | "b" | "n")
+              : undefined,
+        });
+
+        if (!moveDetails) {
+          console.error("Invalid move from Stockfish:", bestMove);
+          return;
+        }
+
+        console.log("Updating game state with new FEN:", gameCopy.fen());
+
+        // Update the game state immediately
+        setGame(gameCopy);
+        setGamePosition(gameCopy.fen());
+
+        // Update captured pieces if a piece was captured
+        if (moveDetails.captured) {
+          const botColor = playerColor === "white" ? "black" : "white";
+          const pieceType = moveDetails.captured;
+          console.log(`Bot (${botColor}) captured piece: ${pieceType}`);
+
+          setCapturedPieces((prev) => ({
+            ...prev,
+            [botColor]: [...prev[botColor as keyof typeof prev], pieceType],
+          }));
+        }
+
+        // Set up animation after state updates
+        requestAnimationFrame(() => {
+          if (!isMounted) return;
+
+          console.log("Starting animation for move:", {
+            from: moveDetails.from,
+            to: moveDetails.to,
+            piece: moveDetails.piece + moveDetails.color,
+          });
+
+          setLastMove({
+            from: moveDetails.from,
+            to: moveDetails.to,
+          });
+
+          // Get piece being moved for animation
+          const fromPos = squareToPosition(moveDetails.from);
+          setAnimatedPiece({
+            ...fromPos,
+            piece: moveDetails.piece + moveDetails.color,
+            square: moveDetails.from,
+          });
+
+          // Animate the move
+          setIsAnimating(true);
+
+          // Clear animation after a delay
+          setTimeout(() => {
+            if (!isMounted) return;
+            console.log("Clearing animation");
+            setAnimatedPiece(null);
+            setIsAnimating(false);
+          }, 300);
+        });
+      } catch (error) {
+        console.error("Error in bot move:", error);
+        if (isMounted) {
+          setIsAnimating(false);
         }
       }
     };
 
     makeBotMove();
-  }, [game, matchType, botSettings, playerColor, isAnimating]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    gameState,
+    matchType,
+    botSettings,
+    playerColor,
+    isAnimating,
+    evaluatePosition,
+    onBestMove,
+  ]);
   // Parse time control string (e.g., "5+3" = 5 minutes + 3 second increment)
   const parseTimeControl = (timeControl: string) => {
     const [minutes, increment] = timeControl.split("+").map(Number);
@@ -207,15 +303,13 @@ export function ChessGameClean({
     },
   ]);
 
-  const isWhiteTurn = game.turn() === "w";
-  const currentPlayer: PlayerColor = isWhiteTurn ? "white" : "black";
-
   // Timer countdown effect
   useEffect(() => {
     if (!game.isGameOver()) {
       const timer = setInterval(() => {
         setGameTime((prev) => {
-          const currentPlayer = isWhiteTurn ? "white" : "black";
+          const currentTurn = game.turn();
+          const currentPlayer = currentTurn === "w" ? "white" : "black";
           const newTime = {
             ...prev,
             [currentPlayer]: Math.max(0, prev[currentPlayer] - 1),
@@ -223,7 +317,7 @@ export function ChessGameClean({
 
           // Handle time out
           if (newTime[currentPlayer] <= 0) {
-            const winner = isWhiteTurn ? "black" : "white";
+            const winner = currentTurn === "w" ? "black" : "white";
             console.log(
               `Time out! ${currentPlayer} lost on time. ${winner} wins!`
             );
@@ -241,18 +335,70 @@ export function ChessGameClean({
 
       return () => clearInterval(timer);
     }
-  }, [isWhiteTurn, game]);
+  }, [game]);
+
+  // Track animation state with ref to avoid stale closures
+  const isAnimatingRef = useRef(false);
+  const animationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync ref with state
+  useEffect(() => {
+    isAnimatingRef.current = isAnimating;
+  }, [isAnimating]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (animationTimeoutRef.current) {
+        clearTimeout(animationTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Reset animation state if it gets stuck
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (isAnimatingRef.current) {
+        isAnimatingRef.current = false;
+        setAnimatedPiece(null);
+        setIsAnimating(false);
+      }
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Apply increment when a move is made
   const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
-    if (isAnimating) return false;
+    // Initialize move processing
+
+    // Prevent move if animation is in progress
+    if (isAnimatingRef.current || isAnimating) {
+      return false;
+    }
+
+    // Set both ref and state
+    isAnimatingRef.current = true;
+    setIsAnimating(true);
 
     const gameCopy = new Chess(game.fen());
     const { increment } = parseTimeControl(timeControl);
+    console.log(
+      "Move details - From:",
+      sourceSquare,
+      "To:",
+      targetSquare,
+      "Promotion: q"
+    );
 
     try {
       // Check if the move would capture a piece
-      gameCopy.get(targetSquare as Square); // Check if target square is occupied
+      const targetPiece = gameCopy.get(targetSquare as Square);
+      console.log(
+        "Target piece:",
+        targetPiece ? `${targetPiece.color}${targetPiece.type}` : "empty"
+      );
+
       const move = gameCopy.move({
         from: sourceSquare as Square,
         to: targetSquare as Square,
@@ -264,23 +410,18 @@ export function ChessGameClean({
         if (move.captured) {
           // The capturing player is the one who made the move (move.color)
           const capturingColor = move.color === "w" ? "white" : "black";
-
-          // Use the original piece type (lowercase for black, uppercase for white)
           const pieceType = move.captured;
-
-          console.log(`Captured piece: ${pieceType} by ${capturingColor}`);
 
           // Create a new array reference to trigger re-render
           setCapturedPieces((prev) => {
             const newPieces = {
               ...prev,
-              // Add the captured piece to the capturing player's list
               [capturingColor]: [
                 ...prev[capturingColor as keyof typeof prev],
                 pieceType,
               ],
             };
-            console.log("Updated captured pieces:", newPieces);
+
             return newPieces;
           });
         }
@@ -293,55 +434,98 @@ export function ChessGameClean({
 
         // Get piece being moved for animation
         const fromPos = squareToPosition(sourceSquare);
-        setAnimatedPiece({
+        const animatedPieceData = {
           ...fromPos,
           piece: move.piece + move.color,
           square: sourceSquare,
-        });
+        };
+
+        setAnimatedPiece(animatedPieceData);
 
         // Apply time increment to the current player's clock
         const currentTurn = gameCopy.turn();
+
         if (increment > 0) {
-          setGameTime((prev) => ({
-            ...prev,
-            [currentTurn === "w" ? "white" : "black"]:
-              prev[currentTurn === "w" ? "white" : "black"] + increment,
-          }));
+          setGameTime((prev) => {
+            const newTime = {
+              ...prev,
+              [currentTurn === "w" ? "white" : "black"]:
+                prev[currentTurn === "w" ? "white" : "black"] + increment,
+            };
+
+            return newTime;
+          });
         }
 
         // Animate the move
         setIsAnimating(true);
 
-        // Update game state after animation
-        setTimeout(() => {
+        // Clear any pending timeouts first
+        if (animationTimeoutRef.current) {
+          clearTimeout(animationTimeoutRef.current);
+        }
+
+        try {
+          // Update game state first
           setGame(gameCopy);
           setGamePosition(gameCopy.fen());
-          setMoveHistory([...moveHistory, move.san]);
+          setMoveHistory((prev) => [...prev, move.san]);
+
+          // Game state updated
+
+          // Set a single timeout for animation cleanup
+          animationTimeoutRef.current = setTimeout(() => {
+            try {
+              setAnimatedPiece(null);
+
+              // Update ref and state after a small delay
+              setTimeout(() => {
+                isAnimatingRef.current = false;
+                setIsAnimating(false);
+              }, 50);
+            } catch {
+              // Reset animation state on error
+              isAnimatingRef.current = false;
+              setAnimatedPiece(null);
+              setIsAnimating(false);
+            }
+          }, 300); // Match this with your CSS transition duration
+        } catch {
+          // Reset state on error
+          isAnimatingRef.current = false;
           setAnimatedPiece(null);
           setIsAnimating(false);
-        }, 300); // Match this with animation duration
+        }
 
         return true;
       }
     } catch (error) {
-      console.log("Invalid move:", error);
+      if (error instanceof Error) {
+        console.error("Move failed:", error.message);
+      }
     }
     return false;
   };
 
   const onDrop = (sourceSquare: string, targetSquare: string): boolean => {
-    if (playerColor !== currentPlayer) return false;
+    // Check if it's the current player's turn based on the game state
+    const currentTurn = game.turn();
+    const isPlayerTurn =
+      (currentTurn === "w" && playerColor === "white") ||
+      (currentTurn === "b" && playerColor === "black");
+
+    if (!isPlayerTurn) {
+      return false;
+    }
     return makeMove(sourceSquare, targetSquare);
   };
 
   const handleResign = () => {
     // In a real app, this would send a resignation to the server
-    console.log("Player resigned");
   };
 
   const handleDrawOffer = () => {
     // In a real app, this would send a draw offer to the opponent
-    console.log("Draw offered");
   };
 
   const customPieces = useMemo(() => {

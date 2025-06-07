@@ -12,6 +12,7 @@ interface BotGameSettings {
 export default function ChessGameCleanPage() {
   const [botSettings, setBotSettings] = useState<BotGameSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { navigateWithTransition, isTransitioning } = useTransition();
 
   useEffect(() => {
     // Load bot settings from localStorage
@@ -21,9 +22,10 @@ export default function ChessGameCleanPage() {
         if (savedSettings) {
           const parsedSettings = JSON.parse(savedSettings) as BotGameSettings;
           setBotSettings(parsedSettings);
-          console.log("Loaded bot settings:", parsedSettings);
         } else {
-          console.log("No saved bot settings found");
+          if (!isTransitioning) {
+            navigateWithTransition("/lobby");
+          }
         }
       } catch (error) {
         console.error("Error loading bot settings:", error);
@@ -33,9 +35,7 @@ export default function ChessGameCleanPage() {
     };
 
     loadBotSettings();
-  }, []);
-
-  const { navigateWithTransition, isTransitioning } = useTransition();
+  }, [isTransitioning, navigateWithTransition]);
 
   const handleDisconnect = () => {
     localStorage.removeItem("botGameSettings");
