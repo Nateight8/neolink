@@ -22,10 +22,8 @@ import GameController from "./game-control";
 import Spectators from "./spectators";
 import ChessHeader from "./chess-header";
 import Player, { type PlayerData } from "./player";
-import {
-  IconPlayerPlayFilled,
-  IconPlayerStopFilled,
-} from "@tabler/icons-react";
+
+import GameStatus from "./game-status";
 
 type PlayerColor = "white" | "black";
 
@@ -66,6 +64,7 @@ export function ChessGameClean({
     }
   }, [matchType, botSettings]);
   const [game, setGame] = useState<Chess>(new Chess());
+  const [showGameOverlay, setShowGameOverlay] = useState<boolean>(true);
   const [gamePosition, setGamePosition] = useState<string>(game.fen());
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(
@@ -303,39 +302,63 @@ export function ChessGameClean({
     },
   ]);
 
+  // Timer management
+  const lastMoveTime = useRef<number>(Date.now());
+  const [currentPlayerTime, setCurrentPlayerTime] = useState<number>(() => {
+    const initialTime = timeControl.split("+")[0];
+    return parseInt(initialTime) * 60; // Convert minutes to seconds
+  });
+
+  const currentTurn = game.turn();
+
+  // Reset timer when turn changes
+  useEffect(() => {
+    lastMoveTime.current = Date.now();
+    const initialTime = timeControl.split("+")[0];
+    setCurrentPlayerTime(parseInt(initialTime) * 60); // Reset to initial time in seconds
+  }, [currentTurn, timeControl]);
+
   // Timer countdown effect
   useEffect(() => {
-    if (!game.isGameOver()) {
-      const timer = setInterval(() => {
-        setGameTime((prev) => {
+    if (game.isGameOver()) return;
+
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const timeElapsed = Math.floor((now - lastMoveTime.current) / 1000);
+
+      setCurrentPlayerTime((prev) => {
+        const newTime = prev - timeElapsed;
+        lastMoveTime.current = now;
+
+        if (newTime <= 0) {
           const currentTurn = game.turn();
           const currentPlayer = currentTurn === "w" ? "white" : "black";
-          const newTime = {
-            ...prev,
-            [currentPlayer]: Math.max(0, prev[currentPlayer] - 1),
-          };
+          const winner = currentTurn === "w" ? "black" : "white";
 
-          // Handle time out
-          if (newTime[currentPlayer] <= 0) {
-            const winner = currentTurn === "w" ? "black" : "white";
-            console.log(
-              `Time out! ${currentPlayer} lost on time. ${winner} wins!`
-            );
-            game.header(
-              "Termination",
-              `Time forfeit - ${currentPlayer} lost on time`
-            );
-            game.header("Result", winner === "white" ? "1-0" : "0-1");
-            game.load(game.fen()); // Force game to end
-          }
+          game.setHeader(
+            "Termination",
+            `Time forfeit - ${currentPlayer} lost on time`
+          );
+          game.setHeader("Result", winner === "white" ? "1-0" : "0-1");
+          game.load(game.fen()); // Force game to end
+          return 0;
+        }
 
-          return newTime;
-        });
-      }, 1000);
+        return newTime;
+      });
+    }, 1000);
 
-      return () => clearInterval(timer);
-    }
-  }, [game]);
+    return () => clearInterval(timer);
+  }, [game, timeControl]);
+
+  // Update game time for display
+  useEffect(() => {
+    const currentPlayer = currentTurn === "w" ? "white" : "black";
+    setGameTime((prev) => ({
+      ...prev,
+      [currentPlayer]: currentPlayerTime,
+    }));
+  }, [currentPlayerTime, currentTurn]);
 
   // Track animation state with ref to avoid stale closures
   const isAnimatingRef = useRef(false);
@@ -718,13 +741,23 @@ export function ChessGameClean({
 
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 max-w-7xl mx-auto mt-6">
             {/* Left Panel - Controls */}
-            <GameController
-              onResign={handleResign}
-              onDrawOffer={handleDrawOffer}
-              isGameOver={game.isGameOver()}
-              isPlayerTurn={isPlayersTurn()}
-            />
-
+            <div className="lg:col-span-2 space-y-4">
+              <GameController
+                onResign={handleResign}
+                onDrawOffer={handleDrawOffer}
+                isGameOver={game.isGameOver() || gameTime.white <= 0 || gameTime.black <= 0}
+                isPlayerTurn={isPlayersTurn()}
+              />
+              <GameStatus 
+                game={game} 
+                gameTime={gameTime} 
+                onPlayAgain={() => window.location.reload()}
+                onViewBoard={() => {
+                  setShowGameOverlay(false);
+                }}
+                onExit={onDisconnect}
+              />
+            </div>
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
               {/* Top Player (Black) */}
@@ -814,7 +847,7 @@ export function ChessGameClean({
                 </div>
 
                 {/* Game status overlay */}
-                {(game.isGameOver() ||
+                {showGameOverlay && (game.isGameOver() ||
                   gameTime.white <= 0 ||
                   gameTime.black <= 0) && (
                   <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm p-4">
@@ -842,31 +875,7 @@ export function ChessGameClean({
                           : "DRAW"}
                       </p>
 
-                      <div className="flex justify-center space-x-6">
-                        {/* Replay Button */}
-                        <button
-                          onClick={() => window.location.reload()}
-                          className="group relative p-2 rounded-full bg-cyan-900/50 hover:bg-cyan-800/70 transition-colors"
-                          aria-label="Play again"
-                        >
-                          <IconPlayerPlayFilled className="text-cyan-400 text-2xl" />
-                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-cyan-300 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            Play Again
-                          </span>
-                        </button>
 
-                        {/* Exit Button */}
-                        <button
-                          onClick={onDisconnect}
-                          className="group relative p-2 rounded-full bg-fuchsia-900/50 hover:bg-fuchsia-800/70 transition-colors"
-                          aria-label="Exit game"
-                        >
-                          <IconPlayerStopFilled className="text-fuchsia-400 text-2xl" />
-                          <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-fuchsia-300 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            Exit Game
-                          </span>
-                        </button>
-                      </div>
                     </div>
                   </div>
                 )}
