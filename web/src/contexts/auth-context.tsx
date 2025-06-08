@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { axiosInstance } from '@/lib/axios-instance';
+import { createContext, useContext, useState, ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios-instance";
+import { useRouter } from "next/navigation";
 
 interface AuthUser {
   _id: string;
@@ -17,7 +18,7 @@ interface AuthUser {
   rating?: number;
   level?: number;
   title?: string;
-  status?: 'online' | 'offline' | 'playing';
+  status?: "online" | "offline" | "playing";
   xp?: number;
   maxXp?: number;
 }
@@ -37,12 +38,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { isLoading, isError, refetch } = useQuery({
-    queryKey: ['authUser'],
+    queryKey: ["authUser"],
     queryFn: async () => {
       try {
-        const response = await axiosInstance.get('/auth/me');
+        const response = await axiosInstance.get("/auth/me");
         setUser(response.data.user);
         return response.data;
       } catch (error) {
@@ -56,11 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await axiosInstance.post('/auth/logout');
+      await axiosInstance.post("/auth/logout");
       setUser(null);
       queryClient.clear();
+      router.push("/login");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     }
   };
 
@@ -82,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
