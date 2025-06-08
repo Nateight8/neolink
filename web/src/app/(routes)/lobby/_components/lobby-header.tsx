@@ -1,81 +1,122 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+// import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
-import { Bell } from "lucide-react";
-import { motion } from "motion/react";
+// import { Bell } from "lucide-react";
+// import { motion } from "motion/react";
 
-export default function LobbyHeader({
-  currentUser,
-  notifications,
-  showNotifications,
-  setShowNotifications,
-}: {
-  currentUser: {
-    id: number;
-    username: string;
-    avatar: string;
-    status: string;
-    rating: number;
-    xp: number;
-    maxXp: number;
-    level: number;
-    title: string;
-  };
-  notifications: {
-    id: number;
-    type: string;
-    from?: string; // Made optional with ?
-    message: string;
-    time: string;
-  }[];
-  showNotifications: boolean;
-  setShowNotifications: (show: boolean) => void;
+interface Notification {
+  id: number;
+  type: string;
+  from?: string;
+  message: string;
+  time: string;
+}
+
+export default function LobbyHeader({}: // notifications = [],
+// showNotifications = false,
+// setShowNotifications = () => {},
+{
+  notifications?: Notification[];
+  showNotifications?: boolean;
+  setShowNotifications?: (show: boolean) => void;
 }) {
-  const { user } = useAuth();
+  const { user, isError } = useAuth();
+
+  // Default values for unauthenticated users
+  const currentUser = {
+    id: user?._id || "guest",
+    username:
+      user?.username || "Neural_Guest_" + Math.floor(Math.random() * 10000),
+    avatar: user?.avatar || "/cyberpunk-avatar.png",
+    status: "online",
+    rating: user?.rating || 1200,
+    xp: 0,
+    maxXp: 1000,
+    level: user?.level || 1,
+    title: user ? user.title || "Neural Novice" : "Neural Drifter",
+    ...user, // Spread user data to override any defaults if available
+  };
+
+  // Generate a random cyberpunk color for the guest user
+  const cyberpunkColors = [
+    "text-cyan-400",
+    "text-fuchsia-400",
+    "text-purple-400",
+    "text-blue-400",
+    "text-green-400",
+  ];
+  const randomColor =
+    cyberpunkColors[Math.floor(Math.random() * cyberpunkColors.length)];
 
   return (
     <>
       {" "}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 p-4 bg-gray-900/50 backdrop-blur-sm border border-cyan-500/20 rounded-lg shadow-lg shadow-cyan-500/10">
         <div className="flex items-center space-x-4">
-          <Avatar className="h-16 w-16 border-2 border-cyan-500 neural-pulse">
-            <AvatarImage
-              src={currentUser.avatar || "/placeholder.svg"}
-              alt={currentUser.username}
-            />
-            <AvatarFallback className="bg-black text-cyan-400 text-lg">
-              {currentUser.username.substring(0, 2)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+            <Avatar className="h-16 w-16 border-2 border-cyan-500 relative z-10 bg-gray-900">
+              <AvatarImage
+                src={currentUser.avatar}
+                alt={currentUser.username}
+              />
+              <AvatarFallback
+                className={`bg-gray-900 ${randomColor} text-xl font-mono`}
+              >
+                {currentUser.username.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold text-cyan-400 neon-text">
+            <div className="flex items-center space-x-3">
+              <h1
+                className={`text-2xl font-bold ${randomColor} font-mono tracking-wide`}
+              >
                 {currentUser.username}
               </h1>
-              <Badge className="bg-fuchsia-950/50 text-fuchsia-400 border-fuchsia-500">
+              <Badge className="bg-fuchsia-900/80 text-fuchsia-300 border-fuchsia-500/50 font-mono text-xs">
                 {currentUser.title}
               </Badge>
+              {!user && !isError && (
+                <span className="text-xs bg-cyan-900/50 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                  GUEST MODE
+                </span>
+              )}
             </div>
-            <p className="text-cyan-300">Neural Rating: {currentUser.rating}</p>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xs text-gray-400">
-                Level {currentUser.level}
-              </span>
-              <Progress
-                value={(currentUser.xp / currentUser.maxXp) * 100}
-                className="w-32 h-2"
-              />
-              <span className="text-xs text-gray-400">
-                {currentUser.xp}/{currentUser.maxXp} XP
+            <div className="flex items-center space-x-4 mt-1">
+              <div className="flex items-center space-x-2">
+                <p className="text-cyan-300 text-sm font-mono">
+                  <span className="text-cyan-500">RATING:</span>{" "}
+                  {currentUser.rating}
+                </p>
+                <div className="h-4 w-px bg-cyan-500/30"></div>
+                <p className="text-fuchsia-300 text-sm font-mono">
+                  <span className="text-fuchsia-500">LEVEL:</span>{" "}
+                  {currentUser.level}
+                </p>
+              </div>
+              <div className="h-1.5 w-24 bg-gray-800/80 rounded-full overflow-hidden border border-cyan-500/20">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-500 ease-out"
+                  style={{
+                    width: `${(currentUser.xp / currentUser.maxXp) * 100}%`,
+                    boxShadow: "0 0 8px rgba(6, 182, 212, 0.6)",
+                  }}
+                />
+              </div>
+              <span className="text-xs text-cyan-300 font-mono">
+                {currentUser.xp}
+                <span className="text-cyan-500/80">
+                  /{currentUser.maxXp} XP
+                </span>
               </span>
             </div>
           </div>
         </div>
 
         {/* Notifications */}
-        <div className="relative">
+        {/* <div className="relative">
           <Button
             variant="outline"
             size="icon"
@@ -116,7 +157,7 @@ export default function LobbyHeader({
               </div>
             </motion.div>
           )}
-        </div>
+        </div> */}
       </div>
     </>
   );

@@ -12,7 +12,14 @@ interface AuthUser {
   username: string;
   handle: string;
   bio: string;
-  friends: User[];
+  avatar?: string;
+  friends?: User[];
+  rating?: number;
+  level?: number;
+  title?: string;
+  status?: 'online' | 'offline' | 'playing';
+  xp?: number;
+  maxXp?: number;
 }
 
 type User = AuthUser;

@@ -14,18 +14,18 @@ import { OpponentSelection } from "./game-modes/opponent-selection";
 import { BotConfig } from "./game-modes/bot-config";
 import { HumanChallenge } from "./game-modes/human-challenge";
 
-// Mock data
-const currentUser = {
-  id: 1,
-  username: "NeuralMaster",
-  avatar: "/placeholder.svg?height=64&width=64&text=NM",
-  status: "online",
-  rating: 1850,
-  xp: 2750,
-  maxXp: 3000,
-  level: 12,
-  title: "Cyber Knight",
-};
+// // Mock data
+// const currentUser = {
+//   id: 1,
+//   username: "NeuralMaster",
+//   avatar: "/placeholder.svg?height=64&width=64&text=NM",
+//   status: "online",
+//   rating: 1850,
+//   xp: 2750,
+//   maxXp: 3000,
+//   level: 12,
+//   title: "Cyber Knight",
+// };
 
 const friends = [
   {
@@ -358,7 +358,6 @@ export function ChessLobby() {
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header with User Profile */}
         <LobbyHeader
-          currentUser={currentUser}
           notifications={notifications}
           showNotifications={showNotifications}
           setShowNotifications={setShowNotifications}
