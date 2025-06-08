@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Shield, Cpu } from "lucide-react";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import Posts from "@/components/profile/posts";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProfilePage() {
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   return (
     <div className="min-h-screen  relative">

@@ -1,7 +1,7 @@
 "use client";
 import FeedClient from "@/components/feed/client";
 
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
 import AlliesRecommendation from "@/components/alies/alies";
@@ -11,7 +11,7 @@ import { LoadingScreen } from "@/components/loading-screen";
 import UsernameOnboardingPage from "@/components/auth/username-field";
 
 export default function Home() {
-  const { user, isLoading } = useAuthUser();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   const { data: onboardingStatus } = useQuery({

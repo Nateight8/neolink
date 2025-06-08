@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // Define the form schema with Zod
 const loginSchema = z.object({
@@ -106,7 +106,7 @@ export default function LoginPage() {
   }
 
   // Check if the user is already authenticated
-  const { user, isLoading: checkingAuthUser } = useAuthUser();
+  const { user, isLoading: checkingAuthUser } = useAuth();
 
   if (checkingAuthUser) {
     return (

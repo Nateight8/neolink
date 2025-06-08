@@ -20,7 +20,7 @@ import { axiosInstance } from "@/lib/axios-instance";
 import type { Post } from "@/types/chat";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // Mock data for trending topics
 const TRENDING = [
@@ -59,7 +59,7 @@ const TRENDING = [
 export default function FeedClient() {
   const router = useRouter();
 
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);

@@ -14,11 +14,12 @@ import {
   Clock,
   X,
 } from "lucide-react";
-import { useAuthUser } from "@/hooks/use-auth";
+
 // import { useQueryClient } from "@tanstack/react-query";
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { cn } from "@/lib/utils";
 import { FormattedContent } from "../shared/formatted-content";
+import { useAuth } from "@/contexts/auth-context";
 
 interface Comment {
   id: string;
@@ -47,7 +48,7 @@ export function CommentThreadModal({
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animationActive, setAnimationActive] = useState(true);
-  const { user } = useAuthUser();
+  const { user } = useAuth();
   // const queryClient = useQueryClient();
   const raysRef = useRef<HTMLDivElement>(null);
 

@@ -20,13 +20,14 @@ import {
 } from "lucide-react";
 import type { Post } from "@/types/chat";
 import Image from "next/image";
-import { useAuthUser } from "@/hooks/use-auth";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { CommentThreadModal } from "./comment-thread";
 import { getCompactRelativeTime } from "@/lib/relative-time";
 import { FormattedContent } from "../shared/formatted-content";
 import { FeedPoll } from "./feed-poll";
+import { useAuth } from "@/contexts/auth-context";
 
 interface FeedPostProps {
   post: Post;
@@ -39,7 +40,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
 
   // Extract hashtags from content
 
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   const likedByUser = user?._id ? post.likedBy.includes(user._id) : false;
   const retweetByUser = user?._id ? post.retweetedBy.includes(user._id) : false;
