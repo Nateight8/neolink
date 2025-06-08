@@ -39,6 +39,7 @@ export default function ChessGameCleanPage() {
 
   const handleDisconnect = () => {
     localStorage.removeItem("botGameSettings");
+    localStorage.removeItem("chessBotGame");
     setBotSettings(null);
 
     if (!isTransitioning) {

@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+
 import { Bell } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -25,7 +26,7 @@ export default function LobbyHeader({
   notifications: {
     id: number;
     type: string;
-    from?: string;  // Made optional with ?
+    from?: string; // Made optional with ?
     message: string;
     time: string;
   }[];

@@ -13,11 +13,7 @@ interface Game {
   blackRating: number;
 }
 
-export default function Live({
-  ongoingGames,
-}: {
-  ongoingGames: Game[];
-}) {
+export default function Live({ ongoingGames }: { ongoingGames: Game[] }) {
   return (
     <>
       <div className="bg-black/50 border border-cyan-900 rounded-sm p-6 backdrop-blur-sm">

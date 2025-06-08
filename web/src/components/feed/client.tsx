@@ -14,7 +14,7 @@ import { FeedPost } from "./feed-post";
 // import { StoryLives } from "./story-lives";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
-import { ChessRoomsSidebar } from "./right-sidebar";
+import { GameRoomsSidebar } from "./right-sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import type { Post } from "@/types/chat";
@@ -302,7 +302,7 @@ export default function FeedClient() {
 
           {/* Right sidebar - Chess Rooms */}
           <aside className="hidden lg:block">
-            <ChessRoomsSidebar />
+            <GameRoomsSidebar />
           </aside>
         </main>
       </div>

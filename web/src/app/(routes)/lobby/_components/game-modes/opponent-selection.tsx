@@ -2,6 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Bot, User, ChevronLeft } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface OpponentSelectionProps {
   onSelect: (opponent: "bot" | "human") => void;
@@ -44,17 +49,25 @@ export function OpponentSelection({
               Practice against AI
             </span>
           </Button>
-          <Button
-            variant="outline"
-            className="h-32 flex-col gap-2 bg-gray-900/50 hover:bg-gray-800/50 border-gray-800 hover:border-fuchsia-500/50 transition-colors"
-            onClick={() => onSelect("human")}
-          >
-            <User className="w-12 h-12 text-fuchsia-400" />
-            <span className="text-lg text-fuchsia-300">Play vs Human</span>
-            <span className="text-sm text-fuchsia-200/70">
-              Challenge real players
-            </span>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-32 flex-col gap-2 bg-gray-900/50 hover:bg-gray-800/50 border-gray-800 hover:border-fuchsia-500/50 transition-colors"
+                onClick={() => onSelect("human")}
+              >
+                <User className="w-12 h-12 text-fuchsia-400" />
+                <span className="text-lg text-fuchsia-300">Play vs Human</span>
+                <span className="text-sm text-fuchsia-200/70">
+                  Challenge real players
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs" variant="production">
+              This feature is still in production. You can see the UI but
+              functionality is not available yet.
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

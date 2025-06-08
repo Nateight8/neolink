@@ -2,8 +2,50 @@
 
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { ChevronLeft, Zap } from "lucide-react";
-import { useState, useEffect } from "react";
+import {
+  ChevronLeft,
+  Zap,
+  Award as BulletIcon,
+  Flame as BlitzIcon,
+  Gauge as RapidIcon,
+  Clock,
+  Clock as ClassicalIcon,
+  Shuffle,
+  Loader2,
+} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { IconChessRook, IconChessRookFilled } from "@tabler/icons-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const chessGameModes = [
+  {
+    name: "Bullet",
+    description:
+      "Ultra-fast games where each player has less than 3 minutes total.",
+    timeControl: "1+0",
+  },
+  {
+    name: "Blitz",
+    description:
+      "Fast-paced games, typically between 3 to 5 minutes per player.",
+    timeControl: "5+0",
+  },
+  {
+    name: "Rapid",
+    description: "Medium-paced games with more time for deeper calculation.",
+    timeControl: "10+0",
+  },
+  {
+    name: "Classical",
+    description:
+      "Long games often used in tournaments with deep strategic play.",
+    timeControl: "30+0",
+  },
+];
 
 type TimeControl = "1+0" | "3+0" | "5+0" | "10+0" | "15+10" | "30+0";
 
@@ -58,24 +100,99 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
   };
 
   const [settings, setSettings] = useState<BotGameSettings>(loadSettings);
-  const { difficulty, timeControl, color } = settings;
-  const timeControls: TimeControl[] = [
-    "1+0",
-    "3+0",
-    "5+0",
-    "10+0",
-    "15+10",
-    "30+0",
-  ];
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [displayColor, setDisplayColor] = useState<"white" | "black">(() =>
+    settings.color === "random"
+      ? "white"
+      : (settings.color as "white" | "black")
+  );
+  const animationRef = useRef<number | null>(null);
+  const animationStartTime = useRef<number>(0);
+
+  const currentSettings = isAnimating
+    ? { ...settings, color: displayColor }
+    : settings;
+
+  const { difficulty, timeControl, color } = currentSettings;
 
   // Update settings and save to localStorage
-  const updateSettings = (updates: Partial<BotGameSettings>) => {
+  const updateSettings = (
+    updates: Partial<BotGameSettings>,
+    skipSave = false
+  ) => {
     const newSettings = { ...settings, ...updates };
     setSettings(newSettings);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !skipSave) {
       localStorage.setItem("botGameSettings", JSON.stringify(newSettings));
     }
     return newSettings;
+  };
+
+  // Animation loop for random color selection
+  const animateColor = (timestamp: number) => {
+    if (!animationStartTime.current) {
+      animationStartTime.current = timestamp;
+    }
+
+    const elapsed = timestamp - animationStartTime.current;
+    const totalDuration = 2000; // 2 seconds total
+    const toggleSpeed = 100; // ms between toggles
+    
+    // Toggle between white and black during animation
+    setDisplayColor(prev => prev === "white" ? "black" : "white");
+    
+    if (elapsed < totalDuration) {
+      // Continue animation
+      setTimeout(() => {
+        if (animationRef.current !== null) {
+          animationRef.current = requestAnimationFrame(animateColor);
+        }
+      }, toggleSpeed);
+    } else {
+      // Animation complete, set final color
+      const finalColor = Math.random() < 0.5 ? "white" : "black";
+      setDisplayColor(finalColor);
+      updateSettings({ color: finalColor });
+      
+      // Show redirecting message
+      const button = document.querySelector(".start-button");
+      if (button) {
+        button.innerHTML = `
+          <span class="inline-flex items-center">
+            <span>Starting as </span>
+            <span class="mx-1 font-bold text-cyan-300">${
+              finalColor.charAt(0).toUpperCase() + finalColor.slice(1)
+            }</span>
+            <span>...</span>
+          </span>
+        `;
+      }
+      
+      // Start the game after a short delay
+      setTimeout(() => {
+        setIsAnimating(false);
+        onStart({ ...settings, color: finalColor });
+      }, 800);
+    }
+  };
+
+  // Clean up animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleRandomClick = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    animationStartTime.current = 0;
+    if (animationRef.current === null) {
+      animationRef.current = requestAnimationFrame(animateColor);
+    }
   };
 
   // Show return to game prompt if there's an existing game
@@ -174,16 +291,85 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
                 Time Control
               </h3>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {timeControls.map((tc: TimeControl) => (
-                <Button
-                  key={tc}
-                  variant={timeControl === tc ? "default" : "outline"}
-                  onClick={() => updateSettings({ timeControl: tc })}
-                >
-                  {tc}
-                </Button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              {chessGameModes.map((mode) => {
+                const isSelected = timeControl === mode.timeControl;
+                const iconMap = {
+                  Bullet: <BulletIcon className="w-4 h-4 text-yellow-400" />,
+                  Blitz: <BlitzIcon className="w-4 h-4 text-orange-400" />,
+                  Rapid: <RapidIcon className="w-4 h-4 text-green-400" />,
+                  Classical: (
+                    <ClassicalIcon className="w-4 h-4 text-blue-400" />
+                  ),
+                };
+                const icon = iconMap[mode.name as keyof typeof iconMap] || (
+                  <Clock className="w-4 h-4" />
+                );
+
+                return (
+                  <Tooltip key={mode.name}>
+                    <TooltipTrigger asChild>
+                      <div className="relative group">
+                        <Button
+                          variant="ghost"
+                          onClick={() =>
+                            updateSettings({
+                              timeControl: mode.timeControl as TimeControl,
+                            })
+                          }
+                          className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 ${
+                            isSelected
+                              ? "bg-gradient-to-br from-fuchsia-900/30 to-cyan-900/30 border border-fuchsia-500/30"
+                              : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-fuchsia-500/30"
+                          }`}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-2">
+                            <div
+                              className={`flex items-center justify-center w-8 h-8 rounded-full mb-1.5 ${
+                                isSelected
+                                  ? "bg-gradient-to-br from-fuchsia-500/20 to-cyan-500/20 border border-fuchsia-500/30"
+                                  : "bg-gray-800/50 border border-gray-700/50"
+                              }`}
+                            >
+                              {icon}
+                            </div>
+                            <span
+                              className={`text-sm font-medium ${
+                                isSelected
+                                  ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 to-cyan-300"
+                                  : "text-gray-300 group-hover:text-white"
+                              }`}
+                            >
+                              {mode.name}
+                            </span>
+                            <span
+                              className={`text-xs mt-0.5 ${
+                                isSelected
+                                  ? "text-fuchsia-200/80"
+                                  : "text-gray-400 group-hover:text-gray-200"
+                              }`}
+                            >
+                              {mode.timeControl}
+                            </span>
+                          </div>
+                        </Button>
+                        {isSelected && (
+                          <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-fuchsia-500 to-cyan-500 rounded-full" />
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent variant="production" className="max-w-xs">
+                      <p className="font-medium">
+                        {mode.name} ({mode.timeControl})
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {mode.description}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
             </div>
           </div>
 
@@ -194,39 +380,166 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
                 Your Color
               </h3>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant={color === "white" ? "default" : "outline"}
-                onClick={() => updateSettings({ color: "white" })}
-              >
-                White
-              </Button>
-              <Button
-                variant={color === "black" ? "default" : "outline"}
-                onClick={() => updateSettings({ color: "black" })}
-              >
-                Black
-              </Button>
-              {/* <Button
-                variant={color === "random" ? "default" : "outline"}
-                onClick={() => {
-                  const randomColor = Math.random() < 0.5 ? "white" : "black";
-                  updateSettings({ color: randomColor });
-                }}
-              >
-                Random
-              </Button> */}
+            <div className="grid grid-cols-3 gap-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={() => updateSettings({ color: "white" })}
+                    className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 relative ${
+                      color === "white"
+                        ? "bg-gradient-to-br from-gray-100/10 to-gray-300/10 border border-gray-300/30"
+                        : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-gray-400/30"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-100/5 to-gray-300/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-2">
+                      <div
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mb-1.5 ${
+                          color === "white"
+                            ? "bg-gradient-to-br from-gray-200/20 to-gray-400/20 border border-gray-300/30"
+                            : "bg-gray-800/50 border border-gray-700/50"
+                        }`}
+                      >
+                        <IconChessRook className="w-5 h-5 text-cyan-300" />
+                      </div>
+                      <span
+                        className={`text-sm font-medium ${
+                          color === "white"
+                            ? "text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400"
+                            : "text-gray-300 group-hover:text-white"
+                        }`}
+                      >
+                        White
+                      </span>
+                    </div>
+                    {color === "white" && (
+                      <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-gray-300 to-gray-100 rounded-full" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent variant="production">
+                  <p>Play as White (moves first)</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={() => updateSettings({ color: "black" })}
+                    className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 relative ${
+                      color === "black"
+                        ? "bg-gradient-to-br from-gray-800/40 to-gray-900/40 border border-gray-400/50 shadow-lg shadow-gray-900/30"
+                        : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-gray-600/30"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-800/5 to-gray-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-2">
+                      <div
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mb-1.5 ${
+                          color === "black"
+                            ? "bg-gradient-to-br from-gray-700/50 to-gray-900/50 border border-gray-500/50"
+                            : "bg-gray-800/50 border border-gray-700/50"
+                        }`}
+                      >
+                        <IconChessRookFilled className="w-5 h-5 text-fuchsia-300" />
+                      </div>
+                      <span
+                        className={`text-sm font-medium ${
+                          color === "black"
+                            ? "text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400"
+                            : "text-gray-300 group-hover:text-white"
+                        }`}
+                      >
+                        Black
+                      </span>
+                    </div>
+                    {color === "black" && (
+                      <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-gray-600 to-gray-400 rounded-full" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent variant="production">
+                  <p>Play as Black (moves second)</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    onClick={handleRandomClick}
+                    disabled={isAnimating}
+                    className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 relative ${
+                      color === "random" || isAnimating
+                        ? "bg-gradient-to-br from-purple-900/10 to-fuchsia-900/10 border border-fuchsia-500/30"
+                        : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-fuchsia-500/30"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-fuchsia-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-2">
+                      <div
+                        className={`flex items-center justify-center w-10 h-10 rounded-full mb-1.5 ${
+                          color === "random" || isAnimating
+                            ? "bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 border border-fuchsia-500/30"
+                            : "bg-gray-800/50 border border-gray-700/50"
+                        }`}
+                      >
+                        {isAnimating ? (
+                          <Loader2 className="w-5 h-5 text-fuchsia-300 animate-spin" />
+                        ) : (
+                          <Shuffle
+                            className={`w-5 h-5 ${
+                              color === "random"
+                                ? "text-fuchsia-300"
+                                : "text-gray-500 group-hover:text-gray-300"
+                            }`}
+                          />
+                        )}
+                      </div>
+                      <span
+                        className={`text-sm font-medium ${
+                          color === "random" || isAnimating
+                            ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-300 to-purple-300"
+                            : "text-gray-300 group-hover:text-white"
+                        }`}
+                      >
+                        {isAnimating ? "Choosing..." : "Random"}
+                      </span>
+                    </div>
+                    {color === "random" && (
+                      <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 rounded-full" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent variant="production">
+                  <p>Let the system randomly choose your color</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
           <div className="pt-4">
             <Button
-              className="w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-6 text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+              className="start-button w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-6 text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
               size="lg"
               onClick={() => onStart(settings)}
+              disabled={isAnimating}
             >
-              <Zap className="w-5 h-5 mr-2" />
-              Start Neural Duel
+              {isAnimating ? (
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              ) : (
+                <Zap className="w-5 h-5 mr-2" />
+              )}
+              {isAnimating ? (
+                <span className="inline-flex items-center">
+                  <span>Preparing match</span>
+                  <span className="animate-pulse">...</span>
+                </span>
+              ) : (
+                "Start Neural Duel"
+              )}
             </Button>
           </div>
         </div>
