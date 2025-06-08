@@ -63,10 +63,46 @@ export function ChessGameClean({
       // For example: initializeBot(botSettings);
     }
   }, [matchType, botSettings]);
-  const [game, setGame] = useState<Chess>(new Chess());
+  // Initialize state
+  const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  const [game, setGame] = useState<Chess>(() => {
+    if (matchType === "bot" && typeof window !== "undefined") {
+      const savedGame = localStorage.getItem("chessBotGame");
+      if (savedGame) {
+        try {
+          const { fen, moveHistory: savedMoveHistory } = JSON.parse(savedGame);
+          const chess = new Chess();
+          chess.load(fen);
+
+          // Set move history from saved game
+          if (Array.isArray(savedMoveHistory)) {
+            setMoveHistory(savedMoveHistory);
+          }
+
+          return chess;
+        } catch (e) {
+          console.error("Failed to load saved game:", e);
+        }
+      }
+    }
+    return new Chess();
+  });
+
   const [showGameOverlay, setShowGameOverlay] = useState<boolean>(true);
   const [gamePosition, setGamePosition] = useState<string>(game.fen());
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+
+  // Save game state and move history to localStorage when they change (only for bot games)
+  useEffect(() => {
+    if (matchType === "bot" && typeof window !== "undefined") {
+      const gameState = {
+        fen: game.fen(),
+        history: game.history(),
+        moveHistory: moveHistory,
+      };
+      localStorage.setItem("chessBotGame", JSON.stringify(gameState));
+    }
+  }, [game, matchType, moveHistory]);
   const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(
     null
   );
@@ -81,21 +117,8 @@ export function ChessGameClean({
   const playerColor =
     botSettings?.color === "black" ? ("black" as const) : ("white" as const);
 
-  // Initialize Stockfish
-  const { evaluatePosition, onBestMove, setSkillLevel } = useStockfish(
-    game.fen()
-  );
-
-  // Set bot skill level when settings change
-  useEffect(() => {
-    if (matchType === "bot" && botSettings) {
-      const difficulty = Math.min(
-        20,
-        Math.max(0, botSettings.difficulty || 10)
-      );
-      setSkillLevel(difficulty);
-    }
-  }, [matchType, botSettings, setSkillLevel]);
+  const skillLevel = botSettings?.difficulty; // Set to 1 for very easy, 10 for medium, 20 for strongest
+  const { evaluatePosition, onBestMove } = useStockfish(game.fen(), skillLevel);
 
   // Memoize game state to prevent unnecessary effect triggers
   const gameState = useMemo(
@@ -129,7 +152,6 @@ export function ChessGameClean({
           if (!isMounted) return resolve(null);
 
           const timeoutId = setTimeout(() => {
-            console.log("Stockfish move timeout");
             resolve(null);
           }, 10000);
 
@@ -139,7 +161,6 @@ export function ChessGameClean({
             bestMove: string | null;
           }) => {
             if (bestMove && bestMove !== "(none)") {
-              console.log("Stockfish best move:", bestMove);
               clearTimeout(timeoutId);
               resolve(bestMove);
             }
@@ -148,8 +169,6 @@ export function ChessGameClean({
           // Set up the best move listener
           const cleanup = onBestMove(handleBestMove);
 
-          // Start the evaluation with a depth of 15 for good move quality
-          console.log("Asking Stockfish for best move...");
           evaluatePosition(currentFen, 15);
 
           // Return cleanup function
@@ -161,8 +180,6 @@ export function ChessGameClean({
 
         if (!isMounted || !bestMove) return;
 
-        console.log("Processing Stockfish move:", bestMove);
-
         const gameCopy = new Chess(currentFen);
         const moveDetails = gameCopy.move({
           from: bestMove.slice(0, 2) as Square,
@@ -173,14 +190,8 @@ export function ChessGameClean({
               : undefined,
         });
 
-        if (!moveDetails) {
-          console.error("Invalid move from Stockfish:", bestMove);
-          return;
-        }
+        if (!moveDetails) return;
 
-        console.log("Updating game state with new FEN:", gameCopy.fen());
-
-        // Update the game state immediately
         setGame(gameCopy);
         setGamePosition(gameCopy.fen());
 
@@ -270,7 +281,8 @@ export function ChessGameClean({
     black: baseTime,
   });
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [moveHistory, setMoveHistory] = useState<string[]>([]);
+
+  // Move history state is already declared above
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
 
@@ -745,12 +757,16 @@ export function ChessGameClean({
               <GameController
                 onResign={handleResign}
                 onDrawOffer={handleDrawOffer}
-                isGameOver={game.isGameOver() || gameTime.white <= 0 || gameTime.black <= 0}
+                isGameOver={
+                  game.isGameOver() ||
+                  gameTime.white <= 0 ||
+                  gameTime.black <= 0
+                }
                 isPlayerTurn={isPlayersTurn()}
               />
-              <GameStatus 
-                game={game} 
-                gameTime={gameTime} 
+              <GameStatus
+                game={game}
+                gameTime={gameTime}
                 onPlayAgain={() => window.location.reload()}
                 onViewBoard={() => {
                   setShowGameOverlay(false);
@@ -847,38 +863,37 @@ export function ChessGameClean({
                 </div>
 
                 {/* Game status overlay */}
-                {showGameOverlay && (game.isGameOver() ||
-                  gameTime.white <= 0 ||
-                  gameTime.black <= 0) && (
-                  <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm p-4">
-                    <div className="text-center mb-6">
-                      <h2 className="text-3xl font-bold text-cyan-400 mb-2 font-cyber neon-text">
-                        {gameTime.white <= 0
-                          ? "BLACK WINS!"
-                          : gameTime.black <= 0
-                          ? "WHITE WINS!"
-                          : game.isCheckmate()
-                          ? `${game.turn() === "w" ? "BLACK" : "WHITE"} WINS!`
-                          : "NEURAL DRAW"}
-                      </h2>
-                      <p className="text-cyan-300 mb-6">
-                        {gameTime.white <= 0 || gameTime.black <= 0
-                          ? "TIME FORFEIT"
-                          : game.isCheckmate()
-                          ? "CHECKMATE"
-                          : game.isStalemate()
-                          ? "STALEMATE"
-                          : game.isThreefoldRepetition()
-                          ? "THREEFOLD REPETITION"
-                          : game.isInsufficientMaterial()
-                          ? "INSUFFICIENT MATERIAL"
-                          : "DRAW"}
-                      </p>
-
-
+                {showGameOverlay &&
+                  (game.isGameOver() ||
+                    gameTime.white <= 0 ||
+                    gameTime.black <= 0) && (
+                    <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm p-4">
+                      <div className="text-center mb-6">
+                        <h2 className="text-3xl font-bold text-cyan-400 mb-2 font-cyber neon-text">
+                          {gameTime.white <= 0
+                            ? "BLACK WINS!"
+                            : gameTime.black <= 0
+                            ? "WHITE WINS!"
+                            : game.isCheckmate()
+                            ? `${game.turn() === "w" ? "BLACK" : "WHITE"} WINS!`
+                            : "NEURAL DRAW"}
+                        </h2>
+                        <p className="text-cyan-300 mb-6">
+                          {gameTime.white <= 0 || gameTime.black <= 0
+                            ? "TIME FORFEIT"
+                            : game.isCheckmate()
+                            ? "CHECKMATE"
+                            : game.isStalemate()
+                            ? "STALEMATE"
+                            : game.isThreefoldRepetition()
+                            ? "THREEFOLD REPETITION"
+                            : game.isInsufficientMaterial()
+                            ? "INSUFFICIENT MATERIAL"
+                            : "DRAW"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* Bottom Player (White) */}
