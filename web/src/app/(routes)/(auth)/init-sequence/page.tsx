@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { axiosInstance } from "@/lib/axios-instance";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // Define the form schema with Zod
 const formSchema = z
@@ -120,7 +120,7 @@ export default function Home() {
       // Invalidate the auth user query to refetch the user data
       await queryClient.invalidateQueries({ queryKey: ["authUser"] });
       // Wait a small amount of time to ensure the auth state is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Then redirect
       form.reset();
       router.push("/");
@@ -128,7 +128,7 @@ export default function Home() {
     onError: (error: Error) => {
       console.error("Signup error:", error);
       // You can add error handling here, like showing a toast notification
-    }
+    },
   });
 
   // Form submission handler
@@ -145,7 +145,7 @@ export default function Home() {
   }
 
   // Check if the user is already authenticated
-  const { user, isLoading } = useAuthUser();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
