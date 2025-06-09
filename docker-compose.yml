@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      target: runner
+    container_name: neonlink-web
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./web/.env
+    environment:
+      - NODE_ENV=production
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    networks:
+      - frontend-network
+    user: "1001"
+    command: ["node", "server.js"]
+
+networks:
+  frontend-network:
+    driver: bridge
