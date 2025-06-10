@@ -531,9 +531,9 @@ export async function profileSetupController(req, res) {
       });
     }
 
-    // Check if username is already taken
+    // Check if username is already taken (case-insensitive)
     const existingUsername = await User.findOne({
-      username,
+      username: { $regex: new RegExp(`^${username}$`, 'i') },
       _id: { $ne: userId }, // Exclude current user
     });
     if (existingUsername) {

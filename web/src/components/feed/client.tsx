@@ -132,16 +132,15 @@ export default function FeedClient() {
                       alt="Profile"
                     />
                     <AvatarFallback className="bg-black text-cyan-400 font-bold">
-                      {user?.fullName
+                      {user?.handle
                         ?.split(" ")
                         .map((name) => name[0])
-                        .join("")}
+                        .join("")
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold text-white uppercase">
-                      {user?.handle}
-                    </h3>
+                    <h3 className="font-bold text-white">{user?.handle}</h3>
                     <p className="text-xs text-cyan-400 font-mono">
                       @{user?.username}
                     </p>

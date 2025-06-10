@@ -53,9 +53,7 @@ export default function AccountSetup() {
       const response = await axiosInstance.post("/auth/account-setup", values);
       return response.data;
     },
-    onSuccess: (data) => {
-      console.log("Account setup successful, data:", data);
-      console.log("Attempting to redirect to /");
+    onSuccess: () => {
       // Force a full page reload to ensure auth state is updated
       window.location.href = "/";
     },
@@ -82,20 +80,20 @@ export default function AccountSetup() {
     return username.substring(0, 2);
   };
 
-  // Handle uppercase for username
+  // Handle username input
   const handleUsernameChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     onChange: (value: string) => void
   ) => {
-    onChange(e.target.value.toUpperCase());
+    onChange(e.target.value);
   };
 
-  // Handle lowercase for handle
+  // Handle handle input
   const handleHandleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     onChange: (value: string) => void
   ) => {
-    onChange(e.target.value.toLowerCase());
+    onChange(e.target.value);
   };
 
   return (
@@ -176,7 +174,7 @@ export default function AccountSetup() {
                       </div>
                     </div>
                     <FormDescription className="text-xs text-gray-500">
-                      Use uppercase letters, numbers, and underscores
+                      Letters, numbers, and underscores only
                     </FormDescription>
                     <FormMessage className="text-xs text-red-400 font-mono flex items-center">
                       {form.formState.errors.username && (
@@ -218,7 +216,7 @@ export default function AccountSetup() {
                       </div>
                     </div>
                     <FormDescription className="text-xs text-gray-500">
-                      Lowercase letters, numbers, and underscores only
+                      Letters, numbers, and underscores only
                     </FormDescription>
                     <FormMessage className="text-xs text-red-400 font-mono flex items-center">
                       {form.formState.errors.handle && (
