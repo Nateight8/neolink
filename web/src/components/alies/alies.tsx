@@ -18,13 +18,25 @@ import { User } from "@/types/chat";
 
 export default function AlliesRecommendation() {
   const queryClient = useQueryClient();
-  const { data: onboardingStatus } = useQuery({
-    queryKey: ["onboardStatus"],
-    queryFn: async () => {
-      const response = await axiosInstance.get("/users/status");
-      return response.data;
-    },
-  });
+
+  // Mark suggestions as seen when component mounts
+  useEffect(() => {
+    const markSuggestionsAsSeen = async () => {
+      try {
+        await axiosInstance.patch('/auth/me', { hasSeenSuggestions: true });
+        // Invalidate user data to refresh the UI
+        await queryClient.invalidateQueries({
+          queryKey: ["currentUser"],
+        });
+      } catch (error) {
+        console.error('Error updating suggestions status:', error);
+        // You might want to add error handling here, like showing a toast notification
+        // toast.error('Failed to update suggestions status');
+      }
+    };
+
+    markSuggestionsAsSeen();
+  }, [queryClient]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [currentAllyIndex, setCurrentAllyIndex] = useState(0);
@@ -255,17 +267,10 @@ export default function AlliesRecommendation() {
             <div className="w-full max-w-md mt-6">
               <Button
                 onClick={() => {
-                  // Invalidate the onboardStatus query to force a re-fetch
-                  queryClient.invalidateQueries({
-                    queryKey: ["onboardStatus"],
-                  });
+                  // Just refresh the page since we already updated hasSeenSuggestions on mount
+                  window.location.reload();
                 }}
-                disabled={onboardingStatus?.pendingRequests === 0}
-                className={`w-full rounded-sm ${
-                  onboardingStatus?.pendingRequests > 0
-                    ? "bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500"
-                    : "bg-gray-500 cursor-not-allowed"
-                } text-white shadow-[0_0_10px_rgba(0,255,255,0.3)] py-6 text-lg font-bold`}
+                className="w-full rounded-sm bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white shadow-[0_0_10px_rgba(0,255,255,0.3)] py-6 text-lg font-bold"
               >
                 <Zap className="h-5 w-5 mr-2" />
                 {addedAllies.length > 0

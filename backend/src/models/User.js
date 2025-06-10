@@ -38,9 +38,19 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    isOnboarder: {
+    hasSeenSuggestions: {
       type: Boolean,
       default: false,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+    },
+    emailVerificationTokenExpires: {
+      type: Date,
     },
 
     friends: [

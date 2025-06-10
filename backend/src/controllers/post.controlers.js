@@ -129,7 +129,7 @@ export const createPost = async (req, res) => {
 export const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "username name avatar verified")
+      .populate("author", "username name avatar verified handle")
       .populate({
         path: "poll",
         select: "question options visibility expiresAt totalVotes",

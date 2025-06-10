@@ -7,6 +7,7 @@ import Background from "@/components/background";
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
 import { FloatingDock } from "@/components/navigation/floating-dock";
 import { TransitionProvider } from "@/components/provider/page-transition-provider";
+import { AuthProvider } from "@/contexts/auth-context";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -29,15 +30,17 @@ export default function RootLayout({
         >
           <QueryClientProviderWrapper>
             <TransitionProvider>
-              <main className="relative ">
-                {/* Fixed Cyberpunk background with grid lines */}
-                <Background />
-                {children}
-                <FloatingDock
-                  desktopClassName="fixed bottom-6 right-6 z-50"
-                  mobileClassName="fixed bottom-6 right-6 z-50"
-                />
-              </main>
+              <AuthProvider>
+                <main className="relative ">
+                  {/* Fixed Cyberpunk background with grid lines */}
+                  <Background />
+                  {children}
+                  <FloatingDock
+                    desktopClassName="fixed bottom-6 right-6 z-50"
+                    mobileClassName="fixed bottom-6 right-6 z-50"
+                  />
+                </main>
+              </AuthProvider>
             </TransitionProvider>
           </QueryClientProviderWrapper>
         </ThemeProvider>

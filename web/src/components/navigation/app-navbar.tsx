@@ -7,7 +7,7 @@ import { GlitchText } from "../feed/glitch-text";
 import { NeonButton } from "../feed/neon-button";
 import { Button } from "../ui/button";
 import { Bell, Flame, Menu, MessageSquare, User, X, Zap } from "lucide-react";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // 🧠 Nav config array
 const navLinks = [
@@ -23,7 +23,7 @@ export default function AppNavbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const { user, isLoading } = useAuthUser();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return null; // Optionally, you can show a loader here
@@ -38,7 +38,7 @@ export default function AppNavbar() {
     pathname === "/login" ||
     pathname.includes("/init-sequence") ||
     pathname.includes("/echo-net") ||
-    user?.isOnboarder === false
+    user?.hasSeenSuggestions === false
   ) {
     return null; // Don't render the navbar on the root page
   }

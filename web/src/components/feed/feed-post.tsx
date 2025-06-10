@@ -20,13 +20,14 @@ import {
 } from "lucide-react";
 import type { Post } from "@/types/chat";
 import Image from "next/image";
-import { useAuthUser } from "@/hooks/use-auth";
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { CommentThreadModal } from "./comment-thread";
 import { getCompactRelativeTime } from "@/lib/relative-time";
 import { FormattedContent } from "../shared/formatted-content";
 import { FeedPoll } from "./feed-poll";
+import { useAuth } from "@/contexts/auth-context";
 
 interface FeedPostProps {
   post: Post;
@@ -39,7 +40,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
 
   // Extract hashtags from content
 
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   const likedByUser = user?._id ? post.likedBy.includes(user._id) : false;
   const retweetByUser = user?._id ? post.retweetedBy.includes(user._id) : false;
@@ -95,20 +96,20 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
             <Avatar className="h-10 w-10 border border-cyan-500">
               <AvatarImage
                 src={"/placeholder.svg"}
-                alt={post.author.fullName}
+                alt={post.author?.fullName}
               />
               <AvatarFallback className="bg-black text-cyan-400">
-                {post.author.username && post.author.username.substring(0, 2)}
+                {post.author?.username && post.author?.username.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center">
                 <h3 className="font-bold text-white mr-1">
-                  {post.author.username}
+                  {post.author?.handle}
                 </h3>
               </div>
               <div className="flex items-center text-xs text-gray-500">
-                <span className="mr-2">@{post.author.username}</span>
+                <span className="mr-2">@{post.author?.username}</span>
                 <span>• {updatedAt}</span>
               </div>
             </div>
@@ -128,13 +129,13 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
           {post.image && (
             <div className="relative rounded-sm overflow-hidden mt-2 border border-cyan-900">
               <Image
-                src="/placeholder.svg"
+                src={post?.image}
                 alt="Post content"
                 className="w-full object-cover max-h-[400px]"
               />
             </div>
           )}
-          {post.hasPoll && <FeedPoll poll={post.poll} />}
+          {post.hasPoll && <FeedPoll poll={post?.poll} />}
         </div>
 
         {/* Post actions */}

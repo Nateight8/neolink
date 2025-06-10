@@ -10,6 +10,7 @@
     "express": "^4.21.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.2",
+    "resend": "^4.5.2",
     "stream-chat": "^8.60.0"
   },
   "devDependencies": {

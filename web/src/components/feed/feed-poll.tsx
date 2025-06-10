@@ -8,7 +8,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Poll } from "@/types/chat";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
+
 // import { Poll } from "@/types/chat";
 
 interface FeedPollProps {
@@ -16,7 +17,7 @@ interface FeedPollProps {
 }
 
 export function FeedPoll({ poll }: FeedPollProps) {
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   const userId = user?._id;
 

@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Zap, Shield, Cpu } from "lucide-react";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import Posts from "@/components/profile/posts";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProfilePage() {
-  const { user } = useAuthUser();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen  relative">
@@ -55,10 +55,24 @@ export default function ProfilePage() {
               <EditProfileDialog />
               <Button
                 size="sm"
-                variant="default"
-                className="rounded-sm bg-fuchsia-600 hover:bg-fuchsia-700 shadow-[0_0_10px_rgba(219,39,119,0.5)]"
+                variant="ghost"
+                onClick={() => {
+                  logout();
+                }}
+                className="relative overflow-hidden group px-6 py-2 rounded-sm border border-fuchsia-500/50 bg-black/80 text-fuchsia-300 hover:bg-fuchsia-900/30 hover:border-fuchsia-400 transition-all duration-300
+                           hover:shadow-[0_0_15px_rgba(219,39,119,0.6)] hover:translate-y-[-2px]"
               >
-                CONNECT
+                <span className="relative z-10 font-mono text-sm tracking-wider">
+                  DISCONNECT
+                </span>
+                {/* Glow effect */}
+                <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/30 to-cyan-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                {/* Animated border - top-left corner */}
+                <span className="absolute border-t-2 border-l-2 border-fuchsia-400/70 w-3 h-3 -left-0.5 -top-0.5 animate-pulse"></span>
+                {/* Animated border - bottom-right corner */}
+                <span className="absolute border-b-2 border-r-2 border-fuchsia-400/50 w-3 h-3 -right-0.5 -bottom-0.5 animate-pulse"></span>
+                {/* Hover effect */}
+                <span className="absolute inset-0 bg-gradient-to-r from-fuchsia-900/0 via-fuchsia-500/20 to-fuchsia-900/0 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:scale-x-150"></span>
               </Button>
             </div>
           </div>

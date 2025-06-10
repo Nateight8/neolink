@@ -14,13 +14,13 @@ import { FeedPost } from "./feed-post";
 // import { StoryLives } from "./story-lives";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
-import { ChessRoomsSidebar } from "./right-sidebar";
+import { GameRoomsSidebar } from "./right-sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import type { Post } from "@/types/chat";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // Mock data for trending topics
 const TRENDING = [
@@ -59,7 +59,7 @@ const TRENDING = [
 export default function FeedClient() {
   const router = useRouter();
 
-  const { user } = useAuthUser();
+  const { user } = useAuth();
 
   const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -111,6 +111,7 @@ export default function FeedClient() {
     }
   };
 
+  console.log("USER FROM FEED", posts);
   // Toggle AR post creation
 
   return (
@@ -131,16 +132,17 @@ export default function FeedClient() {
                       alt="Profile"
                     />
                     <AvatarFallback className="bg-black text-cyan-400 font-bold">
-                      {user?.fullName
+                      {user?.handle
                         ?.split(" ")
                         .map((name) => name[0])
-                        .join("")}
+                        .join("")
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold text-white">{user?.fullName}</h3>
+                    <h3 className="font-bold text-white">{user?.handle}</h3>
                     <p className="text-xs text-cyan-400 font-mono">
-                      @{user?.handle}
+                      @{user?.username}
                     </p>
                   </div>
                 </div>
@@ -302,7 +304,7 @@ export default function FeedClient() {
 
           {/* Right sidebar - Chess Rooms */}
           <aside className="hidden lg:block">
-            <ChessRoomsSidebar />
+            <GameRoomsSidebar />
           </aside>
         </main>
       </div>

@@ -1,28 +1,31 @@
 "use client";
 
 import { useState } from "react";
-
+import { useTransition } from "@/components/provider/page-transition-provider";
 import { Crown, Zap, Trophy, Star } from "lucide-react";
 import LobbyHeader from "./lobby-header";
 import GlobalChat from "./global-chat";
 import AllyList from "./ally-list";
-import GameModeSelector from "./game-mode";
+import { GameModeSelector } from "./game-mode";
 import Live from "./live";
 import Ranking from "./ranking";
 import Achievements from "./achievements";
+import { OpponentSelection } from "./game-modes/opponent-selection";
+import { BotConfig } from "./game-modes/bot-config";
+import { HumanChallenge } from "./game-modes/human-challenge";
 
-// Mock data
-const currentUser = {
-  id: 1,
-  username: "NeuralMaster",
-  avatar: "/placeholder.svg?height=64&width=64&text=NM",
-  status: "online",
-  rating: 1850,
-  xp: 2750,
-  maxXp: 3000,
-  level: 12,
-  title: "Cyber Knight",
-};
+// // Mock data
+// const currentUser = {
+//   id: 1,
+//   username: "NeuralMaster",
+//   avatar: "/placeholder.svg?height=64&width=64&text=NM",
+//   status: "online",
+//   rating: 1850,
+//   xp: 2750,
+//   maxXp: 3000,
+//   level: 12,
+//   title: "Cyber Knight",
+// };
 
 const friends = [
   {
@@ -217,9 +220,132 @@ const notifications = [
   },
 ];
 
+type GameModeView =
+  | "main"
+  | "opponent-selection"
+  | "bot-config"
+  | "human-challenge"
+  | "game";
+
 export function ChessLobby() {
   const [chatMessage, setChatMessage] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [gameModeView, setGameModeView] = useState<GameModeView>("main");
+  const [showLiveGames, setShowLiveGames] = useState(true);
+  const [isGameStarting, setIsGameStarting] = useState(false);
+  const transition = useTransition();
+  const navigateWithTransition =
+    transition?.navigateWithTransition ||
+    ((path: string) => {
+      if (typeof window !== "undefined") {
+        window.location.href = path;
+      }
+    });
+
+  const handleGameModeSelect = () => {
+    setGameModeView("opponent-selection");
+    setShowLiveGames(false);
+  };
+
+  const handleOpponentSelect = (opponent: "bot" | "human") => {
+    setGameModeView(opponent === "bot" ? "bot-config" : "human-challenge");
+  };
+
+  const handleBackToGameModes = () => {
+    setGameModeView("main");
+    setShowLiveGames(true);
+  };
+
+  const handleBackToOpponentSelection = () => {
+    setGameModeView("opponent-selection");
+  };
+
+  interface BotGameSettings {
+    difficulty: number;
+    timeControl: string;
+    color: "white" | "black" | "random";
+  }
+
+  interface ChallengeSettings {
+    timeControl: string;
+    rated: boolean;
+  }
+
+  const handleStartBotGame = (settings: BotGameSettings) => {
+    console.log("Starting bot game with settings:", settings);
+    setIsGameStarting(true);
+    setGameModeView("game");
+
+    // After 5 seconds, redirect to the chess page with transition
+    const timer = setTimeout(() => {
+      navigateWithTransition("/lobby/chess");
+    }, 5000);
+
+    // Cleanup timer on unmount
+    return () => clearTimeout(timer);
+  };
+
+  const handleCreateChallenge = (settings: ChallengeSettings) => {
+    console.log("Creating challenge with settings:", settings);
+    // TODO: Implement challenge creation logic
+    setGameModeView("game");
+  };
+
+  const renderGameModeContent = () => {
+    switch (gameModeView) {
+      case "opponent-selection":
+        return (
+          <OpponentSelection
+            onSelect={handleOpponentSelect}
+            onBack={handleBackToGameModes}
+          />
+        );
+      case "bot-config":
+        return (
+          <BotConfig
+            onBack={handleBackToOpponentSelection}
+            onStart={handleStartBotGame}
+          />
+        );
+      case "human-challenge":
+        return (
+          <HumanChallenge
+            onBack={handleBackToOpponentSelection}
+            onCreateChallenge={handleCreateChallenge}
+          />
+        );
+      case "game":
+        return (
+          <div className="w-full h-[600px] bg-gray-900/50 border border-cyan-900/50 rounded-lg flex items-center justify-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10" />
+            <div className="relative z-10 text-center space-y-4">
+              <div className="animate-pulse">
+                <Zap className="h-16 w-16 mx-auto text-cyan-400" />
+              </div>
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
+                Initializing Neural Duel
+              </h3>
+              <p className="text-cyan-300/80 max-w-md">
+                Loading AI opponent and game environment...
+              </p>
+              <div className="w-48 h-1.5 bg-cyan-900/50 rounded-full overflow-hidden mx-auto mt-6">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-fuchsia-500 transition-all duration-500 ease-out"
+                  style={{ width: isGameStarting ? "100%" : "0%" }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <>
+            <GameModeSelector onSelectGameMode={handleGameModeSelect} />
+            {showLiveGames && <Live ongoingGames={ongoingGames} />}
+          </>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
@@ -232,7 +358,6 @@ export function ChessLobby() {
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header with User Profile */}
         <LobbyHeader
-          currentUser={currentUser}
           notifications={notifications}
           showNotifications={showNotifications}
           setShowNotifications={setShowNotifications}
@@ -243,32 +368,82 @@ export function ChessLobby() {
           {/* Left Sidebar - Friends & Chat */}
           <div className="col-span-3 space-y-6">
             {/* Friends List */}
-            <AllyList friends={friends} />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6">
+                <div className="bg-gradient-to-br from-cyan-900/30 to-fuchsia-900/30 border border-cyan-500/30 rounded-lg p-6 max-w-xs text-center">
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 mb-2">
+                    Friends List
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Coming Soon: Connect with friends, see who&apos;s online,
+                    and challenge them to a game.
+                  </p>
+                  <div className="text-xs text-gray-500">Release: Q3 2025</div>
+                </div>
+              </div>
+              <AllyList friends={friends} />
+            </div>
 
             {/* Global Chat */}
-            <GlobalChat
-              chatMessages={chatMessages}
-              chatMessage={chatMessage}
-              setChatMessage={setChatMessage}
-            />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6">
+                <div className="bg-gradient-to-br from-cyan-900/30 to-fuchsia-900/30 border border-cyan-500/30 rounded-lg p-6 max-w-xs text-center">
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 mb-2">
+                    Global Chat
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Coming Soon: Chat with the community, discuss strategies,
+                    and make new friends.
+                  </p>
+                  <div className="text-xs text-gray-500">Release: Q3 2025</div>
+                </div>
+              </div>
+              <GlobalChat
+                chatMessages={chatMessages}
+                chatMessage={chatMessage}
+                setChatMessage={setChatMessage}
+              />
+            </div>
           </div>
 
           {/* Center Content */}
-          <div className="col-span-6 space-y-6">
-            {/* Game Modes */}
-            <GameModeSelector />
-
-            {/* Ongoing Games */}
-            <Live ongoingGames={ongoingGames} />
-          </div>
+          <div className="col-span-6 space-y-6">{renderGameModeContent()}</div>
 
           {/* Right Sidebar */}
           <div className="col-span-3 space-y-6">
             {/* Leaderboard */}
-            <Ranking leaderboard={leaderboard} />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6">
+                <div className="bg-gradient-to-br from-cyan-900/30 to-fuchsia-900/30 border border-cyan-500/30 rounded-lg p-6 max-w-xs text-center">
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 mb-2">
+                    Leaderboard
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Coming Soon: Track top players, climb the ranks, and see how
+                    you compare to the community.
+                  </p>
+                  <div className="text-xs text-gray-500">Release: Q3 2025</div>
+                </div>
+              </div>
+              <Ranking leaderboard={leaderboard} />
+            </div>
 
             {/* Achievements */}
-            <Achievements achievements={achievements} />
+            <div className="relative group">
+              <div className="absolute inset-0 bg-black/90 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-6">
+                <div className="bg-gradient-to-br from-cyan-900/30 to-fuchsia-900/30 border border-cyan-500/30 rounded-lg p-6 max-w-xs text-center">
+                  <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-400 mb-2">
+                    Achievements
+                  </h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Coming Soon: Unlock achievements, complete challenges, and
+                    show off your progress.
+                  </p>
+                  <div className="text-xs text-gray-500">Release: Q3 2025</div>
+                </div>
+              </div>
+              <Achievements achievements={achievements} />
+            </div>
           </div>
         </div>
       </div>

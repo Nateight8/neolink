@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
-import { useAuthUser } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 
 // Define the form schema with Zod
 const loginSchema = z.object({
@@ -106,9 +106,17 @@ export default function LoginPage() {
   }
 
   // Check if the user is already authenticated
-  const { user, isLoading: checkingAuthUser } = useAuthUser();
+  const { user, isLoading: checkingAuthUser } = useAuth();
 
-  if (checkingAuthUser) {
+  // Handle redirection when user is authenticated
+  useEffect(() => {
+    if (user) {
+      router.push("/");
+    }
+  }, [user, router]);
+
+  // Show loading state while checking auth or redirecting
+  if (checkingAuthUser || user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-500 font-mono text-xs animate-pulse">
@@ -116,11 +124,6 @@ export default function LoginPage() {
         </p>
       </div>
     );
-  }
-
-  if (user) {
-    router.push("/");
-    return null;
   }
 
   return (

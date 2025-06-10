@@ -14,11 +14,12 @@ import {
   Clock,
   X,
 } from "lucide-react";
-import { useAuthUser } from "@/hooks/use-auth";
+
 // import { useQueryClient } from "@tanstack/react-query";
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { cn } from "@/lib/utils";
 import { FormattedContent } from "../shared/formatted-content";
+import { useAuth } from "@/contexts/auth-context";
 
 interface Comment {
   id: string;
@@ -47,7 +48,7 @@ export function CommentThreadModal({
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [animationActive, setAnimationActive] = useState(true);
-  const { user } = useAuthUser();
+  const { user } = useAuth();
   // const queryClient = useQueryClient();
   const raysRef = useRef<HTMLDivElement>(null);
 
@@ -184,21 +185,20 @@ export function CommentThreadModal({
                 <Avatar className="h-10 w-10 border border-cyan-500">
                   <AvatarImage
                     src={"/placeholder.svg"}
-                    alt={post.author.fullName}
+                    alt={post.author?.fullName || 'User'}
                   />
                   <AvatarFallback className="bg-black text-cyan-400">
-                    {post.author.username &&
-                      post.author.username.substring(0, 2)}
+                    {post.author?.username?.substring(0, 2) || 'US'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="flex items-center">
                     <h3 className="font-bold text-white mr-1">
-                      {post.author.username}
+                      {post.author?.username || 'User'}
                     </h3>
                   </div>
                   <div className="flex items-center text-xs text-gray-500">
-                    <span className="mr-2">@{post.author.username}</span>
+                    <span className="mr-2">@{post.author?.username || 'user'}</span>
                     <span>• {post.updatedAt}</span>
                   </div>
                 </div>

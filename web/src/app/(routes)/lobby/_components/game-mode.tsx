@@ -1,89 +1,101 @@
 "use client";
 
-import { Clock, Crown, Settings, Users, Zap } from "lucide-react";
+import { Zap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-export default function GameModeSelector() {
-  const [selectedGameMode, setSelectedGameMode] = useState("blitz");
+interface GameModeSelectorProps {
+  onSelectGameMode: () => void;
+}
+
+export function GameModeSelector({ onSelectGameMode }: GameModeSelectorProps) {
   return (
     <>
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4">
-        <Button className="h-16 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white shadow-[0_0_20px_rgba(0,255,255,0.3)]">
-          <Zap className="h-6 w-6 mr-3" />
-          <div className="text-left">
-            <div className="font-bold">Quick Match</div>
-            <div className="text-xs opacity-80">Find random opponent</div>
-          </div>
-        </Button>
-
-        <Button className="h-16 bg-gradient-to-r from-fuchsia-600 to-fuchsia-500 hover:from-fuchsia-500 hover:to-fuchsia-400 text-white shadow-[0_0_20px_rgba(255,0,255,0.3)]">
-          <Users className="h-6 w-6 mr-3" />
-          <div className="text-left">
-            <div className="font-bold">Challenge Friend</div>
-            <div className="text-xs opacity-80">Invite ally to duel</div>
-          </div>
-        </Button>
-      </div>
-      <div className="bg-black/50 border border-cyan-900 rounded-sm p-6 backdrop-blur-sm">
-        <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-sm -z-10" />
-
-        <h3 className="text-cyan-400 font-bold mb-4 flex items-center">
-          <Settings className="h-5 w-5 mr-2" />
-          Neural Game Modes
-        </h3>
-
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            {
-              id: "blitz",
-              name: "Blitz",
-              time: "3+2",
-              icon: Zap,
-              color: "cyan",
-            },
-            {
-              id: "rapid",
-              name: "Rapid",
-              time: "10+5",
-              icon: Clock,
-              color: "fuchsia",
-            },
-            {
-              id: "classical",
-              name: "Classical",
-              time: "30+0",
-              icon: Crown,
-              color: "yellow",
-            },
-            {
-              id: "custom",
-              name: "Custom",
-              time: "Custom",
-              icon: Settings,
-              color: "green",
-            },
-          ].map((mode) => (
-            <Button
-              key={mode.id}
-              variant={selectedGameMode === mode.id ? "default" : "outline"}
-              className={`h-16 ${
-                selectedGameMode === mode.id
-                  ? `bg-${mode.color}-600 hover:bg-${mode.color}-500 text-white`
-                  : `border-${mode.color}-500 text-${mode.color}-400 hover:bg-${mode.color}-950/30`
-              }`}
-              onClick={() => setSelectedGameMode(mode.id)}
-            >
-              <mode.icon className="h-5 w-5 mr-3" />
-              <div className="text-left">
-                <div className="font-bold">{mode.name}</div>
-                <div className="text-xs opacity-80">{mode.time}</div>
+        <div className="relative bg-black/50 border border-cyan-900/50 rounded-sm backdrop-blur-sm overflow-hidden group hover:border-cyan-500/50 transition-all duration-300">
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 group-hover:opacity-50 transition-opacity" />
+          <Button
+            className="relative w-full h-24 bg-transparent hover:bg-transparent p-0 border-0"
+            onClick={onSelectGameMode}
+          >
+            <div className="absolute inset-0.5 bg-gradient-to-br from-black/70 to-black/50 rounded-sm pointer-events-none" />
+            <div className="relative z-10 flex items-center w-full h-full px-6">
+              <div className="p-2.5 mr-4 rounded-md bg-gradient-to-br from-cyan-400/20 to-fuchsia-500/20 backdrop-blur-sm border border-cyan-500/20 group-hover:border-cyan-400/40 transition-all">
+                <Zap className="w-6 h-6 text-cyan-300 group-hover:text-cyan-200 transition-colors" />
               </div>
-            </Button>
-          ))}
+              <div className="text-left">
+                <div className="font-bold text-lg bg-gradient-to-r from-cyan-200 to-fuchsia-200 bg-clip-text text-transparent">
+                  Quick Match
+                </div>
+                <div className="text-sm text-cyan-300/80 group-hover:text-cyan-200/90 transition-colors">
+                  Randoms or AI
+                </div>
+              </div>
+            </div>
+          </Button>
         </div>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative bg-black/50 border border-fuchsia-900/50 rounded-sm backdrop-blur-sm overflow-hidden group hover:border-fuchsia-500/50 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/10 to-cyan-500/10 group-hover:opacity-50 transition-opacity" />
+              <Button className="relative w-full h-24 bg-transparent hover:bg-transparent p-0 border-0">
+                <div className="absolute inset-0.5 bg-gradient-to-br from-black/70 to-black/50 rounded-sm pointer-events-none" />
+                <div className="relative z-10 flex items-center w-full h-full px-6">
+                  <div className="p-2.5 mr-4 rounded-md bg-gradient-to-br from-fuchsia-400/20 to-cyan-500/20 backdrop-blur-sm border border-fuchsia-500/20 group-hover:border-fuchsia-400/40 transition-all">
+                    <Users className="w-6 h-6 text-fuchsia-300 group-hover:text-fuchsia-200 transition-colors" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-bold text-lg bg-gradient-to-r from-fuchsia-200 to-cyan-200 bg-clip-text text-transparent">
+                      Create Room
+                    </div>
+                    <div className="text-sm text-fuchsia-300/80 group-hover:text-fuchsia-200/90 transition-colors">
+                      Friends
+                    </div>
+                  </div>
+                </div>
+              </Button>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent variant="production">
+            Feature still in production. Try Quick Match!
+          </TooltipContent>
+        </Tooltip>
       </div>
     </>
   );
 }
+
+// {
+//   id: "blitz",
+//   name: "Blitz",
+//   time: "3+2",
+//   icon: Zap,
+//   color: "cyan",
+// },
+// {
+//   id: "rapid",
+//   name: "Rapid",
+//   time: "10+5",
+//   icon: Clock,
+//   color: "fuchsia",
+// },
+// {
+//   id: "classical",
+//   name: "Classical",
+//   time: "30+0",
+//   icon: Crown,
+//   color: "yellow",
+// },
+// {
+//   id: "custom",
+//   name: "Custom",
+//   time: "Custom",
+//   icon: Settings,
+//   color: "green",
+// },
