@@ -1,3 +1,4 @@
+import { User } from "@/types/chat";
 import { axiosInstance } from "./axios-instance";
 
 export default async function getStreamToken() {
@@ -9,3 +10,15 @@ export default async function getStreamToken() {
     throw error;
   }
 }
+
+export const setToken = (token: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("authToken", token);
+  }
+};
+
+export const setUser = (user: User) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("user", JSON.stringify(user));
+  }
+};
