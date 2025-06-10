@@ -29,6 +29,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 import { useAuth } from "@/contexts/auth-context";
+import { setToken, setUser } from "@/lib/api";
 
 // Define the form schema with Zod
 const loginSchema = z.object({
@@ -63,12 +64,14 @@ export default function LoginPage() {
     mutationFn: async (loginData: { email: string; password: string }) => {
       return await axiosInstance.post("/auth/login", loginData);
     },
-    onSuccess: async () => {
-      // Invalidate the auth user query to refetch the user data
+    onSuccess: async (response) => {
+      const { token, user } = response.data;
+      setToken(token);
+      setUser(user);
+
+      // Everything else stays the same
       await queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      // Wait a small amount of time to ensure the auth state is updated
       await new Promise((resolve) => setTimeout(resolve, 100));
-      // Then redirect to the original requested path
       router.push("/");
     },
     onError: (error: {
@@ -78,7 +81,6 @@ export default function LoginPage() {
       console.error("Login error:", error);
       setIsLoading(false);
 
-      // Extract error message from the API response or use a default message
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
