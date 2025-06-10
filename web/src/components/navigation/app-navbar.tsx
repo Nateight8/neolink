@@ -38,7 +38,7 @@ export default function AppNavbar() {
     pathname === "/login" ||
     pathname.includes("/init-sequence") ||
     pathname.includes("/echo-net") ||
-    user?.isOnboarder === false
+    user?.hasSeenSuggestions === false
   ) {
     return null; // Don't render the navbar on the root page
   }

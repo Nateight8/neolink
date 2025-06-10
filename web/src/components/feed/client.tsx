@@ -111,6 +111,7 @@ export default function FeedClient() {
     }
   };
 
+  console.log("USER FROM FEED", posts);
   // Toggle AR post creation
 
   return (
@@ -138,9 +139,11 @@ export default function FeedClient() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-bold text-white">{user?.fullName}</h3>
+                    <h3 className="font-bold text-white uppercase">
+                      {user?.handle}
+                    </h3>
                     <p className="text-xs text-cyan-400 font-mono">
-                      @{user?.handle}
+                      @{user?.username}
                     </p>
                   </div>
                 </div>

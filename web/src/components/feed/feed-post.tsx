@@ -96,20 +96,20 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
             <Avatar className="h-10 w-10 border border-cyan-500">
               <AvatarImage
                 src={"/placeholder.svg"}
-                alt={post.author.fullName}
+                alt={post.author?.fullName}
               />
               <AvatarFallback className="bg-black text-cyan-400">
-                {post.author.username && post.author.username.substring(0, 2)}
+                {post.author?.username && post.author?.username.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center">
                 <h3 className="font-bold text-white mr-1">
-                  {post.author.username}
+                  {post.author?.handle}
                 </h3>
               </div>
               <div className="flex items-center text-xs text-gray-500">
-                <span className="mr-2">@{post.author.username}</span>
+                <span className="mr-2">@{post.author?.username}</span>
                 <span>• {updatedAt}</span>
               </div>
             </div>
@@ -129,13 +129,13 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
           {post.image && (
             <div className="relative rounded-sm overflow-hidden mt-2 border border-cyan-900">
               <Image
-                src="/placeholder.svg"
+                src={post?.image}
                 alt="Post content"
                 className="w-full object-cover max-h-[400px]"
               />
             </div>
           )}
-          {post.hasPoll && <FeedPoll poll={post.poll} />}
+          {post.hasPoll && <FeedPoll poll={post?.poll} />}
         </div>
 
         {/* Post actions */}

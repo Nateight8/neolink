@@ -280,6 +280,7 @@ export function ChessGameClean({
     white: baseTime,
     black: baseTime,
   });
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
   // Move history state is already declared above
@@ -332,7 +333,7 @@ export function ChessGameClean({
 
   // Timer countdown effect
   useEffect(() => {
-    if (game.isGameOver()) return;
+    if (game.isGameOver() || isPaused) return;
 
     const timer = setInterval(() => {
       const now = Date.now();
@@ -361,7 +362,7 @@ export function ChessGameClean({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [game, timeControl]);
+  }, [game, timeControl, isPaused]);
 
   // Update game time for display
   useEffect(() => {
@@ -710,6 +711,17 @@ export function ChessGameClean({
     return styles;
   };
 
+  // Toggle pause state
+  const togglePause = () => {
+    if (!game.isGameOver()) {
+      setIsPaused(!isPaused);
+      if (!isPaused) {
+        // Update last move time when pausing to prevent time jump on resume
+        lastMoveTime.current = Date.now();
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Cyberpunk background */}
@@ -763,11 +775,19 @@ export function ChessGameClean({
                   gameTime.black <= 0
                 }
                 isPlayerTurn={isPlayersTurn()}
+                isPaused={isPaused}
+                onPause={togglePause}
               />
               <GameStatus
                 game={game}
                 gameTime={gameTime}
-                onPlayAgain={() => window.location.reload()}
+                onPlayAgain={() => {
+                  // Clear game state from localStorage before reloading
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('chessBotGame');
+                  }
+                  window.location.reload();
+                }}
                 onViewBoard={() => {
                   setShowGameOverlay(false);
                 }}

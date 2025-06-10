@@ -185,21 +185,20 @@ export function CommentThreadModal({
                 <Avatar className="h-10 w-10 border border-cyan-500">
                   <AvatarImage
                     src={"/placeholder.svg"}
-                    alt={post.author.fullName}
+                    alt={post.author?.fullName || 'User'}
                   />
                   <AvatarFallback className="bg-black text-cyan-400">
-                    {post.author.username &&
-                      post.author.username.substring(0, 2)}
+                    {post.author?.username?.substring(0, 2) || 'US'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="flex items-center">
                     <h3 className="font-bold text-white mr-1">
-                      {post.author.username}
+                      {post.author?.username || 'User'}
                     </h3>
                   </div>
                   <div className="flex items-center text-xs text-gray-500">
-                    <span className="mr-2">@{post.author.username}</span>
+                    <span className="mr-2">@{post.author?.username || 'user'}</span>
                     <span>• {post.updatedAt}</span>
                   </div>
                 </div>

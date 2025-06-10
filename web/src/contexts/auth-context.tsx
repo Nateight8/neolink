@@ -1,6 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 
@@ -8,7 +16,7 @@ interface AuthUser {
   _id: string;
   email: string;
   fullName: string;
-  isOnboarder: boolean;
+  hasSeenSuggestions: boolean;
   username: string;
   handle: string;
   bio: string;
@@ -35,8 +43,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -52,18 +58,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const { 
-    data: userData, 
-    isLoading, 
-    isError, 
-    refetch 
+  const {
+    data: userData,
+    isLoading,
+    isError,
+    refetch,
   } = useQuery<AuthUser | null, Error>({
     queryKey: ["authUser"],
     queryFn: fetchUser,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 1,
     refetchOnWindowFocus: true,
-    initialData: null
+    initialData: null,
   });
 
   // Update user state when query data changes
@@ -99,36 +105,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.removeQueries({ queryKey: ["authUser"] });
       queryClient.clear();
       // Force a hard refresh to ensure all states are reset
-      window.location.href = '/login';
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
     }
   }, [queryClient]);
 
   // Memoize the context value to prevent unnecessary re-renders
-  const contextValue = useMemo(() => ({
-    user,
-    isLoading: !isInitialized || isLoading,
-    isError,
-    isAuthenticated: !!user,
-    refetch: async () => {
-      try {
-        const userData = await fetchUser();
-        setUser(userData);
-        return userData;
-      } catch (err) {
-        console.error("Failed to refetch user:", err);
-        setUser(null);
-        return null;
-      }
-    },
-    logout,
-  }), [user, isInitialized, isLoading, isError, fetchUser, logout]);
+  const contextValue = useMemo(
+    () => ({
+      user,
+      isLoading: !isInitialized || isLoading,
+      isError,
+      isAuthenticated: !!user,
+      refetch: async () => {
+        try {
+          const userData = await fetchUser();
+          setUser(userData);
+          return userData;
+        } catch (err) {
+          console.error("Failed to refetch user:", err);
+          setUser(null);
+          return null;
+        }
+      },
+      logout,
+    }),
+    [user, isInitialized, isLoading, isError, fetchUser, logout]
+  );
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 

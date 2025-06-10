@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Flag, Handshake } from "lucide-react";
+import { Flag, Handshake, Pause, Play } from "lucide-react";
 
 interface GameControllerProps {
   onResign: () => void;
   onDrawOffer: () => void;
   isGameOver: boolean;
   isPlayerTurn: boolean;
+  isPaused: boolean;
+  onPause: () => void;
 }
 
 export default function GameController({
@@ -13,6 +15,8 @@ export default function GameController({
   onDrawOffer,
   isGameOver,
   isPlayerTurn,
+  isPaused,
+  onPause,
 }: GameControllerProps) {
   return (
     <>
@@ -39,6 +43,25 @@ export default function GameController({
           >
             <Handshake className="h-4 w-4 mr-2" />
             OFFER DRAW
+          </Button>
+
+          <Button
+            onClick={onPause}
+            variant="outline"
+            className={`w-full ${isPaused ? 'border-cyan-500 text-cyan-400 hover:bg-cyan-950/30' : 'border-amber-500 text-amber-400 hover:bg-amber-950/30'}`}
+            disabled={isGameOver}
+          >
+            {isPaused ? (
+              <>
+                <Play className="h-4 w-4 mr-2" />
+                RESUME
+              </>
+            ) : (
+              <>
+                <Pause className="h-4 w-4 mr-2" />
+                PAUSE
+              </>
+            )}
           </Button>
         </div>
       </div>
