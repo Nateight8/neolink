@@ -98,12 +98,8 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
                 src={"/placeholder.svg"}
                 alt={post.author?.fullName}
               />
-              <AvatarFallback className="bg-black text-cyan-400 font-bold">
-                {post.author?.handle
-                  ?.split(" ")
-                  .map((name) => name[0])
-                  .join("")
-                  .toUpperCase()}
+              <AvatarFallback className="bg-black text-cyan-400">
+                {post.author?.username && post.author?.username.substring(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div>
