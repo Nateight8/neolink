@@ -3,13 +3,13 @@ import { configDotenv } from "dotenv";
 import authRoute from "./route/auth.route.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import MongoStore from 'connect-mongo';
+import cors from "cors";
 
 import { connectDB } from "./lib/db.js";
 import usersRoute from "./route/user.route.js";
 import chatRoute from "./route/chat.route.js";
 import postRouter from "./route/post.route.js";
-
-import cors from "cors";
 import notificationRoute from "./route/notifications.js";
 import pollRouter from "./route/poll.route.js";
 
@@ -52,11 +52,26 @@ app.get("/api/health", (req, res) => {
 
 // Configure CORS with production settings
 const corsOptions = {
-  origin: CORS_ORIGIN,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://neolink-2.onrender.com',
+      // Add other allowed origins here
+    ];
+
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  exposedHeaders: ["Set-Cookie"]
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "x-auth-token"],
+  exposedHeaders: ["Set-Cookie", "x-auth-token"]
 };
 
 console.log("CORS Options:", corsOptions);
@@ -64,9 +79,10 @@ console.log("CORS Options:", corsOptions);
 // Trust first proxy (important for Render)
 app.set('trust proxy', 1);
 
-// Apply CORS middleware
+// Apply CORS middleware before other middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Session configuration with production settings
@@ -75,14 +91,21 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   proxy: true, // Required for secure cookies on Render
+  name: 'sessionId', // Don't use 'connect.sid' as it can be fingerprinted
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // Must be true in production for HTTPS
-    sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: true, // Must be true for sameSite: 'none'
     sameSite: 'none',
-    secure: true
-  }
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/',
+    domain: process.env.NODE_ENV === 'production' ? '.neolink-2.onrender.com' : 'localhost'
+  },
+  rolling: true, // Reset the maxAge on every request
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 7 * 24 * 60 * 60 // 7 days in seconds
+  })
 };
 
 app.use(session(sessionConfig));

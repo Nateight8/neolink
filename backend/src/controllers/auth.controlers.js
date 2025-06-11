@@ -35,15 +35,26 @@ export async function signinControler(req, res) {
       expiresIn: "7d",
     });
 
-    // Set cookie
+    // Set cookie with secure settings
     res.cookie("jwt", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: true, // Always use secure in production
+      sameSite: 'none', // Required for cross-site requests
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/', // Make sure cookie is sent for all paths
+      domain: process.env.NODE_ENV === 'production' ? '.neolink-2.onrender.com' : 'localhost'
     });
 
-    return res.status(200).json({ success: true, user, token });
+    // Return user data and token in response
+    const userData = user.toObject();
+    delete userData.password;
+    
+    return res.status(200).json({ 
+      success: true, 
+      user: userData, 
+      token, // Include token in response for clients that need it
+      message: 'Login successful'
+    });
   } catch (error) {
     console.error("Error in signin controller:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -54,8 +65,10 @@ export async function signOutControler(req, res) {
   try {
     res.clearCookie("jwt", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      domain: process.env.NODE_ENV === 'production' ? '.neolink-2.onrender.com' : 'localhost'
     });
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
