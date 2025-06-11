@@ -6,15 +6,68 @@ if (!process.env.NEXT_PUBLIC_BASE_URL) {
   );
 }
 
+// Create axios instance with enhanced configuration
 export const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_URL,
-  withCredentials: true,
-  timeout: 10000, // 10 seconds timeout
+  withCredentials: true, // This is crucial for sending cookies with cross-origin requests
+  timeout: 15000, // 15 seconds timeout
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest', // Helps identify AJAX requests
   },
+  // Ensure credentials are sent with CORS requests
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
+  withXSRFToken: true,
 });
+
+// Add request interceptor for debugging
+axiosInstance.interceptors.request.use(
+  (config) => {
+    console.log('Sending request to:', config.url);
+    console.log('Request config:', {
+      method: config.method,
+      url: config.url,
+      withCredentials: config.withCredentials,
+      headers: config.headers,
+    });
+    return config;
+  },
+  (error) => {
+    console.error('Request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for debugging
+axiosInstance.interceptors.response.use(
+  (response) => {
+    console.log('Response received:', {
+      url: response.config.url,
+      status: response.status,
+      headers: response.headers,
+      data: response.data,
+    });
+    return response;
+  },
+  (error) => {
+    if (error.response) {
+      console.error('Response error:', {
+        url: error.config.url,
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data,
+      });
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+    } else {
+      console.error('Request setup error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Request interceptor to add auth token to requests
 axiosInstance.interceptors.request.use(
