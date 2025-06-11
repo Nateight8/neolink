@@ -31,14 +31,14 @@ import {
   CuboidIcon as Cube,
 } from "lucide-react";
 
-import { ConversationList } from "@/components/chats/conversation-list";
+import { ConversationList } from "@/app/(routes)/echo-net/_components/list";
 import { ChatMessage } from "@/components/chats/chat-message";
 import { NeuralIndicator } from "@/components/chats/neural-indicator";
 
 // Mock data for conversations
 const CONVERSATIONS = [
   {
-    id: 1,
+    id: "1",
     user: {
       name: "CYBER_NOMAD",
       handle: "cyber_nomad",
@@ -59,7 +59,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "active",
   },
   {
-    id: 2,
+    id: "2",
     user: {
       name: "NEON_HUNTER",
       handle: "neon_hunter",
@@ -80,7 +80,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "active",
   },
   {
-    id: 3,
+    id: "3",
     user: {
       name: "GHOST_WIRE",
       handle: "ghost_wire",
@@ -101,7 +101,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "inactive",
   },
   {
-    id: 4,
+    id: "4",
     user: {
       name: "DATA_WRAITH",
       handle: "data_wraith",
@@ -122,7 +122,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "secure",
   },
   {
-    id: 5,
+    id: "5",
     user: {
       name: "PIXEL_PUNK",
       handle: "pixel_punk",
@@ -143,7 +143,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "active",
   },
   {
-    id: 6,
+    id: "6",
     user: {
       name: "VOID_RUNNER",
       handle: "void_runner",
@@ -164,7 +164,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "inactive",
   },
   {
-    id: 7,
+    id: "7",
     user: {
       name: "CHROME_REBEL",
       handle: "chrome_rebel",
@@ -274,8 +274,8 @@ export default function MessagesPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState(CONVERSATIONS);
-  const [activeConversation, setActiveConversation] = useState<number | null>(
-    1
+  const [activeConversation, setActiveConversation] = useState<string | null>(
+    "1"
   );
   const [messages, setMessages] = useState(ACTIVE_CONVERSATION_MESSAGES);
   const [newMessage, setNewMessage] = useState("");
@@ -444,7 +444,7 @@ export default function MessagesPage() {
   };
 
   // Handle selecting a conversation
-  const handleSelectConversation = (id: number) => {
+  const handleSelectConversation = (id: string) => {
     setActiveConversation(id);
     setShowMobileConversation(true);
 
