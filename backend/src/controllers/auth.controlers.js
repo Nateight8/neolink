@@ -36,14 +36,29 @@ export async function signinControler(req, res) {
     });
 
     // Set cookie with secure settings
-    res.cookie("jwt", token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: true, // Always use secure in production
       sameSite: 'none', // Required for cross-site requests
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/', // Make sure cookie is sent for all paths
-      domain: process.env.NODE_ENV === 'production' ? '.neolink-2.onrender.com' : 'localhost'
-    });
+    };
+
+    // Only set domain in production, and only if we're not on localhost
+    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
+      // Extract root domain from host
+      const host = req.get('host');
+      const parts = host.split('.');
+      // If it's an IP address, don't set domain
+      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+        // For subdomains like 'neolink-2.onrender.com', use '.onrender.com'
+        // For 'neolink-tawny.vercel.app', use '.vercel.app'
+        const rootDomain = parts.slice(-2).join('.');
+        cookieOptions.domain = `.${rootDomain}`;
+      }
+    }
+
+    res.cookie("jwt", token, cookieOptions);
 
     // Return user data and token in response
     const userData = user.toObject();
@@ -63,13 +78,24 @@ export async function signinControler(req, res) {
 
 export async function signOutControler(req, res) {
   try {
-    res.clearCookie("jwt", {
+    const cookieOptions = {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
       path: '/',
-      domain: process.env.NODE_ENV === 'production' ? '.neolink-2.onrender.com' : 'localhost'
-    });
+    };
+
+    // Match the domain used in the sign-in
+    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
+      const host = req.get('host');
+      const parts = host.split('.');
+      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+        const rootDomain = parts.slice(-2).join('.');
+        cookieOptions.domain = `.${rootDomain}`;
+      }
+    }
+
+    res.clearCookie("jwt", cookieOptions);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     console.error("Error in signOut controller:", error);
