@@ -55,7 +55,9 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://neolink-2.onrender.com',
   'https://neolink-tawny.vercel.app',
-  // Add other allowed origins here
+  // Match all Vercel preview and production deployments
+  /^\.*neolink.*\.vercel\.app$/,
+  /^https?:\/\/neolink.*\.vercel\.app$/
 ];
 
 const corsOptions = {
@@ -63,10 +65,14 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps, curl, or server-side requests)
     if (!origin) return callback(null, true);
     
-    // Check if the origin is in the allowed list or is a subdomain of an allowed domain
+    // Check if the origin is in the allowed list or matches the patterns
     const isAllowed = allowedOrigins.some(allowedOrigin => {
-      return origin === allowedOrigin || 
-             origin.startsWith(allowedOrigin.replace('https://', 'http://'));
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
     });
 
     if (isAllowed) {
@@ -83,13 +89,18 @@ const corsOptions = {
     "Authorization", 
     "Cookie", 
     "x-auth-token",
-    "x-requested-with"
+    "x-requested-with",
+    "x-forwarded-host",
+    "x-forwarded-proto"
   ],
-  exposedHeaders: ["Set-Cookie", "x-auth-token"],
+  exposedHeaders: [
+    "Set-Cookie", 
+    "x-auth-token",
+    "authorization"
+  ],
   preflightContinue: false,
-  optionsSuccessStatus: 204,
-  // Important for credentials
-  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  maxAge: 600 // 10 minutes for preflight cache
 };
 
 console.log("CORS Options:", corsOptions);

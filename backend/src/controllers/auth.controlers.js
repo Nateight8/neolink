@@ -44,12 +44,21 @@ export async function signinControler(req, res) {
       path: '/', // Make sure cookie is sent for all paths
     };
 
-    // Only set domain in production
-    let domain = null;
-    if (process.env.NODE_ENV === 'production') {
-      // For Render deployments, use '.onrender.com'
-      domain = '.onrender.com';
-      cookieOptions.domain = domain;
+    // For Vercel deployments, we need to set the domain to allow cross-origin cookies
+    // In production, we'll use the request's origin to set the domain
+    if (process.env.NODE_ENV === 'production' && req.headers.origin) {
+      try {
+        const originUrl = new URL(req.headers.origin);
+        // For Vercel deployments, we need to use the actual domain
+        if (originUrl.hostname.endsWith('.vercel.app')) {
+          cookieOptions.domain = originUrl.hostname;
+        } else if (originUrl.hostname.endsWith('.onrender.com')) {
+          cookieOptions.domain = '.onrender.com';
+        }
+        // For custom domains, you might need additional logic here
+      } catch (e) {
+        console.error('Error parsing origin URL:', e);
+      }
     }
 
     console.log('Setting cookies with options:', {
@@ -94,9 +103,18 @@ export async function signOutControler(req, res) {
       path: '/',
     };
 
-    // Set domain in production
-    if (process.env.NODE_ENV === 'production') {
-      cookieOptions.domain = '.onrender.com';
+    // Set domain based on the request origin
+    if (process.env.NODE_ENV === 'production' && req.headers.origin) {
+      try {
+        const originUrl = new URL(req.headers.origin);
+        if (originUrl.hostname.endsWith('.vercel.app')) {
+          cookieOptions.domain = originUrl.hostname;
+        } else if (originUrl.hostname.endsWith('.onrender.com')) {
+          cookieOptions.domain = '.onrender.com';
+        }
+      } catch (e) {
+        console.error('Error parsing origin URL in signOut:', e);
+      }
     }
 
     // Clear both JWT and logged_in cookies
