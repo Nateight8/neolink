@@ -1,7 +1,13 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { PageTransition } from "../page-transition";
 import { ErrorBoundary } from "../error-boundary";
@@ -101,7 +107,7 @@ export function TransitionProvider({
 const defaultTransitionContext = {
   isTransitioning: false,
   navigateWithTransition: (path: string) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.location.href = path;
     }
   },

@@ -12,10 +12,18 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import { Home, Search, Bell, MessageSquare, User, Plus } from "lucide-react";
+import {
+  Home,
+  Search,
+  Bell,
+  MessageSquare,
+  User,
+  Plus,
+  ArrowBigLeftDashIcon,
+} from "lucide-react";
 
 import { useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDoorTransition } from "@/hooks/use-page-transition";
 
 import { Button } from "../ui/button";
@@ -28,10 +36,24 @@ export const FloatingDock = ({
   desktopClassName?: string;
   mobileClassName?: string;
 }) => {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const navItemsTOUse = pathname.startsWith("/echo-net")
+    ? [
+        {
+          title: "HOME",
+          icon: <ArrowBigLeftDashIcon className="w-full h-full" />,
+          href: "/",
+          action: () => router.back(),
+        },
+      ]
+    : navItems;
+
   return (
     <>
-      <FloatingDockDesktop items={navItems} className={desktopClassName} />
-      <FloatingDockMobile items={navItems} className={mobileClassName} />
+      <FloatingDockDesktop items={navItemsTOUse} className={desktopClassName} />
+      <FloatingDockMobile items={navItemsTOUse} className={mobileClassName} />
     </>
   );
 };
@@ -246,6 +268,7 @@ const FloatingDockDesktop = ({
   }[];
   className?: string;
 }) => {
+  const pathname = usePathname();
   const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const mouseX = useMotionValue(Number.POSITIVE_INFINITY);
   const clipPath =
@@ -281,13 +304,15 @@ const FloatingDockDesktop = ({
           {items.map((item) => (
             <IconContainer mouseX={mouseX} key={item.title} {...item} />
           ))}
-          <IconContainer
-            mouseX={mouseX}
-            title="Post"
-            icon={<Plus className="w-full h-full" />}
-            href="#"
-            action={() => setIsCreatePostOpen(true)}
-          />
+          {pathname.startsWith("/echo-net") ? null : (
+            <IconContainer
+              mouseX={mouseX}
+              title="Post"
+              icon={<Plus className="w-full h-full" />}
+              href="#"
+              action={() => setIsCreatePostOpen(true)}
+            />
+          )}
         </>
       </motion.div>
     </>
@@ -362,7 +387,7 @@ function IconContainer({
 
   const handleAction = () => {
     if (isTransitioning) return;
-    
+
     if (action) {
       action();
     } else if (href) {
@@ -372,7 +397,10 @@ function IconContainer({
 
   return (
     <motion.button
-      className={cn("hover:cursor-pointer", isTransitioning && "pointer-events-none")} 
+      className={cn(
+        "hover:cursor-pointer",
+        isTransitioning && "pointer-events-none"
+      )}
       onClick={handleAction}
       disabled={isTransitioning}
     >

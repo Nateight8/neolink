@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, CheckCheck, Clock, Pin, Lock, Brain } from "lucide-react";
 
 interface Conversation {
-  id: number;
+  id: string;
   user: {
     name: string;
     handle: string;
@@ -28,15 +28,11 @@ interface Conversation {
 
 interface ConversationListProps {
   conversations: Conversation[];
-  activeConversation: number | null;
-  onSelectConversation: (id: number) => void;
+  activeConversation: string | null;
+  onSelectConversation: (id: string) => void;
 }
 
-export function ConversationList({
-  conversations,
-  activeConversation,
-  onSelectConversation,
-}: ConversationListProps) {
+export function ConversationList({ conversations, activeConversation, onSelectConversation }: ConversationListProps) {
   // Sort conversations: pinned first, then by unread count, then by time (assuming time is in descending order)
   const sortedConversations = [...conversations].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
@@ -45,6 +41,7 @@ export function ConversationList({
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
     return 0;
   });
+
 
   return (
     <div className="divide-y divide-cyan-900/50">
