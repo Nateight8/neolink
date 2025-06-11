@@ -7,6 +7,7 @@ import {
   passwordSetupController,
   profileSetupController,
   updateUserProfileController,
+  emailRateLimiter
 } from "../controllers/auth.controlers.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
@@ -16,7 +17,9 @@ const authRoute = express.Router();
 
 authRoute.post("/login", signinControler);
 // authRoute.post("/signup", signupControler);
-authRoute.post("/email-verification", emailVerificationController);
+
+// Apply rate limiting to email verification endpoint
+authRoute.post("/email-verification", emailRateLimiter, emailVerificationController);
 authRoute.post("/verify-otp", verifyOTPController);
 authRoute.post("/logout", signOutControler);
 authRoute.post("/password", passwordSetupController);

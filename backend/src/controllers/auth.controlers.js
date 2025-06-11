@@ -1,14 +1,37 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { rateLimit } from 'express-rate-limit';
 import User from "../models/User.js";
 import SignupSession from "../models/sign-up.js";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { configDotenv } from "dotenv";
+import { getVerificationEmailTemplate } from "../email-templates/verification-email.js";
 
 configDotenv();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Rate limiting configuration
+const emailRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: 'Too many verification requests from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Create a Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
+  },
+  pool: true,
+  maxConnections: 1,
+  maxMessages: 5
+});
 
 export async function signinControler(req, res) {
   try {
@@ -38,37 +61,60 @@ export async function signinControler(req, res) {
     // Set cookie with secure settings
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always use secure in production
-      sameSite: 'none', // Required for cross-site requests
+      secure: process.env.NODE_ENV === "production", // true in production, false in development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/', // Make sure cookie is sent for all paths
+      path: "/", // Make sure cookie is sent for all paths
     };
 
-    // Only set domain in production, and only if we're not on localhost
-    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
-      // Extract root domain from host
-      const host = req.get('host');
-      const parts = host.split('.');
-      // If it's an IP address, don't set domain
-      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-        // For subdomains like 'neolink-2.onrender.com', use '.onrender.com'
-        // For 'neolink-tawny.vercel.app', use '.vercel.app'
-        const rootDomain = parts.slice(-2).join('.');
-        cookieOptions.domain = `.${rootDomain}`;
-      }
-    }
+    // For cross-origin cookies, we need to ensure proper settings for Vercel
+    const isProduction = process.env.NODE_ENV === "production";
+    const isVercel =
+      req.headers.origin && req.headers.origin.includes("vercel.app");
 
-    res.cookie("jwt", token, cookieOptions);
+    // Set cookie options for cross-origin requests
+    const cookieSettings = {
+      ...cookieOptions,
+      // For Vercel, we need to set secure and sameSite
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      // Don't set domain for Vercel as it breaks cross-origin cookies
+      domain: isProduction && !isVercel ? ".onrender.com" : undefined,
+      // Ensure path is set
+      path: "/",
+      // Make cookies accessible to JavaScript for debugging
+      httpOnly: false,
+    };
+
+    // Set the JWT cookie
+    res.cookie("jwt", token, cookieSettings);
+
+    // Also set a simpler cookie for better compatibility
+    res.cookie("logged_in", "true", {
+      ...cookieSettings,
+      httpOnly: false,
+    });
+
+    // Set CORS headers explicitly
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+
+    console.log("Cookies set successfully");
 
     // Return user data and token in response
     const userData = user.toObject();
     delete userData.password;
-    
-    return res.status(200).json({ 
-      success: true, 
-      user: userData, 
+
+    return res.status(200).json({
+      success: true,
+      user: userData,
       token, // Include token in response for clients that need it
-      message: 'Login successful'
+      message: "Login successful",
     });
   } catch (error) {
     console.error("Error in signin controller:", error);
@@ -80,28 +126,47 @@ export async function signOutControler(req, res) {
   try {
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
     };
 
-    // Match the domain used in the sign-in
-    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
-      const host = req.get('host');
-      const parts = host.split('.');
-      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-        const rootDomain = parts.slice(-2).join('.');
-        cookieOptions.domain = `.${rootDomain}`;
+    // Set domain based on the request origin
+    if (process.env.NODE_ENV === "production" && req.headers.origin) {
+      try {
+        const originUrl = new URL(req.headers.origin);
+        if (originUrl.hostname.endsWith(".vercel.app")) {
+          cookieOptions.domain = originUrl.hostname;
+        } else if (originUrl.hostname.endsWith(".onrender.com")) {
+          cookieOptions.domain = ".onrender.com";
+        }
+      } catch (e) {
+        console.error("Error parsing origin URL in signOut:", e);
       }
     }
 
+    // Clear both JWT and logged_in cookies
     res.clearCookie("jwt", cookieOptions);
-    return res.status(200).json({ message: "Logged out successfully" });
+    res.clearCookie("logged_in", {
+      ...cookieOptions,
+      httpOnly: false,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
   } catch (error) {
     console.error("Error in signOut controller:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 }
+
+// Export the rate limiter for use in routes
+export { emailRateLimiter };
 
 export async function emailVerificationController(req, res) {
   const { fullName, email } = req.body;
@@ -145,97 +210,34 @@ export async function emailVerificationController(req, res) {
     // For development: Always log the OTP
     console.log("OTP for development:", otp);
 
-    // Only send email in production or to your verified test email
-    const TEST_EMAIL = "mbaocha240793@gmail.com";
-    const isTestEmail = email === TEST_EMAIL;
+    // Send email to any verified email address
+    try {
+      console.log("Attempting to send email to:", email);
+      const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
+      const { subject, html: emailHtml } = getVerificationEmailTemplate(fullName, otp);
 
-    if (isTestEmail) {
       try {
-        console.log("Attempting to send email to:", email);
-        const fromEmail = "onboarding@resend.dev";
-        await resend.emails.send({
+        await transporter.sendMail({
           from: `Your App <${fromEmail}>`,
           to: email,
-          subject: "Verify your email - Your App",
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 500px; margin: 40px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
-              <!-- Header with chess pattern -->
-              <div style="height: 8px; background: repeating-linear-gradient(45deg, #000, #000 10px, #fff 10px, #fff 20px);"></div>
-              
-              <!-- Main content -->
-              <div style="padding: 40px;">
-                <!-- Logo/App Name -->
-                <div style="text-align: center; margin-bottom: 30px;">
-                  <h1 style="margin: 0; font-size: 24px; color: #1a1a1a; font-weight: 600;">NOE</h1>
-                  <p style="margin: 8px 0 0; color: #666; font-size: 14px;">Your move starts here</p>
-                </div>
-                
-                <!-- Greeting -->
-                <p style="font-size: 16px; color: #333; line-height: 1.6; margin: 0 0 25px 0;">
-                  Hi <span style="font-weight: 600;">${fullName}</span>,
-                </p>
-                
-                <!-- OTP Code -->
-                <p style="font-size: 15px; color: #555; margin: 0 0 15px 0;">Your verification code is:</p>
-                <div style="
-                  background: #f8f9fa;
-                  border: 1px solid #e1e4e8;
-                  border-radius: 8px;
-                  padding: 20px;
-                  text-align: center;
-                  font-size: 32px;
-                  font-weight: 600;
-                  letter-spacing: 6px;
-                  color: #1a1a1a;
-                  margin: 20px 0 30px;
-                  font-family: 'Courier New', monospace;
-                ">
-                  ${otp}
-                </div>
-                
-                <!-- Instructions -->
-                <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin: 30px 0; font-size: 14px; color: #555; line-height: 1.5;">
-                  <p style="margin: 0 0 8px 0; display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">⏱️</span>
-                    <span>Code expires in 15 minutes</span>
-                  </p>
-                  <p style="margin: 8px 0 0 0; display: flex; align-items: center;">
-                    <span style="display: inline-block; width: 20px; text-align: center; margin-right: 8px;">🔒</span>
-                    <span>Don't share this code with anyone</span>
-                  </p>
-                </div>
-                
-                <!-- Footer -->
-                <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eaeaea; text-align: center;">
-                  <p style="margin: 0 0 10px 0; font-size: 12px; color: #999;">
-                    If you didn't request this, you can safely ignore this email.
-                  </p>
-                  <p style="margin: 0; font-size: 12px; color: #999;">
-                    © ${new Date().getFullYear()} NOE. All rights reserved.
-                  </p>
-                </div>
-              </div>
-              
-              <!-- Bottom border -->
-              <div style="height: 8px; background: repeating-linear-gradient(45deg, #000, #000 10px, #fff 10px, #fff 20px);"></div>
-            </div>
-          `,
+          subject,
+          html: emailHtml,
         });
-        console.log("Test email sent successfully");
-      } catch (emailError) {
-        console.error("Error sending test email:", emailError);
-      }
-    } else {
-      console.log(
-        `Skipping email send to ${email} in development. OTP: ${otp}`
-      );
-    }
+        console.log("Email sent successfully");
 
-    return res.status(200).json({
-      success: true,
-      sessionId,
-      message: "Verification code sent to your email",
-    });
+        return res.status(200).json({
+          success: true,
+          sessionId,
+          message: "Verification code sent to your email",
+        });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+    } catch (error) {
+      console.error("Error in email verification controller:", error);
+      return res.status(500).json({ message: "Failed to process verification request" });
+    }
   } catch (error) {
     console.error("Error in email verification controller:", error);
     return res
@@ -338,25 +340,55 @@ export async function passwordSetupController(req, res) {
       expiresIn: "7d",
     });
 
-    // Set HTTP-only cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
     // Clean up signup session
     await SignupSession.deleteOne({ _id: session._id });
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie("jwt", token, {
+    // Cookie options
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production", // true in production, false in development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Make sure cookie is sent for all paths
+    };
+
+    // For cross-origin cookies, we need to ensure proper settings for Vercel
+    const isProduction = process.env.NODE_ENV === "production";
+    const isVercel = req.headers.origin && req.headers.origin.includes("vercel.app");
+
+    // Set cookie options for cross-origin requests
+    const cookieSettings = {
+      ...cookieOptions,
+      // For Vercel, we need to set secure and sameSite
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      // Don't set domain for Vercel as it breaks cross-origin cookies
+      domain: isProduction && !isVercel ? ".onrender.com" : undefined,
+      // Ensure path is set
       path: "/",
+      // Make cookies accessible to JavaScript for debugging
+      httpOnly: false,
+    };
+
+    // Set the JWT cookie
+    res.cookie("jwt", token, cookieSettings);
+
+    // Also set a simpler cookie for better compatibility
+    res.cookie("logged_in", "true", {
+      ...cookieSettings,
+      httpOnly: false,
     });
+
+    // Set CORS headers explicitly
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+
+    console.log("Cookies set successfully");
 
     // Return user data (without sensitive information)
     const userResponse = {
@@ -572,7 +604,7 @@ export async function profileSetupController(req, res) {
 
     // Check if username is already taken (case-insensitive)
     const existingUsername = await User.findOne({
-      username: { $regex: new RegExp(`^${username}$`, 'i') },
+      username: { $regex: new RegExp(`^${username}$`, "i") },
       _id: { $ne: userId }, // Exclude current user
     });
     if (existingUsername) {

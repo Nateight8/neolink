@@ -41,7 +41,9 @@ function PasswordSetupContent() {
         router.push("/account-setup");
       } catch (err) {
         console.error("Failed to update auth state:", err);
-        toast.error("Password set, but there was an issue updating your session");
+        toast.error(
+          "Password set, but there was an issue updating your session"
+        );
         router.push("/login");
       }
     },
@@ -91,15 +93,6 @@ function PasswordSetupContent() {
     <div className="flex min-h-screen items-center justify-center bg-black p-4">
       <div className="w-full max-w-md bg-black border border-cyan-900 rounded-sm p-6 relative">
         <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 rounded-sm opacity-50 blur-[2px] -z-10"></div>
-
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">
-            Set Your Password
-          </h2>
-          <p className="text-gray-400">
-            Create a secure password for your account
-          </p>
-        </div>
 
         <Password
           value={password}
