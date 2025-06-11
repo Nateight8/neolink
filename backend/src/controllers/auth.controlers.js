@@ -340,25 +340,55 @@ export async function passwordSetupController(req, res) {
       expiresIn: "7d",
     });
 
-    // Set HTTP-only cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
     // Clean up signup session
     await SignupSession.deleteOne({ _id: session._id });
 
-    // Set HTTP-only cookie with JWT token
-    res.cookie("jwt", token, {
+    // Cookie options
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production", // true in production, false in development
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Make sure cookie is sent for all paths
+    };
+
+    // For cross-origin cookies, we need to ensure proper settings for Vercel
+    const isProduction = process.env.NODE_ENV === "production";
+    const isVercel = req.headers.origin && req.headers.origin.includes("vercel.app");
+
+    // Set cookie options for cross-origin requests
+    const cookieSettings = {
+      ...cookieOptions,
+      // For Vercel, we need to set secure and sameSite
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+      // Don't set domain for Vercel as it breaks cross-origin cookies
+      domain: isProduction && !isVercel ? ".onrender.com" : undefined,
+      // Ensure path is set
       path: "/",
+      // Make cookies accessible to JavaScript for debugging
+      httpOnly: false,
+    };
+
+    // Set the JWT cookie
+    res.cookie("jwt", token, cookieSettings);
+
+    // Also set a simpler cookie for better compatibility
+    res.cookie("logged_in", "true", {
+      ...cookieSettings,
+      httpOnly: false,
     });
+
+    // Set CORS headers explicitly
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
+
+    console.log("Cookies set successfully");
 
     // Return user data (without sensitive information)
     const userResponse = {
