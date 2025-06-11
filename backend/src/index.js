@@ -97,6 +97,21 @@ console.log("CORS Options:", corsOptions);
 // Trust first proxy (important for Render)
 app.set('trust proxy', 1);
 
+// Debug middleware for all requests
+app.use((req, res, next) => {
+  console.log('\n=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.originalUrl);
+  console.log('Origin:', req.headers.origin);
+  console.log('Cookies:', req.cookies);
+  console.log('Headers:', {
+    'content-type': req.headers['content-type'],
+    authorization: req.headers.authorization ? 'present' : 'missing',
+    cookie: req.headers.cookie ? 'present' : 'missing',
+  });
+  next();
+});
+
 // Apply CORS middleware before other middlewares
 app.use(cors(corsOptions));
 app.use(express.json());

@@ -45,11 +45,18 @@ export async function signinControler(req, res) {
     };
 
     // Only set domain in production
+    let domain = null;
     if (process.env.NODE_ENV === 'production') {
       // For Render deployments, use '.onrender.com'
-      cookieOptions.domain = '.onrender.com';
+      domain = '.onrender.com';
+      cookieOptions.domain = domain;
     }
 
+    console.log('Setting cookies with options:', {
+      ...cookieOptions,
+      domain: domain || 'localhost',
+      environment: process.env.NODE_ENV
+    });
 
     // Set the JWT cookie
     res.cookie("jwt", token, cookieOptions);
@@ -59,6 +66,8 @@ export async function signinControler(req, res) {
       ...cookieOptions,
       httpOnly: false // Allow client-side JS to read this
     });
+    
+    console.log('Cookies set successfully');
 
     // Return user data and token in response
     const userData = user.toObject();
