@@ -44,40 +44,45 @@ export async function signinControler(req, res) {
       path: '/', // Make sure cookie is sent for all paths
     };
 
-    // For Vercel deployments, we need to set the domain to allow cross-origin cookies
-    // In production, we'll use the request's origin to set the domain
-    let domain = 'localhost'; // Default for development
-    if (process.env.NODE_ENV === 'production' && req.headers.origin) {
-      try {
-        const originUrl = new URL(req.headers.origin);
-        // For Vercel deployments, we need to use the actual domain
-        if (originUrl.hostname.endsWith('.vercel.app')) {
-          domain = originUrl.hostname;
-          cookieOptions.domain = domain;
-        } else if (originUrl.hostname.endsWith('.onrender.com')) {
-          domain = '.onrender.com';
-          cookieOptions.domain = domain;
-        }
-        // For custom domains, you might need additional logic here
-      } catch (e) {
-        console.error('Error parsing origin URL:', e);
-      }
-    }
+    // For cross-origin cookies, we need to ensure proper settings for Vercel
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isVercel = req.headers.origin && req.headers.origin.includes('vercel.app');
+    
+    // Set cookie options for cross-origin requests
+    const cookieSettings = {
+      ...cookieOptions,
+      // For Vercel, we need to set secure and sameSite
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      // Don't set domain for Vercel as it breaks cross-origin cookies
+      domain: isProduction && !isVercel ? '.onrender.com' : undefined,
+      // Ensure path is set
+      path: '/',
+      // Make cookies accessible to JavaScript for debugging
+      httpOnly: false
+    };
 
     console.log('Setting cookies with options:', {
-      ...cookieOptions,
-      domain: domain,
-      environment: process.env.NODE_ENV
+      ...cookieSettings,
+      environment: process.env.NODE_ENV,
+      isVercel,
+      origin: req.headers.origin
     });
 
     // Set the JWT cookie
-    res.cookie("jwt", token, cookieOptions);
+    res.cookie("jwt", token, cookieSettings);
     
     // Also set a simpler cookie for better compatibility
     res.cookie('logged_in', 'true', {
-      ...cookieOptions,
-      httpOnly: false // Allow client-side JS to read this
+      ...cookieSettings,
+      httpOnly: false
     });
+    
+    // Set CORS headers explicitly
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     
     console.log('Cookies set successfully');
 

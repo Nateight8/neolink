@@ -56,8 +56,7 @@ const allowedOrigins = [
   'https://neolink-2.onrender.com',
   'https://neolink-tawny.vercel.app',
   // Match all Vercel preview and production deployments
-  /^\.*neolink.*\.vercel\.app$/,
-  /^https?:\/\/neolink.*\.vercel\.app$/
+  /^https?:\/\/neolink-[a-z0-9-]+\.vercel\.app$/
 ];
 
 const corsOptions = {
@@ -82,25 +81,30 @@ const corsOptions = {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  credentials: true, // This is important for cookies to be sent cross-origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
-    "Content-Type", 
-    "Authorization", 
-    "Cookie", 
-    "x-auth-token",
-    "x-requested-with",
-    "x-forwarded-host",
-    "x-forwarded-proto"
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-HTTP-Method-Override',
+    'Accept',
+    'X-Requested-With',
+    'x-auth-token',
+    'x-csrf-token',
+    'x-forwarded-for',
+    'x-forwarded-proto',
+    'x-forwarded-host'
   ],
   exposedHeaders: [
-    "Set-Cookie", 
-    "x-auth-token",
-    "authorization"
+    'Set-Cookie',
+    'set-cookie',
+    'authorization',
+    'x-auth-token'
   ],
   preflightContinue: false,
-  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
-  maxAge: 600 // 10 minutes for preflight cache
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 hours
 };
 
 console.log("CORS Options:", corsOptions);
