@@ -51,19 +51,25 @@ app.get("/api/health", (req, res) => {
 });
 
 // Configure CORS with production settings
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://neolink-2.onrender.com',
+  'https://neolink-tawny.vercel.app',
+  // Add other allowed origins here
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl, or server-side requests)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'https://neolink-2.onrender.com',
-      'https://neolink-tawny.vercel.app',
-      // Add other allowed origins here
-    ];
+    // Check if the origin is in the allowed list or is a subdomain of an allowed domain
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      return origin === allowedOrigin || 
+             origin.startsWith(allowedOrigin.replace('https://', 'http://'));
+    });
 
-    if (allowedOrigins.includes(origin)) {
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.log('Not allowed by CORS:', origin);
@@ -80,9 +86,10 @@ const corsOptions = {
     "x-requested-with"
   ],
   exposedHeaders: ["Set-Cookie", "x-auth-token"],
-  // Enable preflight requests to have credentials
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  // Important for credentials
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
 console.log("CORS Options:", corsOptions);
@@ -105,12 +112,14 @@ const sessionConfig = {
   name: 'sessionId', // Don't use 'connect.sid' as it can be fingerprinted
   cookie: {
     httpOnly: true,
-    secure: true, // Must be true for sameSite: 'none'
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production', // Must be true for sameSite: 'none' in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/',
-    // For production, we'll use the root domain without subdomain to work across all subdomains
-    domain: process.env.NODE_ENV === 'production' ? '.render.com' : 'localhost'
+    // Only set domain in production
+    ...(process.env.NODE_ENV === 'production' && { 
+      domain: '.onrender.com' // Match your production domain
+    })
   },
   rolling: true, // Reset the maxAge on every request
   store: MongoStore.create({

@@ -38,27 +38,27 @@ export async function signinControler(req, res) {
     // Set cookie with secure settings
     const cookieOptions = {
       httpOnly: true,
-      secure: true, // Always use secure in production
-      sameSite: 'none', // Required for cross-site requests
+      secure: process.env.NODE_ENV === 'production', // true in production, false in development
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/', // Make sure cookie is sent for all paths
     };
 
-    // Only set domain in production, and only if we're not on localhost
-    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
-      // Extract root domain from host
-      const host = req.get('host');
-      const parts = host.split('.');
-      // If it's an IP address, don't set domain
-      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-        // For subdomains like 'neolink-2.onrender.com', use '.onrender.com'
-        // For 'neolink-tawny.vercel.app', use '.vercel.app'
-        const rootDomain = parts.slice(-2).join('.');
-        cookieOptions.domain = `.${rootDomain}`;
-      }
+    // Only set domain in production
+    if (process.env.NODE_ENV === 'production') {
+      // For Render deployments, use '.onrender.com'
+      cookieOptions.domain = '.onrender.com';
     }
 
+
+    // Set the JWT cookie
     res.cookie("jwt", token, cookieOptions);
+    
+    // Also set a simpler cookie for better compatibility
+    res.cookie('logged_in', 'true', {
+      ...cookieOptions,
+      httpOnly: false // Allow client-side JS to read this
+    });
 
     // Return user data and token in response
     const userData = user.toObject();
@@ -80,26 +80,33 @@ export async function signOutControler(req, res) {
   try {
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
     };
 
-    // Match the domain used in the sign-in
-    if (process.env.NODE_ENV === 'production' && !req.get('host').includes('localhost')) {
-      const host = req.get('host');
-      const parts = host.split('.');
-      if (parts.length > 1 && !/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-        const rootDomain = parts.slice(-2).join('.');
-        cookieOptions.domain = `.${rootDomain}`;
-      }
+    // Set domain in production
+    if (process.env.NODE_ENV === 'production') {
+      cookieOptions.domain = '.onrender.com';
     }
 
-    res.clearCookie("jwt", cookieOptions);
-    return res.status(200).json({ message: "Logged out successfully" });
+    // Clear both JWT and logged_in cookies
+    res.clearCookie('jwt', cookieOptions);
+    res.clearCookie('logged_in', {
+      ...cookieOptions,
+      httpOnly: false
+    });
+    
+    return res.status(200).json({ 
+      success: true,
+      message: 'Logged out successfully' 
+    });
   } catch (error) {
-    console.error("Error in signOut controller:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error('Error in signOut controller:', error);
+    return res.status(500).json({ 
+      success: false,
+      message: 'Internal server error' 
+    });
   }
 }
 
