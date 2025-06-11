@@ -2,6 +2,7 @@ import express from "express";
 import { configDotenv } from "dotenv";
 import authRoute from "./route/auth.route.js";
 import cookieParser from "cookie-parser";
+import session from "express-session";
 
 import { connectDB } from "./lib/db.js";
 import usersRoute from "./route/user.route.js";
@@ -49,19 +50,42 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// CORS middleware with debug logging
+// Configure CORS with production settings
 const corsOptions = {
   origin: CORS_ORIGIN,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  exposedHeaders: ["Set-Cookie"]
 };
 
 console.log("CORS Options:", corsOptions);
 
+// Trust first proxy (important for Render)
+app.set('trust proxy', 1);
+
+// Apply CORS middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
+// Session configuration with production settings
+const sessionConfig = {
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  proxy: true, // Required for secure cookies on Render
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Must be true in production for HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    sameSite: 'none',
+    secure: true
+  }
+};
+
+app.use(session(sessionConfig));
 
 app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
