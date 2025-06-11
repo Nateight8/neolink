@@ -46,14 +46,17 @@ export async function signinControler(req, res) {
 
     // For Vercel deployments, we need to set the domain to allow cross-origin cookies
     // In production, we'll use the request's origin to set the domain
+    let domain = 'localhost'; // Default for development
     if (process.env.NODE_ENV === 'production' && req.headers.origin) {
       try {
         const originUrl = new URL(req.headers.origin);
         // For Vercel deployments, we need to use the actual domain
         if (originUrl.hostname.endsWith('.vercel.app')) {
-          cookieOptions.domain = originUrl.hostname;
+          domain = originUrl.hostname;
+          cookieOptions.domain = domain;
         } else if (originUrl.hostname.endsWith('.onrender.com')) {
-          cookieOptions.domain = '.onrender.com';
+          domain = '.onrender.com';
+          cookieOptions.domain = domain;
         }
         // For custom domains, you might need additional logic here
       } catch (e) {
@@ -63,7 +66,7 @@ export async function signinControler(req, res) {
 
     console.log('Setting cookies with options:', {
       ...cookieOptions,
-      domain: domain || 'localhost',
+      domain: domain,
       environment: process.env.NODE_ENV
     });
 
