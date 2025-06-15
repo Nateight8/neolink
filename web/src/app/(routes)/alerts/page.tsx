@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import {
   Tooltip,
@@ -267,9 +268,9 @@ export default function AlertsPage() {
         {/* Header */}
 
         {/* Main content */}
-        <main className="flex-1 container max-w-3xl mx-auto px-4 py-6 ">
+        <main className="flex-1 container max-w-3xl mx-auto   ">
           {/* Page header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-sm bg-cyan-950/50 border border-cyan-500 flex items-center justify-center">
                 <Bell className="h-5 w-5 text-cyan-400" />
@@ -321,74 +322,82 @@ export default function AlertsPage() {
 
           {/* Neural link status */}
           {neuralLinkActive && (
-            <div className="mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
-              <div className="flex items-center">
-                <NeuralIndicator strength={neuralLinkStrength} />
-                <span className="text-xs text-cyan-400 ml-2 font-mono">
-                  NEURAL_LINK: {Math.round(neuralLinkStrength * 100)}% STRENGTH
-                </span>
-              </div>
-              <Badge
-                variant="outline"
-                className={`${
-                  neuralLinkStrength > 0.8
-                    ? "border-green-500 text-green-400"
+            <div className="px-4">
+              <div className="mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
+                <div className="flex items-center">
+                  <NeuralIndicator strength={neuralLinkStrength} />
+                  <span className="text-xs text-cyan-400 ml-2 font-mono">
+                    NEURAL_LINK: {Math.round(neuralLinkStrength * 100)}%
+                    STRENGTH
+                  </span>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`${
+                    neuralLinkStrength > 0.8
+                      ? "border-green-500 text-green-400"
+                      : neuralLinkStrength > 0.5
+                      ? "border-cyan-500 text-cyan-400"
+                      : "border-red-500 text-red-400"
+                  }`}
+                >
+                  {neuralLinkStrength > 0.8
+                    ? "OPTIMAL"
                     : neuralLinkStrength > 0.5
-                    ? "border-cyan-500 text-cyan-400"
-                    : "border-red-500 text-red-400"
-                }`}
-              >
-                {neuralLinkStrength > 0.8
-                  ? "OPTIMAL"
-                  : neuralLinkStrength > 0.5
-                  ? "STABLE"
-                  : "DEGRADED"}
-              </Badge>
+                    ? "STABLE"
+                    : "DEGRADED"}
+                </Badge>
+              </div>
             </div>
           )}
 
           {/* Tabs and actions */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex px-0 md:px-4 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <Tabs
               defaultValue="all"
               className="w-full md:w-auto"
               onValueChange={setActiveTab}
             >
-              <TabsList className="w-full md:w-auto grid grid-cols-5 rounded-sm bg-black border border-cyan-900">
-                <TabsTrigger
-                  value="all"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  ALL
-                </TabsTrigger>
-                <TabsTrigger
-                  value="unread"
-                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                >
-                  UNREAD
-                </TabsTrigger>
-                <TabsTrigger
-                  value="mentions"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  MENTIONS
-                </TabsTrigger>
-                <TabsTrigger
-                  value="neural"
-                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                >
-                  NEURAL
-                </TabsTrigger>
-                <TabsTrigger
-                  value="system"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  SYSTEM
-                </TabsTrigger>
+              <TabsList className="w-full md:w-auto rounded-sm bg-black md:border-x border-y border-cyan-900 p-0">
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <div className="flex px-4 md:pl-0 md:grid md:grid-cols-5">
+                    <TabsTrigger
+                      value="all"
+                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
+                    >
+                      ALL
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="unread"
+                      className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
+                    >
+                      UNREAD
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="mentions"
+                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
+                    >
+                      MENTIONS
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="neural"
+                      className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
+                    >
+                      NEURAL
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="system"
+                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
+                    >
+                      SYSTEM
+                    </TabsTrigger>
+                  </div>
+                  <ScrollBar orientation="horizontal" />
+                </ScrollArea>
               </TabsList>
             </Tabs>
 
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 ">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
