@@ -3,12 +3,14 @@ import EmptyMessages from "./_components/empty-mgs";
 
 export default function Page() {
   return (
-    <div className="h-[calc(100vh-4rem)] flex"> {/* Subtract header height if you have one */}
-      {/* conversation list - shown on mobile only user routes to [messageid] onclick */}
-      <div className="md:hidden w-full h-full">
+    <div className="flex h-dvh overflow-hidden">
+      {/* Conversation list - shown on mobile only, user routes to [messageid] onclick */}
+      <div className="md:hidden w-full h-full min-w-0">
         <Conversations />
       </div>
-      <div className="hidden md:flex w-full h-full items-center justify-center">
+
+      {/* Empty state - shown on desktop only */}
+      <div className="hidden md:flex w-full h-full items-center justify-center min-w-0">
         <EmptyMessages />
       </div>
     </div>

@@ -460,7 +460,7 @@ export default function AlertsPage() {
           <div className="space-y-4 pr-4">
             <AnimatePresence initial={false}>
               {filteredAlerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="flex px-4 flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-cyan-950/30 border border-cyan-500 flex items-center justify-center mb-4">
                     <Bell className="h-8 w-8 text-cyan-400" />
                   </div>

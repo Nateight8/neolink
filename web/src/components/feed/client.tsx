@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { ChevronUp, Cpu, Radio, Shield, Skull, Siren } from "lucide-react";
-import { FeedPost } from "./feed-post";
 // import { StoryLives } from "./story-lives";
 import { HackerNews } from "./hacker-news";
 import { CyberPanel } from "./cyber-pannel";
@@ -21,6 +20,7 @@ import type { Post } from "@/types/chat";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { useAuth } from "@/contexts/auth-context";
+import { FeedPost } from "./feed-post";
 
 // Mock data for trending topics
 const TRENDING = [

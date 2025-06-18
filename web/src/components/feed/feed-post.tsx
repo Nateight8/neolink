@@ -73,53 +73,67 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
   const updatedAt = getCompactRelativeTime(post.updatedAt);
   // const postHasPoll = post
 
-  console.log("POST FROM FEED", post);
-
   return (
     <>
-      <div
-        className={`bg-black border border-cyan-900 rounded-sm p-4 relative ${
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`bg-black/50 backdrop-blur-sm border border-cyan-900/30 rounded-lg p-5 relative overflow-hidden transition-all duration-300 ${
           glitchEffect ? "animate-[glitch_0.2s_ease_forwards]" : ""
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div
-          className={`absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-30 blur-[1px] -z-10 transition-opacity duration-300 ${
-            isHovered ? "opacity-50" : "opacity-30"
+        <motion.div
+          className={`absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 rounded-lg -z-10 transition-opacity duration-500 ${
+            isHovered ? "opacity-100" : "opacity-0"
           }`}
-        ></div>
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-fuchsia-500/5 rounded-lg -z-20" />
 
         {/* Post header */}
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10 border border-cyan-500">
-              <AvatarImage
-                src={"/placeholder.svg"}
-                alt={post.author?.fullName}
-              />
-              <AvatarFallback className="bg-black text-cyan-400">
-                {post.author?.username && post.author?.username.substring(0, 2)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center">
-                <h3 className="font-bold text-white mr-1">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center space-x-3 group">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Avatar className="h-11 w-11 border border-cyan-500/50 transition-transform duration-200 group-hover:border-cyan-400/70">
+                <AvatarImage
+                  src={"/placeholder.svg"}
+                  alt={post.author?.fullName}
+                  className="object-cover"
+                />
+                <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-fuchsia-500/20 text-cyan-300 font-medium">
+                  {post.author?.username &&
+                    post.author.username.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </motion.div>
+            <div className="leading-tight">
+              <div className="flex items-center group">
+                <h3 className="font-bold text-white hover:text-cyan-300 transition-colors cursor-pointer">
                   {post.author?.handle}
                 </h3>
               </div>
-              <div className="flex items-center text-xs text-gray-500">
-                <span className="mr-2">@{post.author?.username}</span>
-                <span>• {updatedAt}</span>
+              <div className="flex items-center text-sm text-gray-400">
+                <span className="hover:text-cyan-300 transition-colors cursor-pointer">
+                  @{post.author?.username}
+                </span>
+                <span className="mx-1.5 text-gray-600">·</span>
+                <span
+                  className="text-gray-500 hover:text-gray-300 transition-colors"
+                  title={new Date(post.updatedAt).toLocaleString()}
+                >
+                  {updatedAt}
+                </span>
               </div>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full text-gray-500 hover:text-white hover:bg-gray-800"
+            className="h-9 w-9 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-colors duration-200"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className="h-4.5 w-4.5" />
           </Button>
         </div>
 
@@ -270,7 +284,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
             </Tooltip>
           </TooltipProvider>
         </div>
-      </div>
+      </motion.div>
 
       {/* Comment Thread Modal */}
       <CommentThreadModal

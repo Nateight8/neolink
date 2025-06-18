@@ -33,7 +33,7 @@ export function PageTransition({
   }, [isOpen, onTransitionComplete]);
 
   return (
-    <div className="relative h-screen overflow-scroll">
+    <div className="relative h-full w-full">
       {/* Page content */}
       <AnimatePresence>
         {showContent && (
@@ -42,7 +42,7 @@ export function PageTransition({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="relative z-10"
+            className="relative z-10 h-full w-full"
           >
             {children}
           </motion.div>

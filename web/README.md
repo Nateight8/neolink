@@ -5,11 +5,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ### Option 1: Using Docker (Recommended)
 
 1. Build the Docker image:
+
    ```bash
    docker build -t neonlink-web .
    ```
 
 2. Run the container:
+
    ```bash
    docker run --env-file .env -p 3000:3000 neonlink-web
    ```
@@ -49,6 +51,7 @@ docker run --env-file .env -p 3000:3000 neonlink-web
 ```
 
 This will:
+
 - Use the environment variables from your local `.env` file
 - Map port 3000 from the container to your host machine
 - Start the Next.js application in production mode
@@ -56,6 +59,7 @@ This will:
 ### Environment Variables
 
 Make sure your `.env` file includes all required environment variables, including:
+
 - `NEXT_PUBLIC_BASE_URL`
 - `STREAM_API_KEY`
 
@@ -75,3 +79,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+4. Key Features to Implement
+   Voting System
+   Upvote/downvote buttons with visual feedback
+   Vote count formatting (K, M)
+   Optimistic UI updates
+   Threading
+   Proper indentation based on depth
+   Collapse/expand functionality
+   Smooth transitions
+   Responsive Design
+   Mobile-friendly layout
+   Adjustable font sizes
+   Touch-friendly targets
+   Accessibility
+   Keyboard navigation
+   ARIA labels
+   Focus management
+5. Performance Optimizations
+   Virtualize long comment threads
+   Memoize comment components
+   Lazy load images/media

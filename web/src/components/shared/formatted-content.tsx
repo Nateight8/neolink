@@ -33,7 +33,12 @@ export function FormattedContent({
         const lines = paragraph.split("\n");
 
         return (
-          <p key={paragraphIndex} className={isLastParagraph ? "mb-0" : "mb-6"}>
+          <p
+            key={paragraphIndex}
+            className={`text-sm leading-relaxed text-muted-foreground text-pretty ${
+              isLastParagraph ? "mb-0" : "mb-6"
+            }`}
+          >
             {lines.map((line, lineIndex) => {
               const processedLine = line.split(" ").map((word, wordIndex) => {
                 if (word.startsWith("#")) {
