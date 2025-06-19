@@ -34,20 +34,20 @@ export function HumanChallenge({
   const [rated, setRated] = useState(true);
 
   return (
-    <div className="relative w-full h-full bg-black/50 border border-cyan-900 rounded-sm backdrop-blur-sm overflow-hidden">
+    <div className="relative w-full h-full bg-black/50 border border-cyan-900/50 rounded-sm backdrop-blur-sm overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20" />
-      <div className="relative space-y-6 p-6">
+      <div className="relative space-y-4 sm:space-y-6 p-4">
         <Button
           variant="ghost"
-          className=" text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 text-xs"
+          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 text-xs px-2 py-1.5 -ml-2"
           onClick={onBack}
         >
-          <ChevronLeft className="h-3 w-3 ml-1" />
-          Back to Opponent Selection
+          <ChevronLeft className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+          <span className="text-xs sm:text-sm">Back</span>
         </Button>
 
         <div className="relative">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
             Create Challenge
           </h2>
           <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500/30 to-fuchsia-500/30"></div>
@@ -57,11 +57,11 @@ export function HumanChallenge({
           <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-fuchsia-400 rounded-full"></div>
-              <h3 className="text-lg font-medium text-fuchsia-300">
+              <h3 className="text-base sm:text-lg font-medium text-fuchsia-300">
                 Time Control
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {chessGameModes.map((mode) => {
                 const isSelected = timeControl === mode.timeControl;
                 const iconMap = {
@@ -83,7 +83,7 @@ export function HumanChallenge({
                         <Button
                           variant="ghost"
                           onClick={() => setTimeControl(mode.timeControl)}
-                          className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 ${
+                          className={`h-16 sm:h-20 w-full p-0 overflow-hidden transition-all duration-300 ${
                             isSelected
                               ? "bg-gradient-to-br from-fuchsia-900/30 to-cyan-900/30 border border-fuchsia-500/30"
                               : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-fuchsia-500/30"
@@ -139,12 +139,12 @@ export function HumanChallenge({
             </div>
           </div>
 
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+          <div className="bg-gray-900 p-3 sm:p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-cyan-400 rounded-full"></div>
-              <h3 className="text-lg font-medium text-cyan-300">Game Type</h3>
+              <h3 className="text-base sm:text-lg font-medium text-cyan-300">Game Type</h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {[
                 {
                   type: "Rated",
@@ -166,7 +166,7 @@ export function HumanChallenge({
                         <Button
                           variant="ghost"
                           onClick={() => setRated(gameType.type === "Rated")}
-                          className={`h-20 w-full p-0 overflow-hidden transition-all duration-300 ${
+                          className={`h-16 sm:h-20 w-full p-0 overflow-hidden transition-all duration-300 ${
                             isSelected
                               ? "bg-gradient-to-br from-cyan-900/30 to-blue-900/30 border border-cyan-500/30"
                               : "bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-cyan-500/30"
@@ -211,14 +211,14 @@ export function HumanChallenge({
             </div>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-2">
             <Button
-              className="w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-6 text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+              className="w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-5 sm:py-6 text-base sm:text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
               size="lg"
               onClick={() => onCreateChallenge({ timeControl, rated })}
             >
-              <Zap className="w-5 h-5 mr-2" />
-              Create Challenge
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="text-sm sm:text-base">Create Challenge</span>
             </Button>
           </div>
         </div>

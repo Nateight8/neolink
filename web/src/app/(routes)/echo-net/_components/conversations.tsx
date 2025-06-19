@@ -232,7 +232,7 @@ export default function Conversations() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-black text-white">
+    <div className="flex flex-col h-full bg-black border-r border-cyan-900 text-white">
       {/* Header */}
       <div className="p-4 md:border-b md:border-cyan-900/50">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
@@ -263,7 +263,7 @@ export default function Conversations() {
                 <TabsTrigger
                   key={tab}
                   value={tab.toLowerCase()}
-                  className="px-3 py-1.5 text-xs rounded-full data-[state=active]:bg-cyan-900/50 data-[state=active]:text-cyan-400 whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs data-[state=active]:border-b-cyan-400 data-[state=active]:text-cyan-400 whitespace-nowrap"
                 >
                   {tab}
                 </TabsTrigger>

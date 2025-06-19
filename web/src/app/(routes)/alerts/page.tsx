@@ -182,7 +182,7 @@ export default function AlertsPage() {
   //   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [alerts, setAlerts] = useState(ALERTS);
-  const [neuralLinkActive, setNeuralLinkActive] = useState(true);
+  const [neuralLinkActive, setNeuralLinkActive] = useState(false);
   const [neuralLinkStrength, setNeuralLinkStrength] = useState(0.85);
   const [glitchEffect, setGlitchEffect] = useState(false);
 
@@ -323,7 +323,7 @@ export default function AlertsPage() {
           {/* Neural link status */}
           {neuralLinkActive && (
             <div className="px-4">
-              <div className="mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
+              <div className="mb-4 md:mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
                 <div className="flex items-center">
                   <NeuralIndicator strength={neuralLinkStrength} />
                   <span className="text-xs text-cyan-400 ml-2 font-mono">
@@ -352,52 +352,31 @@ export default function AlertsPage() {
           )}
 
           {/* Tabs and actions */}
-          <div className="flex px-0 md:px-4 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex px-2 md:px-2 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <Tabs
               defaultValue="all"
-              className="w-full md:w-auto"
+              className="w-full"
               onValueChange={setActiveTab}
             >
-              <TabsList className="w-full md:w-auto rounded-sm bg-black md:border-x border-y border-cyan-900 p-0">
-                <ScrollArea className="w-full whitespace-nowrap">
-                  <div className="flex px-4 md:pl-0 md:grid md:grid-cols-5">
-                    <TabsTrigger
-                      value="all"
-                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                    >
-                      ALL
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="unread"
-                      className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                    >
-                      UNREAD
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="mentions"
-                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                    >
-                      MENTIONS
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="neural"
-                      className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                    >
-                      NEURAL
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="system"
-                      className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                    >
-                      SYSTEM
-                    </TabsTrigger>
-                  </div>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-              </TabsList>
+              <ScrollArea className="w-full px-2">
+                <TabsList className="bg-transparent p-0 w-max min-w-full space-x-2">
+                  {["All", "Unread", "Mentions", "Neural", "System"].map(
+                    (tab) => (
+                      <TabsTrigger
+                        key={tab}
+                        value={tab.toLowerCase()}
+                        className="px-3 py-1.5 text-xs data-[state=active]:border-cyan-400 data-[state=active]:text-cyan-400 whitespace-nowrap"
+                      >
+                        {tab.toUpperCase()}
+                      </TabsTrigger>
+                    )
+                  )}
+                </TabsList>
+                <ScrollBar orientation="horizontal" className="h-1" />
+              </ScrollArea>
             </Tabs>
 
-            <div className="flex space-x-2 ">
+            <div className=" space-x-2 hidden md:flex">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

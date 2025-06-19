@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 // import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { useEffect, useState } from "react";
 // import { Bell } from "lucide-react";
 // import { motion } from "motion/react";
 
@@ -22,12 +23,19 @@ export default function LobbyHeader({}: // notifications = [],
   setShowNotifications?: (show: boolean) => void;
 }) {
   const { user, isError } = useAuth();
+  const [guestUsername, setGuestUsername] = useState<string>("Neural_Guest");
+
+  // Set random guest username on client side only
+  useEffect(() => {
+    if (!user) {
+      setGuestUsername("Neural_Guest_" + Math.floor(Math.random() * 10000));
+    }
+  }, [user]);
 
   // Default values for unauthenticated users
   const currentUser = {
     id: user?._id || "guest",
-    username:
-      user?.username || "Neural_Guest_" + Math.floor(Math.random() * 10000),
+    username: user?.username || guestUsername,
     avatar: user?.avatar || "/cyberpunk-avatar.png",
     status: "online",
     rating: user?.rating || 1200,
@@ -38,16 +46,20 @@ export default function LobbyHeader({}: // notifications = [],
     ...user, // Spread user data to override any defaults if available
   };
 
-  // Generate a random cyberpunk color for the guest user
-  const cyberpunkColors = [
-    "text-cyan-400",
-    "text-fuchsia-400",
-    "text-purple-400",
-    "text-blue-400",
-    "text-green-400",
-  ];
-  const randomColor =
-    cyberpunkColors[Math.floor(Math.random() * cyberpunkColors.length)];
+  // State for random cyberpunk color (client-side only)
+  const [randomColor, setRandomColor] = useState("text-cyan-400");
+
+  // Set random color on client side only
+  useEffect(() => {
+    const cyberpunkColors = [
+      "text-cyan-400",
+      "text-fuchsia-400",
+      "text-purple-400",
+      "text-blue-400",
+      "text-green-400",
+    ];
+    setRandomColor(cyberpunkColors[Math.floor(Math.random() * cyberpunkColors.length)]);
+  }, []);
 
   return (
     <>
