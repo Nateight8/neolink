@@ -8,6 +8,7 @@ import QueryClientProviderWrapper from "@/components/provider/query-client-wrape
 import { FloatingDock } from "@/components/navigation/floating-dock";
 import { TransitionProvider } from "@/components/provider/page-transition-provider";
 import { AuthProvider } from "@/contexts/auth-context";
+// import BottomNav from "@/components/navigation/bottom-nav";
 // import BackgroundV2 from "@/components/background-v2";
 // import Background from "@/components/background";
 

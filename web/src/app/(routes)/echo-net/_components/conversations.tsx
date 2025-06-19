@@ -203,9 +203,7 @@ const CONVERSATIONS = [
 export default function Conversations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab] = useState("all");
-  const [activeConversation, setActiveConversation] = useState<string | null>(
-    null
-  );
+  // const [activeConversation] = useState<string | null>(null);
 
   const filteredConversations = CONVERSATIONS.filter((conversation) => {
     const matchesSearch =
@@ -226,10 +224,6 @@ export default function Conversations() {
 
     return matchesTab && matchesSearch;
   });
-
-  const handleSelectConversation = (id: string) => {
-    setActiveConversation(id);
-  };
 
   return (
     <div className="flex flex-col h-full bg-black border-r border-cyan-900 text-white">
@@ -276,11 +270,7 @@ export default function Conversations() {
 
       {/* Conversation list */}
       <div className="flex-1 overflow-y-auto -mx-4 px-4">
-        <ConversationList
-          conversations={filteredConversations}
-          activeConversation={activeConversation}
-          onSelectConversation={handleSelectConversation}
-        />
+        <ConversationList conversations={filteredConversations} />
       </div>
     </div>
   );

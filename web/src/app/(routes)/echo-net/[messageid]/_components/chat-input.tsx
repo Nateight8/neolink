@@ -21,26 +21,6 @@ export default function ChatInput({
     <>
       <div className="p-4 border-t border-cyan-900">
         <div className="flex items-center space-x-2">
-          <div className="relative flex-1">
-            <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-[1px] -z-10"></div>
-            <Input
-              placeholder={
-                neuralLinkActive
-                  ? "TRANSMIT_NEURAL_MESSAGE..."
-                  : "NEURAL_LINK_INACTIVE. TEXT_ONLY_MODE."
-              }
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-              className="bg-black border-cyan-900 text-white font-mono relative focus-visible:ring-cyan-500"
-            />
-          </div>
-
           <div className="flex space-x-1">
             <TooltipProvider>
               <Tooltip>
@@ -102,6 +82,25 @@ export default function ChatInput({
             >
               <Send className="h-5 w-5" />
             </Button>
+          </div>
+          <div className="relative flex-1">
+            <div className="absolute -inset-[1px] bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-[1px] -z-10"></div>
+            <Input
+              placeholder={
+                neuralLinkActive
+                  ? "TRANSMIT_NEURAL_MESSAGE..."
+                  : "NEURAL_LINK_INACTIVE. TEXT_ONLY_MODE."
+              }
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              className="bg-black border-cyan-900 text-white font-mono relative focus-visible:ring-cyan-500"
+            />
           </div>
         </div>
       </div>{" "}

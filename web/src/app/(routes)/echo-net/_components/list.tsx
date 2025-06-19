@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Check, CheckCheck, Clock, Pin } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 interface Conversation {
   id: string;
@@ -27,15 +28,9 @@ interface Conversation {
 
 interface ConversationListProps {
   conversations: Conversation[];
-  activeConversation: string | null;
-  onSelectConversation: (id: string) => void;
 }
 
-export function ConversationList({
-  conversations,
-  activeConversation,
-  onSelectConversation,
-}: ConversationListProps) {
+export function ConversationList({ conversations }: ConversationListProps) {
   // Sort conversations: pinned first, then by unread count, then by time
   const sortedConversations = [...conversations].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
@@ -44,6 +39,10 @@ export function ConversationList({
     if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
     return 0;
   });
+
+  const router = useRouter();
+
+  const activeConversation = usePathname().split("/").pop();
 
   return (
     <div className="divide-y divide-cyan-900/50 -mx-4">
@@ -55,10 +54,10 @@ export function ConversationList({
         sortedConversations.map((conversation) => (
           <div
             key={conversation.id}
-            onClick={() => onSelectConversation(conversation.id)}
-            className={`px-4 py-3 hover:bg-cyan-950/20  cursor-pointer transition-colors ${
+            onClick={() => router.push(`/echo-net/${conversation.id}`)}
+            className={`p-4 hover:bg-cyan-950/20  cursor-pointer transition-colors ${
               activeConversation === conversation.id
-                ? "bg-cyan-950/30 border-l-2 border-cyan-500"
+                ? "bg-cyan-950/30 border-l border-y border-cyan-500"
                 : ""
             }`}
           >

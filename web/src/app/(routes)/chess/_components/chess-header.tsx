@@ -6,9 +6,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Volume2, VolumeX, Pause, Play, Flag, Handshake } from "lucide-react";
+import {
+  Volume2,
+  VolumeX,
+  Pause,
+  Play,
+  Flag,
+  Handshake,
+  ArrowBigLeftDashIcon,
+} from "lucide-react";
 
 import { Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface ChessHeaderProps {
   isGameOver: boolean;
@@ -39,6 +48,8 @@ export default function ChessHeader({
   showSpectators = false,
   roomId = "#NX-7842", // Default value for backward compatibility
 }: ChessHeaderProps) {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between md:mb-6 mb-4">
       <TooltipProvider>
@@ -63,6 +74,16 @@ export default function ChessHeader({
         </div>
 
         <div className="flex md:items-center space-x-2 py-2">
+          <Button
+            onClick={() => router.back()}
+            variant="outline"
+            size="icon"
+            className={`border-gray-600 hover:bg-gray-800 ${
+              soundEnabled ? "text-cyan-400" : "text-gray-400"
+            }`}
+          >
+            <ArrowBigLeftDashIcon />
+          </Button>
           {/* Sound Toggle */}
           <Tooltip>
             <TooltipTrigger asChild>

@@ -59,7 +59,9 @@ export const FloatingDock = ({
   return (
     <>
       <FloatingDockDesktop items={navItemsTOUse} className={desktopClassName} />
-      <FloatingDockMobile items={navItemsTOUse} className={mobileClassName} />
+      <div className="hidden">
+        <FloatingDockMobile items={navItemsTOUse} className={mobileClassName} />
+      </div>
     </>
   );
 };
