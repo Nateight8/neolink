@@ -17,7 +17,7 @@ export default function Spectators({
   moveHistory,
 }: SpectatorsProps) {
   return (
-    <div className="lg:col-span-2 space-y-4">
+    <div className="lg:col-span-2 space-y-4 hidden md:block">
       <div className="bg-black/80 border border-gray-800 rounded-sm p-4 relative">
         <div className="absolute -inset-[1px] bg-gradient-to-r from-gray-700/20 to-gray-700/10 rounded-sm opacity-30 blur-[1px] -z-10" />
         <div className="flex items-center space-x-2 mb-3">
