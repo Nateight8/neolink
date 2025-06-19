@@ -274,9 +274,7 @@ export default function MessagesPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [conversations, setConversations] = useState(CONVERSATIONS);
-  const [activeConversation, setActiveConversation] = useState<string | null>(
-    "1"
-  );
+  const [activeConversation] = useState<string | null>("1");
   const [messages, setMessages] = useState(ACTIVE_CONVERSATION_MESSAGES);
   const [newMessage, setNewMessage] = useState("");
   const [showMobileConversation, setShowMobileConversation] = useState(false);
@@ -443,29 +441,6 @@ export default function MessagesPage() {
     }, 2000);
   };
 
-  // Handle selecting a conversation
-  const handleSelectConversation = (id: string) => {
-    setActiveConversation(id);
-    setShowMobileConversation(true);
-
-    // Mark conversation as read
-    setConversations(
-      conversations.map((conv) => {
-        if (conv.id === id) {
-          return {
-            ...conv,
-            unreadCount: 0,
-            lastMessage: {
-              ...conv.lastMessage,
-              isRead: true,
-            },
-          };
-        }
-        return conv;
-      })
-    );
-  };
-
   // Toggle neural link
   const toggleNeuralLink = () => {
     setNeuralLinkActive(!neuralLinkActive);
@@ -535,11 +510,7 @@ export default function MessagesPage() {
 
               {/* Conversation list */}
               <ScrollArea className="flex-1">
-                <ConversationList
-                  conversations={filteredConversations}
-                  activeConversation={activeConversation}
-                  onSelectConversation={handleSelectConversation}
-                />
+                <ConversationList conversations={filteredConversations} />
               </ScrollArea>
             </div>
 

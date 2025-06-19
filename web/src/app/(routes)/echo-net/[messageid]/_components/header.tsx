@@ -10,13 +10,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  ArrowBigLeftDashIcon,
   Brain,
-  ChevronLeft,
   MoreVertical,
   Phone,
   Shield,
   Video,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface MockUser {
   name: string;
@@ -45,32 +46,35 @@ export default function ChatHeader({
     setActiveNeuralLink(!activeNeuralLink);
   };
 
+  const router = useRouter();
+
   return (
     <>
       {" "}
       {/* Chat header */}
-      <div className="p-4 border-b border-cyan-900 flex items-center justify-between">
+      <div className="py-3 border-b border-cyan-900 flex items-center justify-between">
         <div className="flex items-center">
           {/* Back button (mobile only) */}
           <Button
+            onClick={() => router.back()}
             variant="ghost"
             size="icon"
-            className="mr-2 md:hidden h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
+            className="h-8 md:hidden w-8 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ArrowBigLeftDashIcon />
           </Button>
 
           {/* User info */}
-          <div className="flex items-center">
+          <div className="flex flex-1 items-center mx-3">
             <div className="relative">
-              <Avatar className="h-10 w-10 border border-cyan-500">
+              <Avatar className="size-8 border border-cyan-500">
                 <AvatarImage src="" alt="user name" />
                 <AvatarFallback className="bg-black text-cyan-400">
                   {mockUser.name.substring(0, 2) || "UN"}
                 </AvatarFallback>
               </Avatar>
               <div
-                className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border border-black ${
+                className={`absolute bottom-0 right-0 size-2 rounded-full border border-black ${
                   mockUser.status === "online"
                     ? "bg-green-500"
                     : mockUser.status === "away"
@@ -80,7 +84,7 @@ export default function ChatHeader({
               ></div>
             </div>
             <div className="ml-3">
-              <div className="flex items-center">
+              <div className=" items-center hidden">
                 <h3 className="font-bold text-white mr-1">{mockUser.name}</h3>
                 {mockUser.verified && (
                   <Badge
@@ -92,9 +96,9 @@ export default function ChatHeader({
                   </Badge>
                 )}
               </div>
-              <div className="flex items-center text-xs">
-                <span className="text-cyan-400 font-mono">
-                  @{mockUser.handle}
+              <div className="flex items-center text-lg font-semibold">
+                <span className="text-cyan-400 uppercase font-mono">
+                  {mockUser.handle}
                 </span>
               </div>
             </div>
@@ -165,7 +169,7 @@ export default function ChatHeader({
 
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger asChild className="hidden">
                 <Button
                   variant="ghost"
                   size="icon"
