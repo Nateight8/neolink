@@ -42,8 +42,8 @@ export default function ChessHeader({
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between md:mb-6 mb-4">
       <TooltipProvider>
-        <div className="flex flex-col md:flex-row md:items-center space-x-4">
-          <h1 className="text-md md:text-2xl font-bold text-cyan-400 font-cyber neon-text">
+        <div className="flex justify-between  items-center space-x-4">
+          <h1 className=" md:text-2xl font-bold text-cyan-400 font-cyber neon-text">
             NEURAL CHESS DUEL
           </h1>
           <Badge

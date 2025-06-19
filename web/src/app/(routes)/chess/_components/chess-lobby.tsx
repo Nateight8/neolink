@@ -749,7 +749,7 @@ export function ChessGameClean({
       </div>
 
       {/* Chess game interface */}
-      <div className="relative z-20 p-6">
+      <div className="relative z-20 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <ChessHeader
