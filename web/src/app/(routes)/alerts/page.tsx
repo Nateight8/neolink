@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 
@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 import {
   Tooltip,
@@ -181,7 +182,7 @@ export default function AlertsPage() {
   //   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [alerts, setAlerts] = useState(ALERTS);
-  const [neuralLinkActive, setNeuralLinkActive] = useState(true);
+  const [neuralLinkActive, setNeuralLinkActive] = useState(false);
   const [neuralLinkStrength, setNeuralLinkStrength] = useState(0.85);
   const [glitchEffect, setGlitchEffect] = useState(false);
 
@@ -267,9 +268,9 @@ export default function AlertsPage() {
         {/* Header */}
 
         {/* Main content */}
-        <main className="flex-1 container max-w-3xl mx-auto px-4 py-6 ">
+        <main className="flex-1 container max-w-3xl mx-auto   ">
           {/* Page header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between p-4">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-sm bg-cyan-950/50 border border-cyan-500 flex items-center justify-center">
                 <Bell className="h-5 w-5 text-cyan-400" />
@@ -321,74 +322,61 @@ export default function AlertsPage() {
 
           {/* Neural link status */}
           {neuralLinkActive && (
-            <div className="mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
-              <div className="flex items-center">
-                <NeuralIndicator strength={neuralLinkStrength} />
-                <span className="text-xs text-cyan-400 ml-2 font-mono">
-                  NEURAL_LINK: {Math.round(neuralLinkStrength * 100)}% STRENGTH
-                </span>
-              </div>
-              <Badge
-                variant="outline"
-                className={`${
-                  neuralLinkStrength > 0.8
-                    ? "border-green-500 text-green-400"
+            <div className="px-4">
+              <div className="mb-4 md:mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
+                <div className="flex items-center">
+                  <NeuralIndicator strength={neuralLinkStrength} />
+                  <span className="text-xs text-cyan-400 ml-2 font-mono">
+                    NEURAL_LINK: {Math.round(neuralLinkStrength * 100)}%
+                    STRENGTH
+                  </span>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`${
+                    neuralLinkStrength > 0.8
+                      ? "border-green-500 text-green-400"
+                      : neuralLinkStrength > 0.5
+                      ? "border-cyan-500 text-cyan-400"
+                      : "border-red-500 text-red-400"
+                  }`}
+                >
+                  {neuralLinkStrength > 0.8
+                    ? "OPTIMAL"
                     : neuralLinkStrength > 0.5
-                    ? "border-cyan-500 text-cyan-400"
-                    : "border-red-500 text-red-400"
-                }`}
-              >
-                {neuralLinkStrength > 0.8
-                  ? "OPTIMAL"
-                  : neuralLinkStrength > 0.5
-                  ? "STABLE"
-                  : "DEGRADED"}
-              </Badge>
+                    ? "STABLE"
+                    : "DEGRADED"}
+                </Badge>
+              </div>
             </div>
           )}
 
           {/* Tabs and actions */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex px-2 md:px-2 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <Tabs
               defaultValue="all"
-              className="w-full md:w-auto"
+              className="w-full"
               onValueChange={setActiveTab}
             >
-              <TabsList className="w-full md:w-auto grid grid-cols-5 rounded-sm bg-black border border-cyan-900">
-                <TabsTrigger
-                  value="all"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  ALL
-                </TabsTrigger>
-                <TabsTrigger
-                  value="unread"
-                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                >
-                  UNREAD
-                </TabsTrigger>
-                <TabsTrigger
-                  value="mentions"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  MENTIONS
-                </TabsTrigger>
-                <TabsTrigger
-                  value="neural"
-                  className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300"
-                >
-                  NEURAL
-                </TabsTrigger>
-                <TabsTrigger
-                  value="system"
-                  className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300"
-                >
-                  SYSTEM
-                </TabsTrigger>
-              </TabsList>
+              <ScrollArea className="w-full px-2">
+                <TabsList className="bg-transparent p-0 w-max min-w-full space-x-2">
+                  {["All", "Unread", "Mentions", "Neural", "System"].map(
+                    (tab) => (
+                      <TabsTrigger
+                        key={tab}
+                        value={tab.toLowerCase()}
+                        className="px-3 py-1.5 text-xs data-[state=active]:border-cyan-400 data-[state=active]:text-cyan-400 whitespace-nowrap"
+                      >
+                        {tab.toUpperCase()}
+                      </TabsTrigger>
+                    )
+                  )}
+                </TabsList>
+                <ScrollBar orientation="horizontal" className="h-1" />
+              </ScrollArea>
             </Tabs>
 
-            <div className="flex space-x-2">
+            <div className=" space-x-2 hidden md:flex">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -451,7 +439,7 @@ export default function AlertsPage() {
           <div className="space-y-4 pr-4">
             <AnimatePresence initial={false}>
               {filteredAlerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="flex px-4 flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-cyan-950/30 border border-cyan-500 flex items-center justify-center mb-4">
                     <Bell className="h-8 w-8 text-cyan-400" />
                   </div>

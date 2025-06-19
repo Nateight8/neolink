@@ -280,10 +280,9 @@ export function ChessGameClean({
     white: baseTime,
     black: baseTime,
   });
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-
-  // Move history state is already declared above
+  const [isPaused, setIsPaused] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showSpectators, setShowSpectators] = useState(false);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
 
@@ -750,7 +749,7 @@ export function ChessGameClean({
       </div>
 
       {/* Chess game interface */}
-      <div className="relative z-20 p-6">
+      <div className="relative z-20 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <ChessHeader
@@ -758,14 +757,25 @@ export function ChessGameClean({
             isCheckmate={game.isCheckmate()}
             isDraw={game.isDraw()}
             soundEnabled={soundEnabled}
+            isPaused={isPaused}
+            showSpectators={showSpectators}
             onToggleSound={() => setSoundEnabled(!soundEnabled)}
-            onDisconnect={onDisconnect}
+            onPauseResume={() => setIsPaused(!isPaused)}
+            onSurrender={() => {
+              // Handle surrender logic here
+              console.log("Surrender requested");
+            }}
+            onOfferDraw={() => {
+              // Handle draw offer logic here
+              console.log("Draw offered");
+            }}
+            onToggleSpectators={() => setShowSpectators(!showSpectators)}
             roomId="NX-7842"
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 max-w-7xl mx-auto mt-6">
             {/* Left Panel - Controls */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 hidden lg:block space-y-4">
               <GameController
                 onResign={handleResign}
                 onDrawOffer={handleDrawOffer}
@@ -783,8 +793,8 @@ export function ChessGameClean({
                 gameTime={gameTime}
                 onPlayAgain={() => {
                   // Clear game state from localStorage before reloading
-                  if (typeof window !== 'undefined') {
-                    localStorage.removeItem('chessBotGame');
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("chessBotGame");
                   }
                   window.location.reload();
                 }}

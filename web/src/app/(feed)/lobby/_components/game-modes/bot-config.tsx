@@ -137,10 +137,10 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
     const elapsed = timestamp - animationStartTime.current;
     const totalDuration = 2000; // 2 seconds total
     const toggleSpeed = 100; // ms between toggles
-    
+
     // Toggle between white and black during animation
-    setDisplayColor(prev => prev === "white" ? "black" : "white");
-    
+    setDisplayColor((prev) => (prev === "white" ? "black" : "white"));
+
     if (elapsed < totalDuration) {
       // Continue animation
       setTimeout(() => {
@@ -153,7 +153,7 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
       const finalColor = Math.random() < 0.5 ? "white" : "black";
       setDisplayColor(finalColor);
       updateSettings({ color: finalColor });
-      
+
       // Show redirecting message
       const button = document.querySelector(".start-button");
       if (button) {
@@ -167,7 +167,7 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
           </span>
         `;
       }
-      
+
       // Start the game after a short delay
       setTimeout(() => {
         setIsAnimating(false);
@@ -198,7 +198,7 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
   // Show return to game prompt if there's an existing game
   if (hasExistingGame) {
     return (
-      <div className="relative w-full h-full bg-black/50 border border-cyan-900 rounded-sm backdrop-blur-sm overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-[50svh] bg-black/50 border border-cyan-900 rounded-sm backdrop-blur-sm overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20" />
         <div className="relative bg-gray-900/80 p-8 rounded-lg border border-cyan-500/30 max-w-md w-full mx-4 backdrop-blur-sm">
           <h2 className="text-2xl font-bold text-center mb-4 bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
@@ -239,30 +239,30 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
   }
 
   return (
-    <div className="relative w-full h-full bg-black/50 border border-cyan-900 rounded-sm backdrop-blur-sm overflow-hidden">
+    <div className="relative w-full h-full bg-black/50 border border-cyan-900/50 rounded-sm backdrop-blur-sm overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20" />
-      <div className="relative space-y-6 p-6">
+      <div className="relative space-y-4 sm:space-y-6 p-4">
         <Button
           variant="ghost"
-          className=" text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 text-xs"
+          className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30 text-xs px-2 py-1.5 -ml-2"
           onClick={onBack}
         >
-          <ChevronLeft className="h-3 w-3 ml-1" />
-          Back to Opponent Selection
+          <ChevronLeft className="h-3.5 w-3.5 sm:h-3 sm:w-3 mr-1" />
+          <span className="text-xs sm:text-sm">Back</span>
         </Button>
 
         <div className="relative">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+          <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
             Neural Agent Settings
           </h2>
           <div className="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500/30 to-fuchsia-500/30"></div>
         </div>
 
         <div className="space-y-8">
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+          <div className="bg-gray-900 p-3 sm:p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-cyan-400 rounded-full"></div>
-              <h3 className="text-lg font-medium text-cyan-300">
+              <h3 className="text-base sm:text-lg font-medium text-cyan-300">
                 Agent Intelligence
               </h3>
             </div>
@@ -284,14 +284,14 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
             </div>
           </div>
 
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+          <div className="bg-gray-900 p-3 sm:p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-fuchsia-400 rounded-full"></div>
-              <h3 className="text-lg font-medium text-fuchsia-300">
+              <h3 className="text-base sm:text-lg font-medium text-fuchsia-300">
                 Time Control
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {chessGameModes.map((mode) => {
                 const isSelected = timeControl === mode.timeControl;
                 const iconMap = {
@@ -373,14 +373,14 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
             </div>
           </div>
 
-          <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+          <div className="bg-gray-900 p-3 sm:p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-purple-400 rounded-full"></div>
-              <h3 className="text-lg font-medium text-purple-300">
+              <h3 className="text-base sm:text-lg font-medium text-purple-300">
                 Your Color
               </h3>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -520,25 +520,25 @@ export function BotConfig({ onBack, onStart }: BotConfigProps) {
             </div>
           </div>
 
-          <div className="pt-4">
+          <div className="pt-2">
             <Button
-              className="start-button w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-6 text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
+              className="start-button w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-5 sm:py-6 text-base sm:text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
               size="lg"
               onClick={() => onStart(settings)}
               disabled={isAnimating}
             >
               {isAnimating ? (
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
               ) : (
-                <Zap className="w-5 h-5 mr-2" />
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               )}
               {isAnimating ? (
-                <span className="inline-flex items-center">
+                <span className="inline-flex items-center text-sm sm:text-base">
                   <span>Preparing match</span>
                   <span className="animate-pulse">...</span>
                 </span>
               ) : (
-                "Start Neural Duel"
+                <span className="text-sm sm:text-base">Start Neural Duel</span>
               )}
             </Button>
           </div>

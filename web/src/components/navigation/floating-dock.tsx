@@ -28,6 +28,7 @@ import { useDoorTransition } from "@/hooks/use-page-transition";
 
 import { Button } from "../ui/button";
 import { CreatePostDialog } from "@/components/navigation/create-post-modal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const FloatingDock = ({
   desktopClassName,
@@ -38,7 +39,8 @@ export const FloatingDock = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-
+  // const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
   const navItemsTOUse = pathname.startsWith("/echo-net")
     ? [
         {
@@ -49,6 +51,10 @@ export const FloatingDock = ({
         },
       ]
     : navItems;
+
+  if (isMobile && !pathname.startsWith("/echo-net")) {
+    return null;
+  }
 
   return (
     <>

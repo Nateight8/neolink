@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
-import Background from "@/components/background";
+
 // import AppNavbar from "@/components/navigation/app-navbar";
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
 import { FloatingDock } from "@/components/navigation/floating-dock";
 import { TransitionProvider } from "@/components/provider/page-transition-provider";
 import { AuthProvider } from "@/contexts/auth-context";
+// import BackgroundV2 from "@/components/background-v2";
+// import Background from "@/components/background";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -33,7 +35,7 @@ export default function RootLayout({
               <AuthProvider>
                 <main className="relative ">
                   {/* Fixed Cyberpunk background with grid lines */}
-                  <Background />
+                  {/* <Background /> */}
                   {children}
                   <FloatingDock
                     desktopClassName="fixed bottom-6 right-6 z-50"

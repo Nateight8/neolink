@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { ConversationList } from "@/app/(routes)/echo-net/_components/list";
 
 // Mock data for conversations
 const CONVERSATIONS = [
   {
-    id: " 1",
+    id: "1",
     user: {
       name: "CYBER_NOMAD",
       handle: "cyber_nomad",
@@ -53,7 +52,7 @@ const CONVERSATIONS = [
     neuralLinkStatus: "active",
   },
   {
-    id: " 3",
+    id: "3",
     user: {
       name: "GHOST_WIRE",
       handle: "ghost_wire",
@@ -202,18 +201,13 @@ const CONVERSATIONS = [
 ];
 
 export default function Conversations() {
-  const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  // const [, setActiveConversation] = useState<number | null>(null);
-  // const [, setShowMobileConversation] = useState(false);
+  const [activeTab] = useState("all");
+  const [activeConversation, setActiveConversation] = useState<string | null>(
+    null
+  );
 
-  // Filter conversations based on active tab and search query
   const filteredConversations = CONVERSATIONS.filter((conversation) => {
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "pinned" && conversation.isPinned) ||
-      (activeTab === "encrypted" && conversation.isEncrypted) ||
-      (activeTab === "neural" && conversation.neuralLinkStatus === "active");
     const matchesSearch =
       conversation.user.name
         .toLowerCase()
@@ -224,80 +218,70 @@ export default function Conversations() {
       conversation.lastMessage.text
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
+
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "unread" && conversation.unreadCount > 0) ||
+      (activeTab === "mentions" && conversation.lastMessage.text.includes("@"));
+
     return matchesTab && matchesSearch;
   });
 
-  // Handle conversation selection
-  // const handleSelectConversation = (id: number) => {
-  //   setActiveConversation(id);
-  //   setShowMobileConversation(true);
-  // };
-  //   showMobileConversation ? "hidden md:flex" : "flex"
+  const handleSelectConversation = (id: string) => {
+    setActiveConversation(id);
+  };
+
   return (
-    <>
-      <div className="w-full h-full bg-black border-r border-cyan-900 flex flex-col">
-        {/* Search and tabs */}
-        <div className="p-4 border-b border-cyan-900">
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cyan-400" />
-            <Input
-              placeholder="SEARCH_CONVERSATIONS..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-black border-cyan-900 text-white font-mono"
-            />
-          </div>
+    <div className="flex flex-col h-full bg-black border-r border-cyan-900 text-white">
+      {/* Header */}
+      <div className="p-4 md:border-b md:border-cyan-900/50">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+          Echo Net
+        </h1>
+      </div>
 
-          <Tabs
-            defaultValue="all"
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="w-full grid grid-cols-4 rounded-sm bg-black border border-cyan-900">
-              <TabsTrigger
-                value="all"
-                className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300 px-4"
-              >
-                ALL
-              </TabsTrigger>
-              <TabsTrigger
-                value="pinned"
-                className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300 px-4"
-              >
-                PINNED
-              </TabsTrigger>
-              <TabsTrigger
-                value="encrypted"
-                className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300 px-4"
-              >
-                ENCRYPTED
-              </TabsTrigger>
-              <TabsTrigger
-                value="neural"
-                className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300 px-4"
-              >
-                NEURAL
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Conversation list */}
-        <div className="flex-1 overflow-hidden">
-          <ScrollArea className="h-full w-full">
-            <div className="pr-4">
-              <ConversationList 
-                conversations={filteredConversations} 
-                activeConversation={null}
-                onSelectConversation={() => {}}
-              />
-              {/* Add some bottom padding to ensure last item is not cut off */}
-              <div className="h-4" />
-            </div>
-          </ScrollArea>
+      {/* Search */}
+      <div className="px-4 py-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search conversations..."
+            className="w-full pl-10 bg-gray-900/50 border-cyan-900/50 focus-visible:ring-1 focus-visible:ring-cyan-500 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
-    </>
+
+      {/* Tabs */}
+      <div className="px-4 pb-2">
+        <Tabs defaultValue="all" className="w-full">
+          <ScrollArea className="w-full">
+            <TabsList className="bg-transparent p-0 w-max min-w-full space-x-2">
+              {["All", "Unread", "Neural", "Groups", "Channels"].map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab.toLowerCase()}
+                  className="px-3 py-1.5 text-xs data-[state=active]:border-b-cyan-400 data-[state=active]:text-cyan-400 whitespace-nowrap"
+                >
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <ScrollBar orientation="horizontal" className="h-1" />
+          </ScrollArea>
+        </Tabs>
+      </div>
+
+      {/* Conversation list */}
+      <div className="flex-1 overflow-y-auto -mx-4 px-4">
+        <ConversationList
+          conversations={filteredConversations}
+          activeConversation={activeConversation}
+          onSelectConversation={handleSelectConversation}
+        />
+      </div>
+    </div>
   );
 }
