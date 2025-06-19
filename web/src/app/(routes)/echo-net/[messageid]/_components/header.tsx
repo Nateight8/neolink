@@ -17,7 +17,7 @@ import {
   Shield,
   Video,
 } from "lucide-react";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 interface MockUser {
   name: string;
@@ -46,6 +46,8 @@ export default function ChatHeader({
     setActiveNeuralLink(!activeNeuralLink);
   };
 
+  const router = useRouter();
+
   return (
     <>
       {" "}
@@ -57,7 +59,7 @@ export default function ChatHeader({
             onClick={() => router.back()}
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
+            className="h-8 md:hidden w-8 rounded-sm text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"
           >
             <ArrowBigLeftDashIcon />
           </Button>
