@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { rateLimit } from 'express-rate-limit';
+import { rateLimit } from "express-rate-limit";
 import User from "../models/User.js";
 import SignupSession from "../models/sign-up.js";
 import nodemailer from "nodemailer";
@@ -14,15 +14,16 @@ configDotenv();
 const emailRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 requests per windowMs
-  message: 'Too many verification requests from this IP, please try again after 15 minutes',
+  message:
+    "Too many verification requests from this IP, please try again after 15 minutes",
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 // Create a Nodemailer transporter
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
   secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
@@ -30,7 +31,7 @@ const transporter = nodemailer.createTransport({
   },
   pool: true,
   maxConnections: 1,
-  maxMessages: 5
+  maxMessages: 5,
 });
 
 export async function signinControler(req, res) {
@@ -214,7 +215,10 @@ export async function emailVerificationController(req, res) {
     try {
       console.log("Attempting to send email to:", email);
       const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
-      const { subject, html: emailHtml } = getVerificationEmailTemplate(fullName, otp);
+      const { subject, html: emailHtml } = getVerificationEmailTemplate(
+        fullName,
+        otp
+      );
 
       try {
         await transporter.sendMail({
@@ -232,11 +236,15 @@ export async function emailVerificationController(req, res) {
         });
       } catch (emailError) {
         console.error("Error sending email:", emailError);
-        return res.status(500).json({ message: "Failed to send verification email" });
+        return res
+          .status(500)
+          .json({ message: "Failed to send verification email" });
       }
     } catch (error) {
       console.error("Error in email verification controller:", error);
-      return res.status(500).json({ message: "Failed to process verification request" });
+      return res
+        .status(500)
+        .json({ message: "Failed to process verification request" });
     }
   } catch (error) {
     console.error("Error in email verification controller:", error);
@@ -354,7 +362,8 @@ export async function passwordSetupController(req, res) {
 
     // For cross-origin cookies, we need to ensure proper settings for Vercel
     const isProduction = process.env.NODE_ENV === "production";
-    const isVercel = req.headers.origin && req.headers.origin.includes("vercel.app");
+    const isVercel =
+      req.headers.origin && req.headers.origin.includes("vercel.app");
 
     // Set cookie options for cross-origin requests
     const cookieSettings = {
@@ -387,8 +396,6 @@ export async function passwordSetupController(req, res) {
       "Access-Control-Allow-Headers",
       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
     );
-
-    console.log("Cookies set successfully");
 
     // Return user data (without sensitive information)
     const userResponse = {

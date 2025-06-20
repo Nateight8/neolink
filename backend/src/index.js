@@ -8,10 +8,10 @@ import cors from "cors";
 
 import { connectDB } from "./lib/db.js";
 import usersRoute from "./route/user.route.js";
-import chatRoute from "./route/chat.route.js";
 import postRouter from "./route/post.route.js";
 import notificationRoute from "./route/notifications.js";
 import pollRouter from "./route/poll.route.js";
+import dmRoute from "./route/dm.route.js";
 
 configDotenv();
 
@@ -158,10 +158,10 @@ app.use(session(sessionConfig));
 
 app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
-app.use("/api/chat", chatRoute);
 app.use("/api/posts", postRouter);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/polls", pollRouter);
+app.use("/api/dm", dmRoute);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

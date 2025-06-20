@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { Snowflake } from '@theinternetfolks/snowflake';
 
 const userSchema = new mongoose.Schema(
   {
@@ -59,6 +60,11 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    participantId: {
+      type: String,
+      unique: true,
+      default: () => Snowflake.generate(),
+    },
   },
   {
     timestamps: true,

@@ -9,15 +9,25 @@ import {
 import { PaperclipIcon, Send, Sparkles, Gamepad2, Mic } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useSendMessage } from "@/hooks/api/use-message";
 
 export default function ChatInput({
   neuralLinkActive,
+  conversationId,
 }: {
   neuralLinkActive: boolean;
+  conversationId: string;
 }) {
   const [newMessage, setNewMessage] = useState("");
   const [showSendButton, setShowSendButton] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { mutateAsync } = useSendMessage(conversationId, {
+    onSuccess: () => {
+      setNewMessage("");
+      inputRef.current?.focus();
+    },
+  });
 
   // Update showSendButton based on input changes
   useEffect(() => {
@@ -26,10 +36,7 @@ export default function ChatInput({
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      // Your send message logic here
-      console.log("Sending message:", newMessage);
-      setNewMessage("");
-      inputRef.current?.focus();
+      mutateAsync({ content: newMessage });
     }
   };
 

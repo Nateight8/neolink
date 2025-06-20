@@ -14,17 +14,14 @@ export async function recommendedUsers(req, res) {
 
     // Convert ObjectId to string for safer comparison
     const userId = currentUser._id.toString();
-    console.log("Current user ID:", userId);
 
     // Ensure friends is an array
     const friendIds = Array.isArray(currentUser.friends)
       ? currentUser.friends.map((id) => id.toString())
       : [];
-    console.log("Friends count:", friendIds.length);
 
     // Get all users first (for debugging)
     const allUsers = await User.find({});
-    console.log("Total users in database:", allUsers.length);
 
     // Get pending requests that the current user has sent
     const pendingRequests = await FriendRequest.find({
@@ -36,22 +33,12 @@ export async function recommendedUsers(req, res) {
     const pendingUserIds = pendingRequests.map((request) =>
       request.recipient.toString()
     );
-    console.log("DEBUG - Current user:", { id: userId, friends: friendIds });
-    console.log("DEBUG - Pending requests sent by user:", pendingRequests);
-    console.log("DEBUG - Users with pending requests:", pendingUserIds);
 
     // Get incoming friend requests
     const incomingRequests = await FriendRequest.find({
       recipient: userId,
       status: "pending",
     }).populate("sender", "fullName handle");
-    console.log(
-      "DEBUG - Incoming friend requests:",
-      incomingRequests.map((r) => ({
-        from: r.sender.fullName,
-        senderId: r.sender._id,
-      }))
-    );
 
     // Query with explicit string conversion and proper handling
     const recommendedUsers = await User.find({
@@ -62,15 +49,6 @@ export async function recommendedUsers(req, res) {
         { _id: { $nin: pendingUserIds } },
       ],
     }).lean();
-
-    console.log(
-      "DEBUG - Recommended users:",
-      recommendedUsers.map((u) => ({
-        id: u._id,
-        name: u.fullName,
-        handle: u.handle,
-      }))
-    );
 
     return res.status(200).json(recommendedUsers);
   } catch (error) {

@@ -5,10 +5,33 @@ import ChatHeader from "./header";
 import ChatInput from "./chat-input";
 import Messages from "./messages";
 import NeuralLink from "./neural-link";
+import { useDirectMessage } from "@/hooks/api/use-direct-message";
+import { useGetMessages } from "@/hooks/api/use-message";
 
-export default function ChatClient() {
+export default function ChatClient({
+  conversationId,
+}: {
+  conversationId: string;
+}) {
   const [activateNeuralLink, setActivateNeuralLink] = useState(false);
   const neuralLinkStrength = 6;
+
+  const { conversation, isLoading, isError, error } = useDirectMessage(
+    conversationId,
+    {
+      onSuccess: (data) => {
+        console.log("Conversation data:", data);
+      },
+      onError: (error) => {
+        console.error("Error fetching conversation:", error);
+      },
+    }
+  );
+
+  const { data: messages } = useGetMessages(conversationId);
+
+  console.log("Conversation data:", messages);
+
   return (
     <div className="flex flex-col h-full w-full">
       <ChatHeader
@@ -19,13 +42,12 @@ export default function ChatClient() {
         <NeuralLink neuralLinkStrength={neuralLinkStrength} />
       )}
       <div className="flex-1 overflow-scroll">
-        <Messages
-          neuralLinkActive={activateNeuralLink}
-          neuralLinkStrength={neuralLinkStrength}
-          messages={ACTIVE_CONVERSATION_MESSAGES || []}
-        />
+        <Messages messages={messages?.messages || []} />
       </div>
-      <ChatInput neuralLinkActive={activateNeuralLink} />
+      <ChatInput
+        conversationId={conversationId}
+        neuralLinkActive={activateNeuralLink}
+      />
     </div>
   );
 }
