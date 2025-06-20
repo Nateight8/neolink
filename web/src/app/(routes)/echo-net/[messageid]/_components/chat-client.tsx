@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { socket } from "@/lib/socket";
+import type { Message, MessageResponse } from "@/types/chat";
 import ChatHeader from "./header";
 import ChatInput from "./chat-input";
 import Messages from "./messages";
@@ -18,6 +21,42 @@ export default function ChatClient({
   const { data } = useGetMessages(conversationId);
   const messages = data?.messages;
   const conversation = data?.conversation;
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!conversationId) return;
+    // Connect and join room
+    if (!socket.connected) socket.connect();
+    socket.emit("joinConversation", conversationId);
+
+    // Listen for new messages
+    const handleNewMessage = (newMessage: Message) => {
+      queryClient.setQueryData(
+        ["messages", conversationId],
+        (old: MessageResponse | undefined) => {
+          if (!old) return old;
+          // Avoid duplicates (by id or tempId)
+          const exists = old.messages.some(
+            (msg) =>
+              msg.id === newMessage.id ||
+              (msg.tempId && msg.tempId === newMessage.tempId)
+          );
+          if (exists) return old;
+          return {
+            ...old,
+            messages: [...old.messages, newMessage],
+          };
+        }
+      );
+    };
+    socket.on("newMessage", handleNewMessage);
+
+    // Cleanup
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      // Optionally leave room or disconnect if needed
+    };
+  }, [conversationId, queryClient]);
 
   return (
     <div className="flex flex-col h-full w-full">

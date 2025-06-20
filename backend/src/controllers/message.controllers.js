@@ -3,6 +3,7 @@ import { Message } from "../models/conversation.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import { getOtherParticipant } from "../lib/utils/get-other-participant.js";
+import { io } from "../index.js";
 
 // ============================================
 // MESSAGE QUERY CONTROLLERS
@@ -259,9 +260,8 @@ const sendMessage = async (req, res) => {
     };
 
     res.status(201).json(response);
-
-    // TODO: Emit socket event for real-time updates
-    // io.to(conversationId).emit('new-message', response);
+    // Emit newMessage event to the conversation room
+    io.to(conversationId).emit("newMessage", response.message);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();

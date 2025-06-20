@@ -1,5 +1,7 @@
 import express from "express";
 import { configDotenv } from "dotenv";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import authRoute from "./route/auth.route.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -31,6 +33,18 @@ if (!process.env.CORS_ORIGIN) {
 const CORS_ORIGIN = process.env.CORS_ORIGIN;
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://neolink-2.onrender.com",
+      process.env.CORS_ORIGIN,
+      /https?:\/\/neolink-[a-z0-9-]+\.vercel\.app$/,
+    ],
+    credentials: true,
+  },
+});
 
 // Debug middleware with more detailed logging
 app.use((req, res, next) => {
@@ -163,8 +177,20 @@ app.use("/api/notifications", notificationRoute);
 app.use("/api/polls", pollRouter);
 app.use("/api/dm", dmRoute);
 
-app.listen(PORT, () => {
+// Socket.IO connection logic
+io.on("connection", (socket) => {
+  // Join a conversation room
+  socket.on("joinConversation", (conversationId) => {
+    socket.join(conversationId);
+  });
+  // Optionally handle disconnects, typing, etc. here
+});
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`CORS origin: ${CORS_ORIGIN}`);
   connectDB();
 });
+
+// Export io for use in controllers
+export { io };
