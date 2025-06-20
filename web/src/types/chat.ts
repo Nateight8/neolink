@@ -35,7 +35,9 @@ export interface Message {
     username?: string;
     handle: string;
     avatarUrl?: string;
-  } | null;
+  };
+  optimistic?: boolean;
+  tempId?: string;
 }
 
 export interface MessageResponse {

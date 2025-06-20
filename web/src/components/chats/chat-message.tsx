@@ -15,7 +15,7 @@ interface ChatMessageProps {
 export function ChatMessage({ message, neuralLinkActive }: ChatMessageProps) {
   // Get status icon
 
-  const messageStatus = message.readBy.find(
+  const messageStatus = (message.readBy ?? []).find(
     (readBy) => readBy.userId === message.senderId
   );
 

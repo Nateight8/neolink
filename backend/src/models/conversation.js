@@ -49,6 +49,10 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    tempId: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

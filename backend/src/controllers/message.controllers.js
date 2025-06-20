@@ -145,7 +145,7 @@ const sendMessage = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const participantId = req.user.participantId; // Using participantId from auth middleware
-    const { content, messageType = "text", replyToId } = req.body;
+    const { content, messageType = "text", replyToId, tempId } = req.body;
 
     // Verify conversation exists and user has access
     let conversation = await Conversation.findById(conversationId).session(
@@ -205,6 +205,7 @@ const sendMessage = async (req, res) => {
         },
       ],
       ...(replyToId && { replyTo: replyToId }),
+      ...(tempId && { tempId }),
     });
 
     await message.save({ session });
@@ -253,6 +254,7 @@ const sendMessage = async (req, res) => {
         replyTo: populatedMessage.replyTo,
         createdAt: populatedMessage.createdAt,
         updatedAt: populatedMessage.updatedAt,
+        ...(populatedMessage.tempId && { tempId: populatedMessage.tempId }),
       },
     };
 

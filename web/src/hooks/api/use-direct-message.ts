@@ -13,6 +13,7 @@ export interface Message {
   senderId: string;
   timestamp: Date;
   // Add other message properties as needed
+  tempId?: string;
 }
 
 export interface UserMeta {

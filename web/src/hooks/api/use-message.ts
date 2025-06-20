@@ -7,6 +7,7 @@ export interface SendMessageData {
   content: string;
   messageType?: "text";
   replyTo?: string;
+  tempId?: string;
 }
 
 interface SendMessageResponse {
