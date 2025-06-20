@@ -238,30 +238,52 @@ const sendMessage = async (req, res) => {
     session.endSession();
 
     // Populate reply if exists
-    const populatedMessage = await Message.findById(message._id).populate(
-      "replyTo",
-      "content senderId createdAt"
-    );
+    const populatedMessage = await Message.findById(message._id)
+      .populate("replyTo", "content senderId createdAt")
+      .lean();
+
+    // Fetch sender details to include in the response
+    const sender = await User.findOne({
+      participantId: populatedMessage.senderId,
+    })
+      .select("_id participantId fullName username handle avatarUrl")
+      .lean();
+
+    const messageWithSender = {
+      id: populatedMessage._id,
+      conversationId: populatedMessage.conversationId,
+      senderId: populatedMessage.senderId,
+      content: populatedMessage.content,
+      messageType: populatedMessage.messageType,
+      attachments: populatedMessage.attachments,
+      replyTo: populatedMessage.replyTo,
+      createdAt: populatedMessage.createdAt,
+      updatedAt: populatedMessage.updatedAt,
+      isRead: false, // For other clients, it's initially unread
+      readBy: populatedMessage.readBy,
+      ...(populatedMessage.tempId && { tempId: populatedMessage.tempId }),
+      // Attach the full sender object
+      sender: sender
+        ? {
+            id: sender._id,
+            participantId: sender.participantId,
+            fullName: sender.fullName,
+            username: sender.username,
+            handle: sender.handle,
+            avatarUrl: sender.avatarUrl,
+          }
+        : null,
+    };
 
     const response = {
       success: true,
-      message: {
-        id: populatedMessage._id,
-        conversationId: populatedMessage.conversationId,
-        senderId: populatedMessage.senderId,
-        content: populatedMessage.content,
-        messageType: populatedMessage.messageType,
-        attachments: populatedMessage.attachments,
-        replyTo: populatedMessage.replyTo,
-        createdAt: populatedMessage.createdAt,
-        updatedAt: populatedMessage.updatedAt,
-        ...(populatedMessage.tempId && { tempId: populatedMessage.tempId }),
-      },
+      message: messageWithSender,
     };
 
     res.status(201).json(response);
+
     // Emit newMessage event to the conversation room
-    io.to(conversationId).emit("newMessage", response.message);
+    io.to(conversationId).emit("newMessage", messageWithSender);
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
