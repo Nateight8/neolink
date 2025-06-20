@@ -12,30 +12,22 @@ export const axiosInstance = axios.create({
   withCredentials: true, // This is crucial for sending cookies with cross-origin requests
   timeout: 15000, // 15 seconds timeout
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest', // Helps identify AJAX requests
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest", // Helps identify AJAX requests
   },
   // Ensure credentials are sent with CORS requests
-  xsrfCookieName: 'csrftoken',
-  xsrfHeaderName: 'X-CSRFToken',
+  xsrfCookieName: "csrftoken",
+  xsrfHeaderName: "X-CSRFToken",
   withXSRFToken: true,
 });
 
 // Add request interceptor for debugging
 axiosInstance.interceptors.request.use(
   (config) => {
-    console.log('Sending request to:', config.url);
-    console.log('Request config:', {
-      method: config.method,
-      url: config.url,
-      withCredentials: config.withCredentials,
-      headers: config.headers,
-    });
     return config;
   },
   (error) => {
-    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
@@ -43,43 +35,22 @@ axiosInstance.interceptors.request.use(
 // Add response interceptor for debugging
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log('Response received:', {
-      url: response.config.url,
-      status: response.status,
-      headers: response.headers,
-      data: response.data,
-    });
     return response;
   },
   (error) => {
     if (error.response) {
-      console.error('Response error:', {
-        url: error.config.url,
-        status: error.response.status,
-        statusText: error.response.statusText,
-        headers: error.response.headers,
-        data: error.response.data,
-      });
+      return Promise.reject(error);
     } else if (error.request) {
-      console.error('No response received:', error.request);
+      return Promise.reject(error);
     } else {
-      console.error('Request setup error:', error.message);
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
   }
 );
 
 // Request interceptor to add auth token to requests
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from cookies (handled by the browser automatically with withCredentials: true)
-    // If you need to use token in Authorization header, uncomment below:
-    /*
-    const token = getCookie('jwt');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    */
     return config;
   },
   (error) => {
@@ -91,15 +62,17 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
       // If this is a retry request, redirect to login
       if (originalRequest._retry) {
         // Redirect to login or handle as needed
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/signin';
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/signin";
         }
         return Promise.reject(error);
       }
@@ -122,27 +95,29 @@ axiosInstance.interceptors.response.use(
       // }
     }
 
-
     // Handle other errors
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      console.error('Response error:', error.response.data);
-      
+      return Promise.reject(error);
+
       // You can handle specific status codes here
       if (error.response.status === 403) {
-        console.error('Forbidden: You do not have permission to access this resource');
+        return Promise.reject(error);
+        console.error(
+          "Forbidden: You do not have permission to access this resource"
+        );
       } else if (error.response.status === 404) {
-        console.error('Not Found: The requested resource was not found');
+        console.error("Not Found: The requested resource was not found");
       } else if (error.response.status >= 500) {
-        console.error('Server Error: Something went wrong on the server');
+        console.error("Server Error: Something went wrong on the server");
       }
     } else if (error.request) {
       // The request was made but no response was received
-      console.error('No response received:', error.request);
+      console.error("No response received:", error.request);
     } else {
       // Something happened in setting up the request that triggered an Error
-      console.error('Request error:', error.message);
+      console.error("Request error:", error.message);
     }
 
     return Promise.reject(error);

@@ -94,19 +94,7 @@ export function ChessLobby() {
     setGameModeView("opponent-selection");
   };
 
-  interface BotGameSettings {
-    difficulty: number;
-    timeControl: string;
-    color: "white" | "black" | "random";
-  }
-
-  interface ChallengeSettings {
-    timeControl: string;
-    rated: boolean;
-  }
-
-  const handleStartBotGame = (settings: BotGameSettings) => {
-    console.log("Starting bot game with settings:", settings);
+  const handleStartBotGame = () => {
     setIsGameStarting(true);
     setGameModeView("game");
 
@@ -119,9 +107,7 @@ export function ChessLobby() {
     return () => clearTimeout(timer);
   };
 
-  const handleCreateChallenge = (settings: ChallengeSettings) => {
-    console.log("Creating challenge with settings:", settings);
-    // TODO: Implement challenge creation logic
+  const handleCreateChallenge = () => {
     setGameModeView("game");
   };
 

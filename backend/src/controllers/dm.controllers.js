@@ -9,9 +9,6 @@ const getOrCreateConversation = async (req, res) => {
 
     const meParticipantId = req.user.participantId.toString();
 
-    console.log("Current participant ID:", meParticipantId);
-    console.log("Request for conversation:", conversationId);
-
     // STEP 1: Validate conversation ID format
     const conversationIdPattern = /^\d+-\d+$/;
     if (!conversationIdPattern.test(conversationId)) {
@@ -22,7 +19,6 @@ const getOrCreateConversation = async (req, res) => {
 
     // STEP 2: Extract participants from conversation ID
     const participants = conversationId.split("-");
-    console.log("Participants:", participants);
 
     // STEP 3: Security check - ensure current user is one of the participants
     if (!participants.includes(meParticipantId)) {
@@ -84,10 +80,8 @@ const getOrCreateConversation = async (req, res) => {
       },
     };
 
-    console.log("Returning response:", response);
     res.json(response);
   } catch (error) {
-    console.error("Error in getOrCreateConversation:", error);
     res.status(500).json({
       error: "Failed to get or create conversation",
       details: error.message,
@@ -159,7 +153,6 @@ const getConversations = async (req, res) => {
 
     res.json(response);
   } catch (error) {
-    console.error("Error fetching conversations:", error);
     res.status(500).json({ error: "Failed to fetch conversations" });
   }
 };

@@ -21,7 +21,6 @@ async function migrateUserRefs() {
       participantId: { $in: conv.participants },
     });
     if (users.length !== conv.participants.length) {
-      console.warn(`Could not find all users for conversation ${conv._id}`);
       continue;
     }
 
@@ -30,7 +29,6 @@ async function migrateUserRefs() {
     updated++;
   }
 
-  console.log(`Migration complete. Updated ${updated} conversations.`);
   await mongoose.disconnect();
 }
 

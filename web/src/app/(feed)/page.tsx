@@ -10,8 +10,6 @@ export default function Home() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  console.log("USER FROM HOME", user);
-
   useEffect(() => {
     // Only run redirect checks after auth is loaded
     if (!isLoading) {

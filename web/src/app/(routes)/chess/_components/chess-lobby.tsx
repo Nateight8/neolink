@@ -58,7 +58,6 @@ export function ChessGameClean({
   // Log bot settings when they change
   useEffect(() => {
     if (matchType === "bot" && botSettings) {
-      console.log("Bot game started with settings:", botSettings);
       // Here you would initialize the bot with the settings
       // For example: initializeBot(botSettings);
     }
@@ -763,11 +762,9 @@ export function ChessGameClean({
             onPauseResume={() => setIsPaused(!isPaused)}
             onSurrender={() => {
               // Handle surrender logic here
-              console.log("Surrender requested");
             }}
             onOfferDraw={() => {
               // Handle draw offer logic here
-              console.log("Draw offered");
             }}
             onToggleSpectators={() => setShowSpectators(!showSpectators)}
             roomId="NX-7842"

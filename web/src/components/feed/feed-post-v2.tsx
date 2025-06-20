@@ -5,8 +5,6 @@ import { FormattedContent } from "../shared/formatted-content";
 import Image from "next/image";
 
 export default function FeedPostV2({ post }: { post: Post }) {
-  console.log("Feed Post V2", post);
-
   return (
     <div className="border">
       <div className="relative border h-fit">

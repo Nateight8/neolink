@@ -8,7 +8,6 @@ export async function recommendedUsers(req, res) {
 
     // Ensure we have a valid user
     if (!currentUser || !currentUser._id) {
-      console.error("Current user is missing or invalid:", currentUser);
       return res.status(401).json({ message: "Unauthorized - Invalid user" });
     }
 
@@ -52,7 +51,6 @@ export async function recommendedUsers(req, res) {
 
     return res.status(200).json(recommendedUsers);
   } catch (error) {
-    console.error("Error in recommendedUsers controller:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -69,7 +67,6 @@ export async function friends(req, res) {
 
     return res.status(200).json(user.friends); // Return the populated friends
   } catch (error) {
-    console.error("Error in friends controller:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -121,12 +118,6 @@ export async function friendRequest(req, res) {
     await newFriendRequest.save();
 
     // Create notification with the friend request ID
-    console.log("Creating notification for friend request:", {
-      recipientId: recipient._id,
-      senderId: currentUser._id,
-      requestId: newFriendRequest._id, // Include the request ID
-    });
-
     await Notification.create({
       userId: recipient._id, // who receives the notification
       fromUserId: currentUser._id, // who triggered it
