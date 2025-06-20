@@ -1,5 +1,6 @@
 import { Conversation } from "../models/dm.models.js";
 import { Message } from "../models/conversation.js";
+import User from "../models/User.js";
 import mongoose from "mongoose";
 import { getOtherParticipant } from "../lib/utils/get-other-participant.js";
 
@@ -35,19 +36,84 @@ const getConversationMessages = async (req, res) => {
       }
     }
 
+    // First get messages without populating senderId
     const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .limit(limit)
-      .populate("replyTo", "content senderId createdAt");
+      .populate("replyTo", "content senderId createdAt")
+      .lean(); // Convert to plain JavaScript objects
+
+    // Get unique sender IDs
+    const senderIds = [...new Set(messages.map((msg) => msg.senderId))];
+
+    // Fetch sender details in a single query
+    const senders = await User.find(
+      {
+        participantId: { $in: senderIds },
+      },
+      "fullName username handle avatarUrl participantId"
+    );
+
+    // Create a map of participantId -> user
+    const senderMap = {};
+    senders.forEach((sender) => {
+      senderMap[sender.participantId] = sender;
+    });
+
+    // Attach sender data to each message
+    messages.forEach((message) => {
+      message.sender = senderMap[message.senderId] || null;
+    });
 
     // Reverse to show oldest first
     messages.reverse();
 
+    // Fetch the other participant's user document for metadata
+    const otherParticipantId = conversation.participants.find(
+      (p) => p !== participantId
+    );
+    const otherUser = await User.findOne(
+      { participantId: otherParticipantId },
+      "_id participantId fullName username handle avatarUrl status verified"
+    );
+    const conversationMeta = {
+      id: conversation._id,
+      participants: conversation.participants,
+      currentUser: participantId,
+      otherParticipant: otherUser
+        ? {
+            id: otherUser._id,
+            participantId: otherUser.participantId,
+            fullName: otherUser.fullName,
+            username: otherUser.username,
+            handle: otherUser.handle,
+            avatarUrl: otherUser.avatarUrl,
+            status: otherUser.status,
+            verified: otherUser.verified,
+          }
+        : null,
+      lastMessage: conversation.lastMessage || null,
+      unreadCount: conversation.unreadCount.get(participantId) || 0,
+      createdAt: conversation.createdAt,
+      updatedAt: conversation.updatedAt,
+      isActive: conversation.isActive,
+    };
+
     const response = {
+      conversation: conversationMeta,
       messages: messages.map((msg) => ({
         id: msg._id,
         conversationId: msg.conversationId,
-        senderId: msg.senderId,
+        sender: msg.sender
+          ? {
+              id: msg.sender._id,
+              participantId: msg.sender.participantId,
+              fullName: msg.sender.fullName,
+              username: msg.sender.username,
+              handle: msg.sender.handle,
+              avatarUrl: msg.sender.avatarUrl,
+            }
+          : null,
         content: msg.content,
         messageType: msg.messageType,
         attachments: msg.attachments,

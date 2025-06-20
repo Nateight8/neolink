@@ -36,7 +36,7 @@ export default function Messages({
 
   return (
     <>
-      <div className="space-y-4 p-4">
+      <div className="flex flex-col justify-end h-full space-y-4 p-4 overflow-y-auto">
         {messages.map((message) => (
           <ChatMessage
             key={message.id}
@@ -45,7 +45,7 @@ export default function Messages({
           />
         ))}
         {isTyping && (
-          <div className="flex items-start space-x-2 max-w-[80%]">
+          <div className="flex items-start space-x-2 max-w-[80%] mb-2">
             <Avatar className="h-8 w-8 border border-cyan-900">
               <AvatarImage
                 src={mockUser.avatar || "/placeholder.svg"}

@@ -18,29 +18,18 @@ import {
   Video,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-interface MockUser {
-  name: string;
-  status: "online" | "away" | "offline";
-  verified: boolean;
-  handle: string;
-}
-
-const mockUser: MockUser = {
-  name: "James Bonds",
-  status: "online",
-  verified: true,
-  handle: "james",
-};
+import { UserMeta } from "@/hooks/api/use-direct-message";
 
 interface ChatProps {
   setActiveNeuralLink: Dispatch<SetStateAction<boolean>>;
   activeNeuralLink: boolean;
+  user?: UserMeta | null;
 }
 
 export default function ChatHeader({
   activeNeuralLink,
   setActiveNeuralLink,
+  user,
 }: ChatProps) {
   const toggleNeuralLink = () => {
     setActiveNeuralLink(!activeNeuralLink);
@@ -68,16 +57,26 @@ export default function ChatHeader({
           <div className="flex flex-1 items-center mx-3">
             <div className="relative">
               <Avatar className="size-8 border border-cyan-500">
-                <AvatarImage src="" alt="user name" />
+                <AvatarImage
+                  src={user?.avatarUrl || ""}
+                  alt={
+                    user?.username || user?.fullName || user?.handle || "User"
+                  }
+                />
                 <AvatarFallback className="bg-black text-cyan-400">
-                  {mockUser.name.substring(0, 2) || "UN"}
+                  {(
+                    user?.username ||
+                    user?.fullName ||
+                    user?.handle ||
+                    "UN"
+                  ).substring(0, 2)}
                 </AvatarFallback>
               </Avatar>
               <div
                 className={`absolute bottom-0 right-0 size-2 rounded-full border border-black ${
-                  mockUser.status === "online"
+                  user?.status === "online"
                     ? "bg-green-500"
-                    : mockUser.status === "away"
+                    : user?.status === "away"
                     ? "bg-yellow-500"
                     : "bg-gray-500"
                 }`}
@@ -85,8 +84,10 @@ export default function ChatHeader({
             </div>
             <div className="ml-3">
               <div className=" items-center hidden">
-                <h3 className="font-bold text-white mr-1">{mockUser.name}</h3>
-                {mockUser.verified && (
+                <h3 className="font-bold text-white mr-1">
+                  {user?.username || user?.fullName || user?.handle || "User"}
+                </h3>
+                {user?.verified && (
                   <Badge
                     variant="outline"
                     className="h-4 px-1 bg-cyan-950/50 border-cyan-500 text-cyan-400 text-[10px]"
@@ -98,7 +99,7 @@ export default function ChatHeader({
               </div>
               <div className="flex items-center text-lg font-semibold">
                 <span className="text-cyan-400 uppercase font-mono">
-                  {mockUser.handle}
+                  {user?.handle}
                 </span>
               </div>
             </div>

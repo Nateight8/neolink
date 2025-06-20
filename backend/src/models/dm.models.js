@@ -9,18 +9,17 @@ const conversationSchema = new mongoose.Schema(
     },
     participants: [
       {
-        type: String, // Snowflake IDs as strings
+        type: String, // participantId (Snowflake)
         required: true,
       },
     ],
-    participantA: {
-      type: String,
-      required: true,
-    },
-    participantB: {
-      type: String,
-      required: true,
-    },
+    userRefs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
     lastMessage: {
       content: String,
       senderId: String,
@@ -49,7 +48,6 @@ const conversationSchema = new mongoose.Schema(
 
 // Indexes for performance
 conversationSchema.index({ participants: 1 });
-conversationSchema.index({ participantA: 1, participantB: 1 });
 conversationSchema.index({ updatedAt: -1 });
 
 // Static method to create deterministic conversation ID

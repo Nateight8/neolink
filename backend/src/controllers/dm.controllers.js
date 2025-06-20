@@ -1,6 +1,7 @@
 import { Conversation } from "../models/dm.models.js";
 import { Message } from "../models/conversation.js";
 import mongoose from "mongoose";
+import User from "../models/User.js";
 
 const getOrCreateConversation = async (req, res) => {
   try {
@@ -33,28 +34,28 @@ const getOrCreateConversation = async (req, res) => {
     // STEP 4: Try to find existing conversation
     let conversation = await Conversation.findById(conversationId);
 
-    if (conversation) {
-      console.log("Found existing conversation:", conversation._id);
-    } else {
-      console.log("Creating new conversation...");
-
-      // STEP 5: Create new conversation if it doesn't exist
-      const sortedIds = participants.sort(); // Ensure consistent ordering
-
+    if (!conversation) {
+      // Find the other user by participantId
+      const otherParticipantId = participants.find(
+        (p) => p !== meParticipantId
+      );
+      const otherUser = await User.findOne({
+        participantId: otherParticipantId,
+      });
+      if (!otherUser) {
+        return res.status(404).json({ error: "Other participant not found" });
+      }
       conversation = new Conversation({
         _id: conversationId,
-        participants: sortedIds,
-        participantA: sortedIds[0],
-        participantB: sortedIds[1],
+        participants: participants,
+        userRefs: [req.user._id, otherUser._id], // Do not sort
         unreadCount: new Map([
-          [sortedIds[0], 0],
-          [sortedIds[1], 0],
+          [participants[0], 0],
+          [participants[1], 0],
         ]),
         isActive: true,
       });
-
       await conversation.save();
-      console.log("Created new conversation:", conversation._id);
     }
 
     // STEP 6: Fetch messages for this conversation
@@ -94,4 +95,73 @@ const getOrCreateConversation = async (req, res) => {
   }
 };
 
-export { getOrCreateConversation };
+// Get all conversations for the authenticated user
+const getConversations = async (req, res) => {
+  try {
+    const userId = req.user._id; // Use MongoDB _id
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const query = {
+      userRefs: userId,
+      isActive: true,
+    };
+
+    const conversations = await Conversation.find(query)
+      .sort({ updatedAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    const totalCount = await Conversation.countDocuments(query);
+
+    const response = {
+      conversations: await Promise.all(
+        conversations.map(async (conv) => {
+          // Find the other participantId
+          const otherParticipantId = conv.participants.find(
+            (p) => p !== req.user.participantId
+          );
+          // Fetch the other participant's user document
+          const otherUser = await User.findOne(
+            { participantId: otherParticipantId },
+            "_id participantId fullName username handle avatarUrl status verified"
+          );
+          return {
+            id: conv._id,
+            otherParticipant: otherUser
+              ? {
+                  id: otherUser._id,
+                  participantId: otherUser.participantId,
+                  fullName: otherUser.fullName,
+                  username: otherUser.username,
+                  handle: otherUser.handle,
+                  avatarUrl: otherUser.avatarUrl,
+                  status: otherUser.status,
+                  verified: otherUser.verified,
+                }
+              : null,
+            lastMessage: conv.lastMessage,
+            unreadCount: conv.unreadCount.get(userId.toString()) || 0,
+            updatedAt: conv.updatedAt,
+            createdAt: conv.createdAt,
+          };
+        })
+      ),
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        hasNext: page < Math.ceil(totalCount / limit),
+        hasPrev: page > 1,
+      },
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching conversations:", error);
+    res.status(500).json({ error: "Failed to fetch conversations" });
+  }
+};
+
+export { getOrCreateConversation, getConversations };

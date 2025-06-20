@@ -1,6 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { axiosInstance } from "@/lib/axios-instance";
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 
 export interface Message {
   id: string;
@@ -10,16 +15,32 @@ export interface Message {
   // Add other message properties as needed
 }
 
+export interface UserMeta {
+  id: string;
+  participantId: string;
+  fullName?: string;
+  username?: string;
+  handle?: string;
+  avatarUrl?: string;
+  status?: string;
+  verified?: boolean;
+}
+
 export interface Conversation {
   id: string;
   participants: string[];
-  currentUser: string;
-  otherParticipant: string;
-  lastMessage: Message | null;
+  currentUser?: string; // Optional as it's not present in all contexts
+  otherParticipant: UserMeta | null;
+  lastMessage?: {
+    id: string;
+    content: string;
+    sender: string;
+    createdAt: string;
+  } | null;
   unreadCount: number;
-  createdAt: string;
   updatedAt: string;
-  isActive: boolean;
+  createdAt: string;
+  isActive?: boolean; // Optional as it's not present in all contexts
 }
 
 interface ConversationResponse {
@@ -32,7 +53,23 @@ interface UseDirectMessageOptions {
   onError?: (error: Error) => void;
 }
 
-export const useDirectMessage = (conversationId?: string, options: UseDirectMessageOptions = {}) => {
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface ConversationsResponse {
+  conversations: Conversation[];
+  pagination: PaginationInfo;
+}
+
+export const useDirectMessage = (
+  conversationId?: string,
+  options: UseDirectMessageOptions = {}
+) => {
   const queryClient = useQueryClient();
   const [error, setError] = useState<Error | null>(null);
   const { onSuccess, onError } = options;
@@ -44,19 +81,23 @@ export const useDirectMessage = (conversationId?: string, options: UseDirectMess
     isError,
     refetch,
   } = useQuery({
-    queryKey: ['conversation', conversationId],
+    queryKey: ["conversation", conversationId],
     queryFn: async (): Promise<Conversation> => {
       if (!conversationId) {
-        throw new Error('Conversation ID is required');
+        throw new Error("Conversation ID is required");
       }
 
       // Validate conversation ID format
       const conversationIdPattern = /^\d+-\d+$/;
       if (!conversationIdPattern.test(conversationId)) {
-        throw new Error('Invalid conversation ID format. Expected: userA-userB');
+        throw new Error(
+          "Invalid conversation ID format. Expected: userA-userB"
+        );
       }
 
-      const response = await axiosInstance.get<ConversationResponse>(`/dm/${conversationId}`);
+      const response = await axiosInstance.get<ConversationResponse>(
+        `/dm/${conversationId}`
+      );
       return response.data.conversation;
     },
     enabled: !!conversationId,
@@ -89,10 +130,7 @@ export const useDirectMessage = (conversationId?: string, options: UseDirectMess
     },
     onSuccess: (data: ConversationResponse) => {
       if (data?.conversation) {
-        queryClient.setQueryData(
-          ['conversation', data.conversation.id],
-          data
-        );
+        queryClient.setQueryData(["conversation", data.conversation.id], data);
         onSuccess?.(data.conversation);
       }
     },
@@ -118,15 +156,44 @@ export const useDirectMessage = (conversationId?: string, options: UseDirectMess
     isLoading,
     isError,
     error,
-    
+
     // Actions
     getOrCreateConversation,
     refetch,
-    
+
     // Raw mutations
     createConversation: createConversationMutation.mutate,
-    createConversationAsync: createConversationMutation.mutateAsync,
   };
 };
 
-export default useDirectMessage;
+/**
+ * Hook to fetch paginated conversations for the authenticated user
+ * @param page - Page number (1-based, default: 1)
+ * @param limit - Number of items per page (default: 20)
+ * @param options - Additional React Query options
+ * @returns Query result with conversations and pagination info
+ */
+export const useConversationParticipants = (
+  page = 1,
+  limit = 20,
+  options?: Omit<UseQueryOptions<ConversationsResponse>, "queryKey" | "queryFn">
+) => {
+  return useQuery<ConversationsResponse>({
+    queryKey: ["conversations", { page, limit }],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<ConversationsResponse>(
+        "/dm/conversations",
+        {
+          params: {
+            page: String(page),
+            limit: String(limit),
+          },
+        }
+      );
+      return data;
+    },
+    // Keep previous data while fetching new data
+    placeholderData: (previousData) => previousData,
+    ...options,
+  });
+};

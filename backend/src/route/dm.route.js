@@ -1,5 +1,8 @@
 import express from "express";
-import { getOrCreateConversation } from "../controllers/dm.controllers.js";
+import {
+  getConversations,
+  getOrCreateConversation,
+} from "../controllers/dm.controllers.js";
 import {
   getConversationMessages,
   sendMessage,
@@ -11,6 +14,9 @@ const router = express.Router();
 
 // Apply authentication to all DM routes
 router.use(authMiddleware);
+
+// GET: /api/dm/conversations - Must come before parameterized routes
+router.get("/conversations", getConversations);
 
 // Get or create conversation - our main endpoint
 // GET /api/dm/:conversationId

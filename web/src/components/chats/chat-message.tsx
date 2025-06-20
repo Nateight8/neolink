@@ -35,8 +35,7 @@ export function ChatMessage({ message, neuralLinkActive }: ChatMessageProps) {
   console.log("MESSAGES FROM HERE:", message);
 
   const { user } = useAuth();
-  const messageSender =
-    user?.participantId === message.senderId ? "self" : "others";
+  const messageSender = user?.participantId === message.sender?.participantId;
 
   // Neural message effect based on link strength
 
@@ -52,7 +51,9 @@ export function ChatMessage({ message, neuralLinkActive }: ChatMessageProps) {
             src="/placeholder.svg?height=50&width=50&text=CN"
             alt="User"
           />
-          <AvatarFallback className="bg-black text-cyan-400">CN</AvatarFallback>
+          <AvatarFallback className="bg-black uppercase text-base text-cyan-400">
+            {message.sender?.fullName.substring(0, 2) || "UN"}
+          </AvatarFallback>
         </Avatar>
       )}
 

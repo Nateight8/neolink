@@ -1,3 +1,5 @@
+import type { Conversation } from "@/hooks/api/use-direct-message";
+
 export interface User {
   _id: string;
   username?: string;
@@ -26,9 +28,18 @@ export interface Message {
   createdAt: string;
   updatedAt: string;
   isRead: boolean;
+  sender: {
+    id: string;
+    participantId: string;
+    fullName: string;
+    username?: string;
+    handle: string;
+    avatarUrl?: string;
+  } | null;
 }
 
 export interface MessageResponse {
+  conversation: Conversation;
   messages: Message[];
   hasMore: boolean;
 }
