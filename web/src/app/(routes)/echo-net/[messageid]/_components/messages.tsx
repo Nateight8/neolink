@@ -23,8 +23,10 @@ const mockUser: MockUser = {
 
 export default function Messages({
   messages,
+  neuralLinkActive,
 }: {
   messages: Message[];
+  neuralLinkActive: boolean;
 }) {
   const isTyping = true;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,6 +41,7 @@ export default function Messages({
           <ChatMessage
             key={message.id}
             message={message}
+            neuralLinkActive={neuralLinkActive}
           />
         ))}
         {isTyping && (

@@ -42,7 +42,11 @@ export default function ChatClient({
         <NeuralLink neuralLinkStrength={neuralLinkStrength} />
       )}
       <div className="flex-1 overflow-scroll">
-        <Messages messages={messages?.messages || []} />
+        <Messages
+          neuralLinkActive={activateNeuralLink}
+          neuralLinkStrength={neuralLinkStrength}
+          messages={messages?.messages || []}
+        />
       </div>
       <ChatInput
         conversationId={conversationId}

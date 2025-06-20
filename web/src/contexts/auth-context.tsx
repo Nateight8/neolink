@@ -28,6 +28,7 @@ interface AuthUser {
   status?: "online" | "offline" | "playing";
   xp?: number;
   maxXp?: number;
+  participantId: string;
 }
 
 type User = AuthUser;
