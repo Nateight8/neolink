@@ -1,14 +1,22 @@
 import mongoose from "mongoose";
-// import dotenv from "dotenv";
+import dotenv from "dotenv";
+import path from "path";
 import User from "../src/models/User.js";
 import { Conversation } from "../src/models/dm.models.js";
 
-dotenv.config();
+// Explicitly load .env file from the root
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 async function migrateUserRefs() {
-  await mongoose.connect(MONGO_URI);
+  if (!process.env.MONGO_URI) {
+    console.error("MONGO_URI is not defined in your environment variables.");
+    process.exit(1);
+  }
+  await mongoose.connect(process.env.MONGO_URI);
+  console.log("Connected to MongoDB for migration.");
 
   const conversations = await Conversation.find({});
+  console.log(`Found ${conversations.length} conversations to check.`);
 
   let updated = 0;
   for (const conv of conversations) {
@@ -21,14 +29,19 @@ async function migrateUserRefs() {
       participantId: { $in: conv.participants },
     });
     if (users.length !== conv.participants.length) {
+      console.warn(
+        `Could not find all users for conversation ${conv._id}. Skipping.`
+      );
       continue;
     }
 
     conv.userRefs = users.map((u) => u._id);
     await conv.save();
     updated++;
+    console.log(`Updated conversation ${conv._id}`);
   }
 
+  console.log(`Migration complete. Updated ${updated} conversations.`);
   await mongoose.disconnect();
 }
 

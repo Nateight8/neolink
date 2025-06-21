@@ -136,7 +136,7 @@ const getConversations = async (req, res) => {
                 }
               : null,
             lastMessage: conv.lastMessage,
-            unreadCount: conv.unreadCount.get(userId.toString()) || 0,
+            unreadCount: conv.unreadCount.get(req.user.participantId) || 0,
             updatedAt: conv.updatedAt,
             createdAt: conv.createdAt,
           };
