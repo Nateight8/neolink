@@ -3,7 +3,7 @@ import { Message } from "../models/conversation.js";
 import User from "../models/User.js";
 import mongoose from "mongoose";
 import { getOtherParticipant } from "../lib/utils/get-other-participant.js";
-import { io } from "../index.js";
+import { io } from "../lib/socket.js";
 
 // ============================================
 // MESSAGE QUERY CONTROLLERS
