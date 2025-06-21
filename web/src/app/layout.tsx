@@ -38,7 +38,10 @@ export default function RootLayout({
                   {/* Fixed Cyberpunk background with grid lines */}
                   {/* <Background /> */}
                   {children}
-                  <FloatingDock />
+                  <FloatingDock
+                    desktopClassName="fixed bottom-6 right-6 z-50"
+                    mobileClassName="fixed bottom-6 right-6 z-50"
+                  />
                 </main>
               </AuthProvider>
             </TransitionProvider>

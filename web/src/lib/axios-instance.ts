@@ -99,11 +99,9 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      return Promise.reject(error);
 
       // You can handle specific status codes here
       if (error.response.status === 403) {
-        return Promise.reject(error);
         console.error(
           "Forbidden: You do not have permission to access this resource"
         );

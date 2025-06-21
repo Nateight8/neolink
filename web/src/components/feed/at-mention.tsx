@@ -6,62 +6,34 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BeveledButton } from "@/components/ui/beveled-button";
 import { MessageSquare } from "lucide-react";
-import { getCompactRelativeTime } from "@/lib/relative-time";
-import { useAuth } from "@/contexts/auth-context";
-import { useRouter } from "next/navigation";
 
-interface UserDataProps {
+interface AtMentionProps {
   name: string;
   handle: string;
-  timestamp: string;
   avatar: string;
   bio: string;
   mutualFriends?: {
     count: number;
     avatars: string[];
   };
-  participantId: string;
 }
 
-export default function UserData({
+export default function AtMention({
   name,
   handle,
-  timestamp,
   avatar,
   bio,
   mutualFriends,
-  participantId,
-}: UserDataProps) {
-  const { user } = useAuth();
-
-  const loggedInUser = user?.participantId;
-  const router = useRouter();
-  const handleMessage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    router.push(`/echo-net/${loggedInUser}-${participantId}`);
-  };
-
+}: AtMentionProps) {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <div className="flex cursor-pointer items-center text-sm">
-          <span
-            className="glitch-text mr-2 font-bold text-white hover:underline"
-            data-text={name}
-          >
-            {name}
-          </span>
-          <span
-            className="glitch-text font-mono text-muted-foreground"
-            data-text={`@${handle}`}
-          >
-            @{handle}
-          </span>
-          <span className="mx-2 text-gray-600">·</span>
-          <span className="text-gray-500">
-            {getCompactRelativeTime(timestamp)}
-          </span>
-        </div>
+        <span
+          className="glitch-text cursor-pointer text-cyan-300 hover:text-cyan-300"
+          data-text={`@${handle}`}
+        >
+          @{handle}
+        </span>
       </HoverCardTrigger>
       <HoverCardContent className="w-80 border-cyan-900/50 bg-black text-white">
         <div className="space-y-4">
@@ -81,7 +53,7 @@ export default function UserData({
               </div>
             </div>
             <div className="">
-              <BeveledButton onClick={handleMessage} size="icon-lsm">
+              <BeveledButton size="icon-lsm">
                 <MessageSquare className="size-3" />
               </BeveledButton>
             </div>

@@ -12,7 +12,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronUp } from "lucide-react";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
-import { FeedPost } from "../feed-post";
+import FeedPost from "@/app/(feed)/[username]/[status]/[postid]/_components/feed-post-v2";
+// import { FeedPost } from "../feed-post";
 
 export default function MainFeed() {
   const [, setActiveTab] = useState("for-you");
@@ -119,7 +120,7 @@ export default function MainFeed() {
 
         {/* Feed posts */}
         {/* <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}> */}
-        <div className="space-y-6 ">
+        <div className="space-y-1">
           <AnimatePresence initial={false}>
             {posts?.map((post) => (
               <motion.div
@@ -129,7 +130,7 @@ export default function MainFeed() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <FeedPost post={post} glitchEffect={glitchEffect} />
+                <FeedPost post={post} />
               </motion.div>
             ))}
           </AnimatePresence>

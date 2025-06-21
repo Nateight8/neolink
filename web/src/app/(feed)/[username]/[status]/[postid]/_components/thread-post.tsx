@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserData from "./user-data";
+import { FormattedContent } from "@/components/shared/formatted-content";
 
 // Types
 interface Reply {
@@ -34,9 +35,17 @@ const mainPost = {
   timestamp: "4 hours ago",
   bio: "Quantum physicist and part-time chronomancer. I build things that bend the laws of reality.",
   content:
-    "Just integrated a new quantum processing core into my rig. The processing speed is unreal. Has anyone else experimented with quantum entanglement for FTL data transfer? The latency is practically zero.",
+    "Just integrated a new quantum processing core into my rig. The processing speed is unreal. Has anyone else experimented with #QuantumEntanglement for FTL data transfer? The latency is practically zero. Big shoutout to @GHOST_IN_THE_CODE for the help.",
   upvotes: 1337,
   commentsCount: 42,
+};
+
+const users = {
+  GHOST_IN_THE_CODE: {
+    name: "GHOST_IN_THE_CODE",
+    avatar: "/placeholder.svg?text=GC",
+    bio: "Reverse-engineering the fabric of spacetime. One line of code at a time.",
+  },
 };
 
 const comments = [
@@ -127,7 +136,7 @@ const Comment = ({
         />
 
         {/* Comment body */}
-        <p className="text-gray-300 mb-2 text-sm">{comment.content}</p>
+        <FormattedContent content={comment.content} className="text-gray-300" />
 
         {/* Comment actions */}
         <div className="flex items-center space-x-4 text-gray-500">
@@ -206,7 +215,7 @@ export default function Thread() {
                 avatar={mainPost.avatar}
                 bio={mainPost.bio}
               />
-              <p className="text-sm mb-4">{mainPost.content}</p>
+              <FormattedContent content={mainPost.content} users={users} />
               {/* Post Actions */}
               <div className="mt-4 flex items-center space-x-6 text-gray-400">
                 <Button
