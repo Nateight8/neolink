@@ -16,6 +16,7 @@ export default function ChatClient({
   conversationId: string;
 }) {
   const [activateNeuralLink, setActivateNeuralLink] = useState(false);
+  const [isOpponentTyping, setIsOpponentTyping] = useState(false);
   const neuralLinkStrength = 6;
 
   const { data } = useGetMessages(conversationId);
@@ -51,9 +52,15 @@ export default function ChatClient({
     };
     socket.on("newMessage", handleNewMessage);
 
+    // Listen for typing indicators
+    socket.on("isTyping", () => setIsOpponentTyping(true));
+    socket.on("isNotTyping", () => setIsOpponentTyping(false));
+
     // Cleanup
     return () => {
       socket.off("newMessage", handleNewMessage);
+      socket.off("isTyping");
+      socket.off("isNotTyping");
       // Optionally leave room or disconnect if needed
     };
   }, [conversationId, queryClient]);
@@ -73,6 +80,8 @@ export default function ChatClient({
           neuralLinkActive={activateNeuralLink}
           // neuralLinkStrength={neuralLinkStrength}
           messages={messages || []}
+          isOpponentTyping={isOpponentTyping}
+          otherParticipant={conversation?.otherParticipant}
         />
       </div>
       <ChatInput

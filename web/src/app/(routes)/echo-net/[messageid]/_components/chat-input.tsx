@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth-context";
 import { v4 as uuidv4 } from "uuid";
 import type { Message, MessageResponse } from "@/types/chat";
+import { socket } from "@/lib/socket";
 
 type OptimisticMessage = Message & { optimistic?: boolean; tempId?: string };
 
@@ -29,6 +30,31 @@ export default function ChatInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Emit typing events
+  useEffect(() => {
+    if (newMessage.trim().length > 0) {
+      socket.emit("typing", conversationId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit("stopTyping", conversationId);
+      }, 2000); // 2-second timeout
+    } else {
+      socket.emit("stopTyping", conversationId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+    // Cleanup on unmount
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [newMessage, conversationId]);
 
   const { mutateAsync } = useSendMessage(conversationId, {
     onSuccess: (data) => {
@@ -70,6 +96,10 @@ export default function ChatInput({
   }, [newMessage]);
 
   const handleSendMessage = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      socket.emit("stopTyping", conversationId);
+    }
     if (newMessage.trim() && user) {
       const tempId = uuidv4();
       const now = new Date().toISOString();
