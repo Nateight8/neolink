@@ -133,6 +133,7 @@ const Comment = ({
           timestamp={comment.timestamp}
           avatar={comment.avatar}
           bio={comment.bio}
+          participantId="123"
         />
 
         {/* Comment body */}
@@ -214,6 +215,7 @@ export default function Thread() {
                 timestamp={mainPost.timestamp}
                 avatar={mainPost.avatar}
                 bio={mainPost.bio}
+                participantId="1234"
               />
               <FormattedContent content={mainPost.content} users={users} />
               {/* Post Actions */}

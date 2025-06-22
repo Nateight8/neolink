@@ -18,7 +18,7 @@ import FeedPost from "@/app/(feed)/[username]/[status]/[postid]/_components/feed
 export default function MainFeed() {
   const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [glitchEffect, setGlitchEffect] = useState(false);
+  // const [glitchEffect, setGlitchEffect] = useState(false);
 
   // const [isARPostEnabled, setIsARPostEnabled] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -39,14 +39,14 @@ export default function MainFeed() {
   }, []);
 
   // Trigger random glitch effects
-  useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      setGlitchEffect(true);
-      setTimeout(() => setGlitchEffect(false), 200);
-    }, 10000);
+  // useEffect(() => {
+  //   const glitchInterval = setInterval(() => {
+  //     setGlitchEffect(true);
+  //     setTimeout(() => setGlitchEffect(false), 200);
+  //   }, 10000);
 
-    return () => clearInterval(glitchInterval);
-  }, []);
+  //   return () => clearInterval(glitchInterval);
+  // }, []);
 
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["post-feed"], // Add a unique query key
@@ -161,3 +161,5 @@ export default function MainFeed() {
     </>
   );
 }
+
+// 09034591403

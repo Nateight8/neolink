@@ -230,8 +230,14 @@ export const reactToPost = async (req, res) => {
       post[field].splice(index, 1);
     }
 
-    await post.save();
-    res.json(post);
+    // Update the post without updating timestamps
+    const updatedPost = await Post.findByIdAndUpdate(
+      post._id,
+      { [field]: post[field] },
+      { new: true, timestamps: false } // `new: true` returns the updated doc
+    ).populate("author");
+
+    res.json(updatedPost);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -21,13 +21,12 @@ import {
 import type { Post } from "@/types/chat";
 import Image from "next/image";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { axiosInstance } from "@/lib/axios-instance";
 import { CommentThreadModal } from "./comment-thread";
 import { getCompactRelativeTime } from "@/lib/relative-time";
 import { FormattedContent } from "../shared/formatted-content";
 import { FeedPoll } from "./feed-poll";
 import { useAuth } from "@/contexts/auth-context";
+import { useEngagement } from "@/hooks/api/use-engagement";
 
 interface FeedPostProps {
   post: Post;
@@ -37,30 +36,12 @@ interface FeedPostProps {
 export function FeedPost({ post, glitchEffect }: FeedPostProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
-
-  // Extract hashtags from content
-
   const { user } = useAuth();
+  const { handleReaction } = useEngagement(post._id);
 
   const likedByUser = user?._id ? post.likedBy.includes(user._id) : false;
   const retweetByUser = user?._id ? post.retweetedBy.includes(user._id) : false;
   const bookMarkedByUser = true;
-
-  const queryClient = useQueryClient();
-  const { mutate: reactionMutation } = useMutation({
-    mutationFn: async (type: "like" | "retweet") => {
-      await axiosInstance.post(`/posts/${post._id}/reactions`, { type });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["post-feed"],
-      });
-    },
-  });
-
-  const handlePostReaction = (type: "like" | "retweet") => {
-    reactionMutation(type);
-  };
 
   const openCommentModal = () => {
     setIsCommentModalOpen(true);
@@ -71,7 +52,6 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
   };
 
   const updatedAt = getCompactRelativeTime(post.updatedAt);
-  // const postHasPoll = post
 
   return (
     <>
@@ -161,7 +141,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handlePostReaction("like")}
+                  onClick={() => handleReaction("like")}
                   className={`rounded-full space-x-2 ${
                     likedByUser
                       ? "text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-950/30"
@@ -221,7 +201,7 @@ export function FeedPost({ post, glitchEffect }: FeedPostProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handlePostReaction("retweet")}
+                  onClick={() => handleReaction("retweet")}
                   className={`rounded-full space-x-2 ${
                     retweetByUser
                       ? "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-950/30"

@@ -51,6 +51,7 @@ export const CommentPost = ({
           timestamp={comment.timestamp}
           avatar={comment.avatar}
           bio={comment.bio}
+          participantId="2"
         />
 
         {/* Comment body */}

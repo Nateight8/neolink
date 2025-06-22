@@ -47,7 +47,7 @@ export default function FeedPost({ post }: { post: Post }) {
             />
             <FormattedContent content={post.content} className="line-clamp-5" />
             {/* Post Actions */}
-            <PostActions />
+            <PostActions post={post} />
           </div>
         </div>
       </div>
