@@ -17,6 +17,7 @@ import {
   ImageIcon,
   Smile,
   CuboidIcon as Cube,
+  Gamepad2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ import {
   AllyMentionPopover,
   type Ally,
 } from "@/components/chats/mention-ally-popover";
+import CreateChess from "@/app/(feed)/chess/_components/create-chess";
 
 // Define the form schema with Zod
 const postFormSchema = z.object({
@@ -79,18 +81,26 @@ interface SearchUser {
 }
 
 // Add type for post data
+type ChallengerType = "everyone" | "ally" | "clan";
+
 interface PostData {
   content: string;
   poll?: {
     question: string;
     options: string[];
-    visibility: "public" | "friends" | "private";
+    visibility: "public" | "private";
     expiresAt: Date;
     showResultsBeforeVoting: boolean;
     anonymousVoting: boolean;
     allowMultipleVotes: boolean;
   };
   image: File | null;
+  chess?: {
+    timeControl: string;
+    rated: boolean;
+    visibility: "public" | "private";
+    challenger: ChallengerType;
+  };
 }
 
 export function CreatePostDialog({
@@ -120,6 +130,43 @@ export function CreatePostDialog({
     position: null as { top: number; left: number } | null,
     startPosition: 0,
   });
+
+  // Chess game state
+  const [isChessEnabled, setIsChessEnabled] = useState(false);
+  const [chessSettings, setChessSettings] = useState<{
+    timeControl: string;
+    rated: boolean;
+    challenger: ChallengerType;
+  } | null>(null);
+
+  const handleChessSettingsChange = useCallback(
+    (settings: {
+      timeControl: string;
+      rated: boolean;
+      challenger: ChallengerType;
+    }) => {
+      setChessSettings(settings);
+    },
+    []
+  );
+
+  const handleARPostToggle = useCallback(() => {
+    setIsARPostEnabled((current) => !current);
+    setIsChessEnabled(false);
+    setIsPollActive(false);
+  }, []);
+
+  const handleChessToggle = useCallback(() => {
+    setIsChessEnabled((current) => !current);
+    setIsARPostEnabled(false);
+    setIsPollActive(false);
+  }, []);
+
+  const handlePollToggle = useCallback(() => {
+    setIsPollActive((current) => !current);
+    setIsARPostEnabled(false);
+    setIsChessEnabled(false);
+  }, []);
 
   // Initialize form with Zod
   const form = useForm<PostFormValues>({
@@ -346,14 +393,26 @@ export function CreatePostDialog({
     // Map frontend visibility to backend visibility
     const mapVisibility = (
       frontendVisibility: string
-    ): "public" | "friends" | "private" => {
-      const visibilityMap: Record<string, "public" | "friends" | "private"> = {
+    ): "public" | "private" => {
+      const visibilityMap: Record<string, "public" | "private"> = {
         everyone: "public",
-        allies: "friends",
+        allies: "public",
         clan: "private",
         selected: "private",
       };
       return visibilityMap[frontendVisibility] || "public";
+    };
+
+    // Map challenger type to visibility
+    const mapChallengerToVisibility = (
+      challenger: ChallengerType
+    ): "public" | "private" => {
+      const visibilityMap: Record<ChallengerType, "public" | "private"> = {
+        everyone: "public",
+        ally: "public",
+        clan: "private",
+      };
+      return visibilityMap[challenger];
     };
 
     // Construct the payload exactly as backend expects
@@ -370,6 +429,14 @@ export function CreatePostDialog({
             allowMultipleVotes: false,
           }
         : undefined,
+      chess:
+        isChessEnabled && chessSettings
+          ? {
+              ...chessSettings,
+              visibility: mapChallengerToVisibility(chessSettings.challenger),
+              challenger: chessSettings.challenger,
+            }
+          : undefined,
       image: null,
     };
 
@@ -408,7 +475,7 @@ export function CreatePostDialog({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
               {/* Gradient border effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 opacity-50" />
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 opacity-50 pointer-events-none" />
 
               <DialogHeader className="relative border-b border-cyan-900/30 px-6 py-4">
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
@@ -511,7 +578,7 @@ export function CreatePostDialog({
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => setIsARPostEnabled(!isARPostEnabled)}
+                            onClick={handleARPostToggle}
                             className={cn(
                               "border-cyan-900/50 bg-[#1a1e2e] hover:bg-[#2a3547] relative overflow-hidden h-9 w-9",
                               isARPostEnabled &&
@@ -519,7 +586,7 @@ export function CreatePostDialog({
                             )}
                             style={{ clipPath: buttonClipPath }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50 pointer-events-none" />
                             <div className="relative z-10 flex items-center justify-center">
                               <Cube className="h-4 w-4" />
                             </div>
@@ -528,6 +595,39 @@ export function CreatePostDialog({
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         <p>Create AR Post</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  {/* Chess Game button */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={handleChessToggle}
+                            className={cn(
+                              "border-cyan-900/50 bg-[#1a1e2e] hover:bg-[#2a3547] relative overflow-hidden h-9 w-9",
+                              isChessEnabled &&
+                                "bg-[#1a2a30] border-cyan-500/50 text-cyan-400"
+                            )}
+                            style={{ clipPath: buttonClipPath }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50 pointer-events-none" />
+                            <div className="relative z-10 flex items-center justify-center">
+                              <Gamepad2 className="h-4 w-4" />
+                            </div>
+                          </Button>
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Create Chess Challenge</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -544,7 +644,7 @@ export function CreatePostDialog({
                             type="button"
                             variant="outline"
                             size="icon"
-                            onClick={() => setIsPollActive(!isPollActive)}
+                            onClick={handlePollToggle}
                             className={cn(
                               "border-cyan-900/50 bg-[#1a1e2e] hover:bg-[#2a3547] relative overflow-hidden h-9 w-9",
                               isPollActive &&
@@ -552,7 +652,7 @@ export function CreatePostDialog({
                             )}
                             style={{ clipPath: buttonClipPath }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50 pointer-events-none" />
                             <div className="relative z-10 flex items-center justify-center">
                               <BarChart2 className="h-4 w-4" />
                             </div>
@@ -580,7 +680,7 @@ export function CreatePostDialog({
                             className="border-cyan-900/50 bg-[#1a1e2e] hover:bg-[#2a3547] relative overflow-hidden h-9 w-9"
                             style={{ clipPath: buttonClipPath }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50 pointer-events-none" />
                             <div className="relative z-10 flex items-center justify-center">
                               <ImageIcon className="h-4 w-4" />
                             </div>
@@ -613,7 +713,7 @@ export function CreatePostDialog({
                             )}
                             style={{ clipPath: buttonClipPath }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 opacity-50 pointer-events-none" />
                             <div className="relative z-10 flex items-center justify-center">
                               <Smile className="h-4 w-4" />
                             </div>
@@ -747,6 +847,13 @@ export function CreatePostDialog({
                         />
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Chess Challenge section */}
+                {isChessEnabled && (
+                  <div className="p-3 border border-cyan-900 bg-cyan-950/20 rounded-sm">
+                    <CreateChess onSettingsChange={handleChessSettingsChange} />
                   </div>
                 )}
 
@@ -935,8 +1042,17 @@ export function CreatePostDialog({
                 >
                   <Button
                     type="submit"
-                    disabled={!form.watch("postContent").trim() || isPosting}
-                    className="relative overflow-hidden bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none"
+                    disabled={
+                      !form.watch("postContent").trim() ||
+                      isPosting ||
+                      (isChessEnabled && chessSettings?.challenger === "ally")
+                    }
+                    className={cn(
+                      "relative overflow-hidden text-white border-none",
+                      isChessEnabled && chessSettings?.challenger === "ally"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
+                        : "bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500"
+                    )}
                     style={{ clipPath }}
                   >
                     {isPosting ? (
@@ -946,12 +1062,17 @@ export function CreatePostDialog({
                       </div>
                     ) : (
                       <span className="relative z-10">
-                        Drop{" "}
-                        {isARPostEnabled
-                          ? "AR"
+                        {isChessEnabled
+                          ? chessSettings?.challenger === "ally"
+                            ? "Challenge Ally (soon)"
+                            : chessSettings?.challenger === "clan"
+                            ? "Challenge Clan (soon)"
+                            : "Challenge Grid"
+                          : isARPostEnabled
+                          ? "Drop AR"
                           : isPollActive
-                          ? "Poll"
-                          : "Post"}
+                          ? "Drop Poll"
+                          : "Drop Post"}
                       </span>
                     )}
                   </Button>

@@ -7,20 +7,15 @@ import { motion, AnimatePresence } from "motion/react";
 
 import { Button } from "@/components/ui/button";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { ChevronUp } from "lucide-react";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
-import FeedPost from "@/app/(feed)/[username]/[status]/[postid]/_components/feed-post-v2";
+import FeedPost from "@/app/(feed)/[username]/status/[postid]/_components/feed-post-v2";
+import AppBar from "@/app/(feed)/_components/appbar";
 // import { FeedPost } from "../feed-post";
 
 export default function MainFeed() {
-  const [, setActiveTab] = useState("for-you");
   const [showScrollTop, setShowScrollTop] = useState(false);
-  // const [glitchEffect, setGlitchEffect] = useState(false);
-
-  // const [isARPostEnabled, setIsARPostEnabled] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
 
   // Handle scroll to show/hide scroll to top button
@@ -37,16 +32,6 @@ export default function MainFeed() {
       return () => feedElement.removeEventListener("scroll", handleScroll);
     }
   }, []);
-
-  // Trigger random glitch effects
-  // useEffect(() => {
-  //   const glitchInterval = setInterval(() => {
-  //     setGlitchEffect(true);
-  //     setTimeout(() => setGlitchEffect(false), 200);
-  //   }, 10000);
-
-  //   return () => clearInterval(glitchInterval);
-  // }, []);
 
   const { data: posts, isLoading } = useQuery<Post[]>({
     queryKey: ["post-feed"], // Add a unique query key
@@ -68,33 +53,13 @@ export default function MainFeed() {
 
   return (
     <>
-      {" "}
-      <div className="lg:col-span-2">
-        {/* Feed tabs */}
-        <Tabs
-          defaultValue="for-you"
-          className="w-full mb-4"
-          onValueChange={setActiveTab}
-        >
-          <TabsList className="w-full md:w-fit grid grid-cols-2 rounded-sm bg-black border border-cyan-900">
-            <TabsTrigger
-              value="for-you"
-              className="rounded-none data-[state=active]:bg-cyan-950 data-[state=active]:text-cyan-300 px-4 md:px-6 text-sm md:text-base"
-            >
-              FOR_YOU.SYS
-            </TabsTrigger>
-            <TabsTrigger
-              value="following"
-              className="rounded-none data-[state=active]:bg-fuchsia-950 data-[state=active]:text-fuchsia-300 px-4 md:px-6 text-sm md:text-base"
-            >
-              FOLLOWING.SYS
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <>
+        {/* Navigation bar */}
+        <AppBar />
 
         {/* Posts */}
         {isLoading ? (
-          <div className="flex justify-center py-8">
+          <div className="flex h-[70vh] w-full justify-center py-8">
             <LoadingIndicator size="lg" text="LOADING NEURAL FEED" />
           </div>
         ) : (
@@ -119,7 +84,6 @@ export default function MainFeed() {
         )}
 
         {/* Feed posts */}
-        {/* <ScrollArea className="h-[calc(100vh-220px)]" ref={feedRef}> */}
         <div className="space-y-1">
           <AnimatePresence initial={false}>
             {posts?.map((post) => (
@@ -130,12 +94,11 @@ export default function MainFeed() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <FeedPost post={post} />
+                <FeedPost className="line-clamp-5" post={post} />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
-        {/* </ScrollArea> */}
 
         {/* Scroll to top button */}
         <AnimatePresence>
@@ -157,7 +120,7 @@ export default function MainFeed() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </>
     </>
   );
 }

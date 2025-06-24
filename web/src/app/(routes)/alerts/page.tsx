@@ -264,13 +264,11 @@ export default function AlertsPage() {
   return (
     <div>
       {/* Main container */}
-      <div className=" z-10 flex flex-col min-h-screen  relative bg-gradient-to-b from-black/40 to-gray-900/60">
-        {/* Header */}
-
+      <div className="z-10 flex flex-col min-h-screen relative bg-gradient-to-b from-black/40 to-gray-900/60">
         {/* Main content */}
-        <main className="flex-1 container max-w-3xl mx-auto   ">
+        <main className="flex-1 container max-w-3xl mx-auto">
           {/* Page header */}
-          <div className="flex items-center justify-between p-4">
+          <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-black/80 backdrop-blur-2xl border-gray-800">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 rounded-sm bg-cyan-950/50 border border-cyan-500 flex items-center justify-center">
                 <Bell className="h-5 w-5 text-cyan-400" />
@@ -322,7 +320,7 @@ export default function AlertsPage() {
 
           {/* Neural link status */}
           {neuralLinkActive && (
-            <div className="px-4">
+            <div className="p-4">
               <div className="mb-4 md:mb-6 p-3 bg-cyan-950/20 border border-cyan-900 rounded-sm flex items-center justify-between">
                 <div className="flex items-center">
                   <NeuralIndicator strength={neuralLinkStrength} />
@@ -352,13 +350,13 @@ export default function AlertsPage() {
           )}
 
           {/* Tabs and actions */}
-          <div className="flex px-2 md:px-2 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex p-4 flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <Tabs
               defaultValue="all"
               className="w-full"
               onValueChange={setActiveTab}
             >
-              <ScrollArea className="w-full px-2">
+              <ScrollArea className="w-full">
                 <TabsList className="bg-transparent p-0 w-max min-w-full space-x-2">
                   {["All", "Unread", "Mentions", "Neural", "System"].map(
                     (tab) => (
@@ -376,7 +374,7 @@ export default function AlertsPage() {
               </ScrollArea>
             </Tabs>
 
-            <div className=" space-x-2 hidden md:flex">
+            <div className="space-x-2 hidden md:flex">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -435,11 +433,10 @@ export default function AlertsPage() {
           </div>
 
           {/* Alerts list */}
-
-          <div className="space-y-4 pr-4">
+          <div className="space-y-4 px-4">
             <AnimatePresence initial={false}>
               {filteredAlerts.length === 0 ? (
-                <div className="flex px-4 flex-col items-center justify-center py-12 text-center">
+                <div className="flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-16 h-16 rounded-full bg-cyan-950/30 border border-cyan-500 flex items-center justify-center mb-4">
                     <Bell className="h-8 w-8 text-cyan-400" />
                   </div>

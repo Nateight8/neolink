@@ -14,6 +14,7 @@ import postRouter from "./route/post.route.js";
 import notificationRoute from "./route/notifications.js";
 import pollRouter from "./route/poll.route.js";
 import dmRoute from "./route/dm.route.js";
+import chessRoute from "./route/chess.route.js";
 
 configDotenv();
 
@@ -176,6 +177,7 @@ app.use("/api/posts", postRouter);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/polls", pollRouter);
 app.use("/api/dm", dmRoute);
+app.use("/api/chess", chessRoute);
 
 // Socket.IO connection logic
 io.on("connection", (socket) => {

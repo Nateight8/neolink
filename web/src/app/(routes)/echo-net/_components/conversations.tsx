@@ -91,8 +91,8 @@ export default function Conversations() {
       </div>
 
       {/* Tabs */}
-      <div className="px-4 pb-2">
-        <Tabs defaultValue="all" className="w-full">
+      <div className="px-4 pb-2 ">
+        <Tabs defaultValue="all" className="w-full border-b border-cyan-950">
           <ScrollArea className="w-full">
             <TabsList className="bg-transparent p-0 w-max min-w-full space-x-2">
               {["All", "Unread", "Neural", "Groups", "Channels"].map((tab) => (
@@ -105,7 +105,7 @@ export default function Conversations() {
                 </TabsTrigger>
               ))}
             </TabsList>
-            <ScrollBar orientation="horizontal" className="h-1" />
+            <ScrollBar orientation="horizontal" className="h-0" />
           </ScrollArea>
         </Tabs>
       </div>

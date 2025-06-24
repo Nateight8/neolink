@@ -1,13 +1,11 @@
-"use client";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { ArrowBigUp, ArrowBigDown, MessageSquare } from "lucide-react";
-import UserData from "@/app/(feed)/[username]/status/[postid]/_components/user-data";
+import UserData from "./user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
+import { Button } from "@/components/ui/button";
+import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";
 
-// This should probably be in a shared types file
-export interface Reply {
+// Types
+interface Reply {
   id: string;
   author: string;
   handle: string;
@@ -19,7 +17,8 @@ export interface Reply {
   bio: string;
 }
 
-export const CommentPost = ({
+// Comment Component
+export const Comment = ({
   comment,
   level = 0,
 }: {
@@ -39,7 +38,7 @@ export const CommentPost = ({
           </AvatarFallback>
         </Avatar>
         {comment.replies && comment.replies.length > 0 && (
-          <div className="w-px flex-1 bg-cyan-900/50 my-2" />
+          <div className="w-px flex-1 bg-cyan-900/50 my-2"></div>
         )}
       </div>
 
@@ -51,11 +50,11 @@ export const CommentPost = ({
           timestamp={comment.timestamp}
           avatar={comment.avatar}
           bio={comment.bio}
-          participantId="2"
+          participantId="123"
         />
 
         {/* Comment body */}
-        <FormattedContent content={comment.content} />
+        <FormattedContent content={comment.content} className="text-gray-300" />
 
         {/* Comment actions */}
         <div className="flex items-center space-x-4 text-gray-500">
@@ -87,7 +86,7 @@ export const CommentPost = ({
         {/* Replies */}
         <div className="mt-4 space-y-4">
           {comment.replies?.map((reply) => (
-            <CommentPost key={reply.id} comment={reply} level={level + 1} />
+            <Comment key={reply.id} comment={reply} level={level + 1} />
           ))}
         </div>
       </div>

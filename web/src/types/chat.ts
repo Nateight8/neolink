@@ -79,4 +79,9 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   poll?: Poll;
+  chess?: {
+    gameId: string;
+    timeControl: string;
+    rated: boolean;
+  };
 }

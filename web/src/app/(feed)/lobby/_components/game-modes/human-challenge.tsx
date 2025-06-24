@@ -18,20 +18,141 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface HumanChallengeProps {
-  onBack: () => void;
-  onCreateChallenge: (settings: {
-    timeControl: string;
-    rated: boolean;
-  }) => void;
+function RoomShareOptions({
+  roomId,
+  joinUrl,
+  onShareToFeed,
+  onClose,
+}: {
+  roomId: string;
+  joinUrl: string;
+  onShareToFeed: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="room-created-modal bg-gray-900/90 border border-cyan-800 rounded-lg p-6 max-w-md mx-auto mt-8 text-white relative z-20">
+      <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
+        Room Created!
+      </h2>
+      <div className="mb-4">
+        <span className="block text-sm text-cyan-300">Room ID:</span>
+        <span className="font-mono text-lg text-fuchsia-300">{roomId}</span>
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs text-gray-400">Link:</span>
+          <code className="bg-gray-800 px-2 py-1 rounded text-cyan-200">
+            {joinUrl}
+          </code>
+          <button
+            className="ml-2 px-2 py-1 bg-cyan-700 rounded text-xs hover:bg-cyan-600"
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.origin + joinUrl);
+            }}
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 mb-4">
+        <div className="invite-ally bg-gray-800 p-3 rounded">
+          <h3 className="font-semibold text-cyan-200 mb-1">Invite an Ally</h3>
+          <p className="text-xs text-gray-400 mb-2">
+            Share this link directly with a friend.
+          </p>
+          <button
+            className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-3 py-1 rounded mr-2"
+            onClick={() => {
+              navigator.clipboard.writeText(window.location.origin + joinUrl);
+            }}
+          >
+            Copy Link
+          </button>
+          <button className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1 rounded">
+            Share via...
+          </button>
+        </div>
+        <div className="or-divider flex items-center justify-center text-xs text-gray-400">
+          OR
+        </div>
+        <div className="open-challenge bg-gray-800 p-3 rounded">
+          <h3 className="font-semibold text-fuchsia-200 mb-1">
+            Open Challenge
+          </h3>
+          <p className="text-xs text-gray-400 mb-2">
+            Let anyone join your game by sharing to the feed.
+          </p>
+          <button
+            className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1 rounded mr-2"
+            onClick={onShareToFeed}
+          >
+            Share to Feed
+          </button>
+          <button
+            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded"
+            onClick={onClose}
+          >
+            Cancel Room
+          </button>
+        </div>
+      </div>
+      <div className="waiting-info text-center text-xs text-gray-400 mt-2">
+        <em>
+          Waiting for opponent to join...
+          <br />
+          (You&apos;ll be notified when someone joins)
+        </em>
+      </div>
+    </div>
+  );
 }
 
-export function HumanChallenge({
-  onBack,
-  onCreateChallenge,
-}: HumanChallengeProps) {
+interface HumanChallengeProps {
+  onBack: () => void;
+}
+
+export function HumanChallenge({ onBack }: HumanChallengeProps) {
   const [timeControl, setTimeControl] = useState("5+0");
   const [rated, setRated] = useState(true);
+  const [roomInfo, setRoomInfo] = useState<null | {
+    roomId: string;
+    joinUrl: string;
+  }>(null);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+
+  // Simulate API call for room creation
+  const handleCreateChallenge = async () => {
+    // Replace with real API call
+    const mockRoomId = `CHESS${Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()}`;
+    const mockJoinUrl = `/chess/room/${mockRoomId}`;
+    setRoomInfo({ roomId: mockRoomId, joinUrl: mockJoinUrl });
+    setShowShareOptions(true);
+    // Optionally call onCreateChallenge({ timeControl, rated });
+  };
+
+  const handleShareToFeed = () => {
+    // Implement share to feed logic
+    setShowShareOptions(false);
+    // Optionally notify parent or show confirmation
+  };
+
+  const handleCancelRoom = () => {
+    setShowShareOptions(false);
+    setRoomInfo(null);
+    // Optionally implement room cancellation logic
+  };
+
+  if (showShareOptions && roomInfo) {
+    return (
+      <RoomShareOptions
+        roomId={roomInfo.roomId}
+        joinUrl={roomInfo.joinUrl}
+        onShareToFeed={handleShareToFeed}
+        onClose={handleCancelRoom}
+      />
+    );
+  }
 
   return (
     <div className="relative w-full h-full bg-black/50 border border-cyan-900/50 rounded-sm backdrop-blur-sm overflow-hidden">
@@ -142,7 +263,9 @@ export function HumanChallenge({
           <div className="bg-gray-900 p-3 sm:p-4 rounded-lg border border-gray-800">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-1.5 h-5 bg-cyan-400 rounded-full"></div>
-              <h3 className="text-base sm:text-lg font-medium text-cyan-300">Game Type</h3>
+              <h3 className="text-base sm:text-lg font-medium text-cyan-300">
+                Game Type
+              </h3>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {[
@@ -215,7 +338,7 @@ export function HumanChallenge({
             <Button
               className="w-full bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white font-medium py-5 sm:py-6 text-base sm:text-lg transition-all duration-300 hover:shadow-[0_0_15px_rgba(34,211,238,0.5)]"
               size="lg"
-              onClick={() => onCreateChallenge({ timeControl, rated })}
+              onClick={handleCreateChallenge}
             >
               <Zap className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               <span className="text-sm sm:text-base">Create Challenge</span>
