@@ -1,10 +1,10 @@
 import express from "express";
-import { createChessRoom } from "../controllers/chess.controllers.js";
+import { acceptChessChallenge } from "../controllers/chess.controllers.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// Create a chess room
-router.post("/rooms", authMiddleware, createChessRoom);
+// Accept a chess challenge
+router.post("/accept", authMiddleware, acceptChessChallenge);
 
 export default router;

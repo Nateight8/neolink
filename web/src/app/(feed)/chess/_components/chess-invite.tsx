@@ -15,6 +15,7 @@ interface ChessInviteProps {
   timeControl: string;
   rated: boolean;
   onClick: (e: React.MouseEvent) => void;
+  disabled?: boolean;
 }
 
 export default function ChessInvite({
@@ -22,6 +23,7 @@ export default function ChessInvite({
   timeControl,
   rated,
   onClick,
+  disabled = false,
 }: ChessInviteProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -36,6 +38,7 @@ export default function ChessInvite({
               onClick={onClick}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
+              disabled={disabled}
             >
               <Avatar className="w-full h-full border-0">
                 <AvatarFallback className="bg-transparent text-3xl font-bold text-fuchsia-400 group-hover:text-fuchsia-300 relative">

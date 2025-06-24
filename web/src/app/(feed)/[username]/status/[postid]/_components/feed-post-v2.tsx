@@ -10,6 +10,7 @@ import PostActions from "./post-actions";
 import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "@/components/provider/page-transition-provider";
 import { cn } from "@/lib/utils";
+import { useAcceptChessChallenge } from "@/hooks/api/use-chess-play";
 
 // Temporary interface extension until backend is updated
 interface PostWithChess extends Post {
@@ -28,6 +29,7 @@ export default function FeedPost({
   className?: string;
 }) {
   const { navigateWithTransition } = useTransition();
+  const acceptChallenge = useAcceptChessChallenge();
   // Use avatar (not present on User), fallback to placeholder
   const avatar = "/placeholder.svg"; // TODO: Replace with real avatar field if added to User
   const pathname = usePathname();
@@ -39,7 +41,14 @@ export default function FeedPost({
   const handleIt = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    navigateWithTransition(`/room/chess/${post.chess?.gameId}`);
+    if (acceptChallenge.isPending) return;
+    acceptChallenge.mutate(post._id, {
+      onSuccess: () => {
+        // Navigate to the chess room after successful acceptance
+        navigateWithTransition(`/room/chess/${post.chess?.gameId}`);
+      },
+      // onError is handled in the hook
+    });
   };
 
   return (
@@ -92,6 +101,7 @@ export default function FeedPost({
                   timeControl={post.chess.timeControl}
                   rated={post.chess.rated}
                   onClick={handleIt}
+                  disabled={acceptChallenge.isPending}
                 />
               </div>
             )}

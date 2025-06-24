@@ -1,32 +1,35 @@
-import ChessRoom from "../models/chessRoom.model.js";
+// Removed createChessRoom controller and ChessRoom import as they are no longer needed.
 import { nanoid } from "nanoid";
 import User from "../models/User.js";
+import ChessRoom from "../models/chessRoom.model.js";
 
-// POST /api/chess/rooms
-export const createChessRoom = async (req, res) => {
+export const acceptChessChallenge = async (req, res) => {
   try {
-    // Generate a unique roomId with CHESS prefix and 6-char NanoID
-    const roomId = `CHESS${nanoid(6)}`;
-    const creatorId = req.user._id;
+    const { postId } = req.body; // or req.params, depending on your route
+    const opponentId = req.user._id;
 
-    // Create the room in DB
-    const room = await ChessRoom.create({
-      roomId,
-      creator: creatorId,
-      status: "waiting",
-    });
+    // Find the chess room by post
+    const chessRoom = await ChessRoom.findOne({ post: postId });
+    if (!chessRoom) {
+      return res.status(404).json({ error: "No such challenge on the grid." });
+    }
 
-    // populate creator info for response
-    const creator = await User.findById(creatorId).select("_id username");
+    if (chessRoom.status === "accepted") {
+      return res.status(400).json({
+        error: "Challenge already jacked in. Find another grid to conquer.",
+      });
+    }
 
-    res.status(201).json({
-      roomId: room.roomId,
-      joinUrl: `/chess/room/${room.roomId}`,
-      status: room.status,
-      creator,
+    chessRoom.status = "accepted";
+    chessRoom.opponent = opponentId;
+    await chessRoom.save();
+
+    return res.status(200).json({
+      message: "Challenge accepted. Time to duel in the neon arena.",
+      room: chessRoom,
     });
   } catch (err) {
-    console.error("[ChessRoom] Create error:", err);
-    res.status(500).json({ error: "Failed to create chess room" });
+    console.error("[ChessRoom] Accept error:", err);
+    return res.status(500).json({ error: "System overload. Try again later." });
   }
 };
