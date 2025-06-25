@@ -19,12 +19,17 @@ export default function ChessClient({ roomid }: { roomid: string }) {
   const { navigateWithTransition, isTransitioning } = useTransition();
   const pathname = usePathname();
 
-  // Fetch chess room state
+  // Extract the last segment from pathname to determine game type
+  const lastPathSegment = pathname.split("/").pop() || "";
+  const isBotGame = lastPathSegment === "bot";
+  const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
+
+  // Only fetch room state if not a bot game
   const {
     data: roomState,
     isLoading: isRoomLoading,
     error: roomError,
-  } = useChessRoomState(roomid);
+  } = useChessRoomState(!isBotGame ? roomid : "");
 
   useEffect(() => {
     // Load bot settings from localStorage
@@ -82,11 +87,6 @@ export default function ChessClient({ roomid }: { roomid: string }) {
       </div>
     );
   }
-
-  // Extract the last segment from pathname to determine game type
-  const lastPathSegment = pathname.split("/").pop() || "";
-  const isBotGame = lastPathSegment === "bot";
-  const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
 
   // For now, log the room state
   console.log("Chess room state:", roomState);

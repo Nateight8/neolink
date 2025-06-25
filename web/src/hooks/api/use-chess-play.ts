@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
+import { toast } from "sonner";
 
 export function useAcceptChessChallenge() {
   return useMutation({
@@ -23,10 +24,7 @@ export function useAcceptChessChallenge() {
       ) {
         msg = (error.response.data as { error: string }).error;
       }
-      // You can use your notification system here, e.g. toast.error(msg)
-      if (typeof window !== "undefined") {
-        alert(msg); // Replace with your preferred UI feedback
-      }
+      toast(msg);
     },
   });
 }
@@ -39,5 +37,48 @@ export function useChessRoomState(roomId: string) {
       return res.data;
     },
     enabled: !!roomId,
+  });
+}
+
+export function useMakeChessMove() {
+  return useMutation({
+    mutationFn: async ({
+      roomId,
+      from,
+      to,
+      san,
+      fen,
+    }: {
+      roomId: string;
+      from: string;
+      to: string;
+      san: string;
+      fen: string;
+    }) => {
+      const res = await axiosInstance.post(`/chess/room/${roomId}/move`, {
+        from,
+        to,
+        san,
+        fen,
+      });
+      return res.data;
+    },
+    onError: (error: unknown) => {
+      let msg = "Move rejected by the neon grid. Try again.";
+      if (
+        error &&
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "data" in error.response &&
+        error.response.data &&
+        typeof error.response.data === "object" &&
+        "error" in error.response.data
+      ) {
+        msg = (error.response.data as { error: string }).error;
+      }
+      toast(msg);
+    },
   });
 }

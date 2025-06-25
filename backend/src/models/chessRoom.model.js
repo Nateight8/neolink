@@ -49,6 +49,16 @@ const chessRoomSchema = new mongoose.Schema(
       ref: "User",
       required: false,
     },
+    white: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
+    black: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: false,
+    },
     moves: [
       {
         from: { type: String, required: true },

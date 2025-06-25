@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useStockfish } from "@/hooks/use-stockfish";
+import { useAuth } from "@/contexts/auth-context";
+import { useMakeChessMove } from "@/hooks/api/use-chess-play";
 
 type PiecePosition = {
   x: number;
@@ -59,6 +61,13 @@ type ChessRoomMove = {
   timestamp: string;
 };
 
+type ChessPlayer = {
+  _id: string;
+  username: string;
+  role: string;
+  color: PlayerColor;
+};
+
 export function ChessGameClean({
   matchType,
   onDisconnect,
@@ -66,6 +75,53 @@ export function ChessGameClean({
   roomid,
   roomState,
 }: ChessGameCleanProps) {
+  const { user } = useAuth();
+
+  // Determine players and color for human vs human
+  let players: PlayerData[] = [];
+  let myColor: PlayerColor = "white";
+  if (
+    matchType === "friend" &&
+    roomState &&
+    Array.isArray(
+      (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers
+    ) &&
+    user
+  ) {
+    const chessPlayers = (roomState as { chessPlayers: ChessPlayer[] })
+      .chessPlayers;
+    const me = chessPlayers.find((p) => p._id === user._id);
+    const opponent = chessPlayers.find((p) => p._id !== user._id);
+    if (me) myColor = me.color;
+    players = [
+      {
+        id: opponent?._id || "1",
+        username: opponent?.username || "Opponent",
+        rating: 1500,
+      },
+      {
+        id: me?._id || "2",
+        username: me?.username || "You",
+        rating: 1500,
+      },
+    ];
+  } else {
+    // Fallback for bot games
+    players = [
+      {
+        id: "1",
+        username: matchType === "bot" ? "AI Bot" : "Opponent",
+        rating: 1500,
+      },
+      {
+        id: "2",
+        username: "You",
+        rating: 1500,
+      },
+    ];
+    myColor = botSettings?.color === "black" ? "black" : "white";
+  }
+
   // Log bot settings when they change
   useEffect(() => {
     if (matchType === "bot" && botSettings) {
@@ -132,8 +188,6 @@ export function ChessGameClean({
     black: string[];
   }>({ white: [], black: [] });
   const boardRef = useRef<HTMLDivElement>(null);
-  const playerColor =
-    botSettings?.color === "black" ? ("black" as const) : ("white" as const);
 
   const skillLevel = botSettings?.difficulty; // Set to 1 for very easy, 10 for medium, 20 for strongest
   const { evaluatePosition, onBestMove } = useStockfish(game.fen(), skillLevel);
@@ -148,9 +202,20 @@ export function ChessGameClean({
     [game]
   );
 
-  // Update moveHistory from roomState.moves if available
+  // For human vs human, always use backend FEN and move history as source of truth
   useEffect(() => {
     if (
+      matchType === "friend" &&
+      roomState &&
+      typeof roomState === "object" &&
+      "fen" in roomState &&
+      typeof roomState.fen === "string"
+    ) {
+      setGame(new Chess(roomState.fen));
+      setGamePosition(roomState.fen);
+    }
+    if (
+      matchType === "friend" &&
       roomState &&
       Array.isArray((roomState as { moves?: ChessRoomMove[] }).moves)
     ) {
@@ -159,7 +224,7 @@ export function ChessGameClean({
         .filter(Boolean);
       setMoveHistory(moves);
     }
-  }, [roomState]);
+  }, [roomState, matchType]);
 
   // Make bot move if it's the bot's turn
   useEffect(() => {
@@ -171,8 +236,8 @@ export function ChessGameClean({
         return;
 
       const isBotTurn =
-        (currentTurn === "w" && playerColor === "black") ||
-        (currentTurn === "b" && playerColor === "white");
+        (currentTurn === "w" && myColor === "black") ||
+        (currentTurn === "b" && myColor === "white");
 
       if (!isBotTurn || isGameOver) return;
 
@@ -228,7 +293,7 @@ export function ChessGameClean({
 
         // Update captured pieces if a piece was captured
         if (moveDetails.captured) {
-          const botColor = playerColor === "white" ? "black" : "white";
+          const botColor = myColor === "white" ? "black" : "white";
           const pieceType = moveDetails.captured;
           console.log(`Bot (${botColor}) captured piece: ${pieceType}`);
 
@@ -289,7 +354,7 @@ export function ChessGameClean({
     gameState,
     matchType,
     botSettings,
-    playerColor,
+    myColor,
     isAnimating,
     evaluatePosition,
     onBestMove,
@@ -316,29 +381,6 @@ export function ChessGameClean({
   const [showSpectators, setShowSpectators] = useState(false);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
-
-  // Player data
-  const opponentUsername =
-    typeof roomState === "object" &&
-    roomState &&
-    "opponent" in roomState &&
-    roomState.opponent &&
-    typeof roomState.opponent === "object" &&
-    "username" in roomState.opponent
-      ? (roomState.opponent.username as string)
-      : "Opponent";
-  const [players] = useState<PlayerData[]>([
-    {
-      id: "1",
-      username: matchType === "bot" ? "AI Bot" : opponentUsername,
-      rating: 1500,
-    },
-    {
-      id: "2",
-      username: "You",
-      rating: 1500,
-    },
-  ]);
 
   // Spectators
   const [spectators] = useState([
@@ -443,44 +485,28 @@ export function ChessGameClean({
     return () => clearInterval(timer);
   }, []);
 
-  // Apply increment when a move is made
-  const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
-    // Initialize move processing
+  const makeChessMove = useMakeChessMove();
 
-    // Prevent move if animation is in progress
+  const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
     if (isAnimatingRef.current || isAnimating) {
       return false;
     }
-
-    // Set both ref and state
     isAnimatingRef.current = true;
     setIsAnimating(true);
-
     const gameCopy = new Chess(game.fen());
     const { increment } = parseTimeControl(timeControl);
-    console.log(
-      "Move details - From:",
-      sourceSquare,
-      "To:",
-      targetSquare,
-      "Promotion: q"
-    );
-
     try {
-      // Check if the move would capture a piece
-      const targetPiece = gameCopy.get(targetSquare as Square);
-      console.log(
-        "Target piece:",
-        targetPiece ? `${targetPiece.color}${targetPiece.type}` : "empty"
-      );
-
       const move = gameCopy.move({
         from: sourceSquare as Square,
         to: targetSquare as Square,
         promotion: "q",
       });
-
       if (move) {
+        if (matchType === "bot") {
+          setGame(gameCopy);
+          setGamePosition(gameCopy.fen());
+          setMoveHistory((prev) => [...prev, move.san]);
+        }
         // Update captured pieces if a piece was captured (en passant or regular capture)
         if (move.captured) {
           // The capturing player is the one who made the move (move.color)
@@ -565,14 +591,25 @@ export function ChessGameClean({
               setIsAnimating(false);
             }
           }, 300); // Match this with your CSS transition duration
+
+          // Persist move for human vs human
+          if (matchType === "friend") {
+            makeChessMove.mutate({
+              roomId: roomid,
+              from: move.from,
+              to: move.to,
+              san: move.san,
+              fen: gameCopy.fen(),
+            });
+          }
+
+          return true;
         } catch {
           // Reset state on error
           isAnimatingRef.current = false;
           setAnimatedPiece(null);
           setIsAnimating(false);
         }
-
-        return true;
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -586,8 +623,8 @@ export function ChessGameClean({
     // Check if it's the current player's turn based on the game state
     const currentTurn = game.turn();
     const isPlayerTurn =
-      (currentTurn === "w" && playerColor === "white") ||
-      (currentTurn === "b" && playerColor === "black");
+      (currentTurn === "w" && myColor === "white") ||
+      (currentTurn === "b" && myColor === "black");
 
     if (!isPlayerTurn) {
       return false;
@@ -684,7 +721,7 @@ export function ChessGameClean({
   const isPlayersTurn = (): boolean => {
     const currentTurn = game.turn();
     const currentPlayerColor = currentTurn === "w" ? "white" : "black";
-    return playerColor === currentPlayerColor;
+    return myColor === currentPlayerColor;
   };
 
   const onSquareClick = (square: string) => {
@@ -848,12 +885,12 @@ export function ChessGameClean({
               <Player
                 player={players[0]}
                 isCurrentPlayer={
-                  playerColor === ("black" as PlayerColor) && !game.isGameOver()
+                  myColor === ("black" as PlayerColor) && !game.isGameOver()
                 }
                 timeRemaining={gameTime.black}
                 capturedPieces={capturedPieces.white} // White's captures are black pieces
                 color="black"
-                isLoggedIn={playerColor === "black"}
+                isLoggedIn={myColor === "black"}
                 key={`black-${capturedPieces.white.join("")}`}
               />
 
@@ -877,7 +914,7 @@ export function ChessGameClean({
                   customSquareStyles={getCustomSquareStyles()}
                   customPieces={customPieces()}
                   boardOrientation={
-                    playerColor === ("black" as PlayerColor) ? "black" : "white"
+                    myColor === ("black" as PlayerColor) ? "black" : "white"
                   }
                 />
 
@@ -968,12 +1005,12 @@ export function ChessGameClean({
               <Player
                 player={players[1]}
                 isCurrentPlayer={
-                  playerColor === ("white" as PlayerColor) && !game.isGameOver()
+                  myColor === ("white" as PlayerColor) && !game.isGameOver()
                 }
                 timeRemaining={gameTime.white}
                 capturedPieces={capturedPieces.black} // Black's captures are white pieces
                 color="white"
-                isLoggedIn={playerColor === "white"}
+                isLoggedIn={myColor === "white"}
                 key={`white-${capturedPieces.black.join("")}`}
               />
             </div>
