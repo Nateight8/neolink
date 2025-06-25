@@ -14,6 +14,13 @@ export const acceptChessChallenge = async (req, res) => {
       return res.status(404).json({ error: "No such challenge on the grid." });
     }
 
+    if (chessRoom.creator.toString() === opponentId.toString()) {
+      return res.status(400).json({
+        error:
+          "You can't jack into your own neural challenge. Await a worthy opponent.",
+      });
+    }
+
     if (chessRoom.status === "accepted") {
       return res.status(400).json({
         error: "Challenge already jacked in. Find another grid to conquer.",
@@ -31,5 +38,21 @@ export const acceptChessChallenge = async (req, res) => {
   } catch (err) {
     console.error("[ChessRoom] Accept error:", err);
     return res.status(500).json({ error: "System overload. Try again later." });
+  }
+};
+
+export const getChessRoomState = async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const room = await ChessRoom.findOne({ roomId })
+      .populate("creator", "_id username")
+      .populate("opponent", "_id username");
+    if (!room) {
+      return res.status(404).json({ error: "Room not found." });
+    }
+    res.json(room);
+  } catch (err) {
+    console.error("[ChessRoom] Get state error:", err);
+    res.status(500).json({ error: "Failed to fetch room state." });
   }
 };

@@ -49,6 +49,18 @@ const chessRoomSchema = new mongoose.Schema(
       ref: "User",
       required: false,
     },
+    moves: [
+      {
+        from: { type: String, required: true },
+        to: { type: String, required: true },
+        san: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
+    fen: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

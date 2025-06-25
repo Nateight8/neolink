@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 
 export function useAcceptChessChallenge() {
@@ -28,5 +28,16 @@ export function useAcceptChessChallenge() {
         alert(msg); // Replace with your preferred UI feedback
       }
     },
+  });
+}
+
+export function useChessRoomState(roomId: string) {
+  return useQuery({
+    queryKey: ["chess-room", roomId],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/chess/room/${roomId}`);
+      return res.data;
+    },
+    enabled: !!roomId,
   });
 }

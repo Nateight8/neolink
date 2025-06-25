@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { useTransition } from "@/components/provider/page-transition-provider";
 import { ChessGameClean } from "./chess-lobby";
 import { usePathname } from "next/navigation";
+import { useChessRoomState } from "@/hooks/api/use-chess-play";
+
 interface BotGameSettings {
   difficulty: number;
   timeControl: string;
@@ -16,6 +18,13 @@ export default function ChessClient({ roomid }: { roomid: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const { navigateWithTransition, isTransitioning } = useTransition();
   const pathname = usePathname();
+
+  // Fetch chess room state
+  const {
+    data: roomState,
+    isLoading: isRoomLoading,
+    error: roomError,
+  } = useChessRoomState(roomid);
 
   useEffect(() => {
     // Load bot settings from localStorage
@@ -50,7 +59,7 @@ export default function ChessClient({ roomid }: { roomid: string }) {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isRoomLoading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center space-y-4">
@@ -61,12 +70,26 @@ export default function ChessClient({ roomid }: { roomid: string }) {
     );
   }
 
+  if (roomError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center space-y-4">
+          <p className="text-red-400">
+            Failed to load chess room:{" "}
+            {roomError instanceof Error ? roomError.message : "Unknown error"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Extract the last segment from pathname to determine game type
   const lastPathSegment = pathname.split("/").pop() || "";
   const isBotGame = lastPathSegment === "bot";
   const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
 
-  console.log(isBotGame);
+  // For now, log the room state
+  console.log("Chess room state:", roomState);
 
   return (
     <ChessGameClean
@@ -74,6 +97,7 @@ export default function ChessClient({ roomid }: { roomid: string }) {
       matchType={gameType}
       onDisconnect={handleDisconnect}
       botSettings={botSettings}
+      roomState={roomState}
     />
   );
 }

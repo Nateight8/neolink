@@ -49,13 +49,22 @@ interface ChessGameCleanProps {
   onDisconnect: () => void;
   botSettings?: BotGameSettings | null;
   roomid: string;
+  roomState?: Record<string, unknown> | null;
 }
+
+type ChessRoomMove = {
+  from: string;
+  to: string;
+  san: string;
+  timestamp: string;
+};
 
 export function ChessGameClean({
   matchType,
   onDisconnect,
   botSettings = null,
   roomid,
+  roomState,
 }: ChessGameCleanProps) {
   // Log bot settings when they change
   useEffect(() => {
@@ -64,6 +73,14 @@ export function ChessGameClean({
       // For example: initializeBot(botSettings);
     }
   }, [matchType, botSettings]);
+
+  // Log roomState for now
+  useEffect(() => {
+    if (roomState) {
+      console.log("[ChessGameClean] roomState:", roomState);
+    }
+  }, [roomState]);
+
   // Initialize state
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [game, setGame] = useState<Chess>(() => {
@@ -130,6 +147,19 @@ export function ChessGameClean({
     }),
     [game]
   );
+
+  // Update moveHistory from roomState.moves if available
+  useEffect(() => {
+    if (
+      roomState &&
+      Array.isArray((roomState as { moves?: ChessRoomMove[] }).moves)
+    ) {
+      const moves = (roomState as { moves: ChessRoomMove[] }).moves
+        .map((m) => m.san)
+        .filter(Boolean);
+      setMoveHistory(moves);
+    }
+  }, [roomState]);
 
   // Make bot move if it's the bot's turn
   useEffect(() => {
@@ -288,10 +318,19 @@ export function ChessGameClean({
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
 
   // Player data
+  const opponentUsername =
+    typeof roomState === "object" &&
+    roomState &&
+    "opponent" in roomState &&
+    roomState.opponent &&
+    typeof roomState.opponent === "object" &&
+    "username" in roomState.opponent
+      ? (roomState.opponent.username as string)
+      : "Opponent";
   const [players] = useState<PlayerData[]>([
     {
       id: "1",
-      username: matchType === "bot" ? "AI Bot" : "Opponent",
+      username: matchType === "bot" ? "AI Bot" : opponentUsername,
       rating: 1500,
     },
     {
