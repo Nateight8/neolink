@@ -56,7 +56,13 @@ export const createPost = async (req, res) => {
       })
       .populate("chess");
 
-    res.status(201).json(completePost);
+    // Ensure roomId is present in the chess object
+    const completePostObj = completePost.toObject();
+    if (completePostObj.chess && completePostObj.chess.roomId) {
+      completePostObj.chess.roomId = completePostObj.chess.roomId;
+    }
+
+    res.status(201).json(completePostObj);
   } catch (err) {
     if (!committed) {
       try {
@@ -86,11 +92,20 @@ export const getAllPosts = async (req, res) => {
       .populate({
         path: "chess",
         select:
-          "gameId timeControl rated challenger status createdAt updatedAt post creator opponent",
+          "roomId timeControl rated challenger status createdAt updatedAt post creator opponent",
       })
       .sort({ createdAt: -1 });
 
-    res.json(posts);
+    // Ensure roomId is present in the chess object for each post
+    const postsWithRoomId = posts.map((post) => {
+      const obj = post.toObject();
+      if (obj.chess && obj.chess.roomId) {
+        obj.chess.roomId = obj.chess.roomId;
+      }
+      return obj;
+    });
+
+    res.json(postsWithRoomId);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
