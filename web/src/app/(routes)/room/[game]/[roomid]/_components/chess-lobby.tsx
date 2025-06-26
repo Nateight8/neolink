@@ -6,7 +6,7 @@ import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useStockfish } from "@/hooks/use-stockfish";
 import { useAuth } from "@/contexts/auth-context";
-import { useMakeChessMove } from "@/hooks/api/use-chess-play";
+import { useChessSocket, ChessRoom } from "@/hooks/api/use-chess-socket";
 
 type PiecePosition = {
   x: number;
@@ -368,8 +368,19 @@ export function ChessGameClean({
     };
   };
 
-  // Get time control from bot settings or use default (10+0)
-  const timeControl = botSettings?.timeControl || "10+0";
+  // Get time control from backend for human vs human, or from bot settings/default for bot games
+  let timeControl = "10+0";
+  if (
+    matchType === "friend" &&
+    roomState &&
+    typeof roomState === "object" &&
+    "timeControl" in roomState &&
+    typeof roomState.timeControl === "string"
+  ) {
+    timeControl = roomState.timeControl;
+  } else if (botSettings?.timeControl) {
+    timeControl = botSettings.timeControl;
+  }
   const { baseTime } = parseTimeControl(timeControl);
 
   const [gameTime, setGameTime] = useState<{ white: number; black: number }>({
@@ -485,7 +496,23 @@ export function ChessGameClean({
     return () => clearInterval(timer);
   }, []);
 
-  const makeChessMove = useMakeChessMove();
+  // --- WebSocket for real-time multiplayer ---
+  const handleSocketRoomState = (newRoomState: ChessRoom) => {
+    if (matchType === "friend") {
+      if (newRoomState.fen) {
+        setGame(new Chess(newRoomState.fen));
+        setGamePosition(newRoomState.fen);
+      }
+      if (Array.isArray(newRoomState.moves)) {
+        const moves = newRoomState.moves.map((m) => m.san).filter(Boolean);
+        setMoveHistory(moves);
+      }
+    }
+  };
+  const { sendMove } = useChessSocket(
+    matchType === "friend" ? roomid : "",
+    handleSocketRoomState
+  );
 
   const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
     if (isAnimatingRef.current || isAnimating) {
@@ -594,8 +621,7 @@ export function ChessGameClean({
 
           // Persist move for human vs human
           if (matchType === "friend") {
-            makeChessMove.mutate({
-              roomId: roomid,
+            sendMove({
               from: move.from,
               to: move.to,
               san: move.san,
