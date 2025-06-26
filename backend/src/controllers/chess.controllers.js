@@ -6,44 +6,62 @@ import { Chess } from "chess.js";
 
 export const acceptChessChallenge = async (req, res) => {
   try {
-    const { postId } = req.body; // or req.params, depending on your route
+    const { postId } = req.body;
     const opponentId = req.user._id;
 
     // Find the chess room by post
-    const chessRoom = await ChessRoom.findOne({ post: postId });
+    const chessRoom = await ChessRoom.findOne({ post: postId }).populate({
+      path: "chessPlayers.user",
+      select: "_id username",
+    });
     if (!chessRoom) {
       return res.status(404).json({ error: "No such challenge on the grid." });
     }
 
-    if (chessRoom.creator.toString() === opponentId.toString()) {
+    // Find creator
+    const creatorPlayer = chessRoom.chessPlayers.find((p) => p.isCreator);
+    if (!creatorPlayer) {
+      return res.status(400).json({ error: "No creator found for this room." });
+    }
+    if (creatorPlayer.user._id.toString() === opponentId.toString()) {
       return res.status(400).json({
         error:
           "You can't jack into your own neural challenge. Await a worthy opponent.",
       });
     }
 
-    if (chessRoom.status === "accepted") {
+    // Check if opponent already joined
+    const opponentPlayer = chessRoom.chessPlayers.find(
+      (p) => !p.isCreator && p.user.toString() === opponentId.toString()
+    );
+    if (opponentPlayer) {
+      return res.status(200).json({
+        message: "Challenge already accepted by you.",
+        room: chessRoom,
+      });
+    }
+    if (chessRoom.chessPlayers.length >= 2) {
       return res.status(400).json({
         error: "Challenge already jacked in. Find another grid to conquer.",
       });
     }
 
-    chessRoom.status = "accepted";
-    chessRoom.opponent = opponentId;
-
-    // Assign white and black randomly
-    if (!chessRoom.white && !chessRoom.black) {
-      if (Math.random() < 0.5) {
-        chessRoom.white = chessRoom.creator;
-        chessRoom.black = opponentId;
-      } else {
-        chessRoom.white = opponentId;
-        chessRoom.black = chessRoom.creator;
-      }
-    }
-
+    // Assign colors randomly
+    const colors = ["white", "black"];
+    const creatorColor = Math.random() < 0.5 ? "white" : "black";
+    const opponentColor = creatorColor === "white" ? "black" : "white";
+    creatorPlayer.color = creatorColor;
+    chessRoom.chessPlayers.push({
+      user: opponentId,
+      isCreator: false,
+      color: opponentColor,
+    });
+    chessRoom.status = "ongoing";
     await chessRoom.save();
-
+    await chessRoom.populate({
+      path: "chessPlayers.user",
+      select: "_id username",
+    });
     return res.status(200).json({
       message: "Challenge accepted. Time to duel in the neon arena.",
       room: chessRoom,
@@ -57,41 +75,15 @@ export const acceptChessChallenge = async (req, res) => {
 export const getChessRoomState = async (req, res) => {
   try {
     const { roomId } = req.params;
-    const room = await ChessRoom.findOne({ roomId })
-      .populate("creator", "_id username")
-      .populate("opponent", "_id username")
-      .populate("white", "_id username")
-      .populate("black", "_id username");
+    const room = await ChessRoom.findOne({ roomId }).populate({
+      path: "chessPlayers.user",
+      select: "_id username",
+    });
     if (!room) {
       return res.status(404).json({ error: "Room not found." });
     }
     const roomObj = room.toObject();
-    delete roomObj.opponent;
-    delete roomObj.white;
-    delete roomObj.black;
-    const chessPlayers = [
-      {
-        _id: room.creator._id,
-        username: room.creator.username,
-        role: "creator",
-        color:
-          room.white && room.white._id.equals(room.creator._id)
-            ? "white"
-            : "black",
-      },
-      room.creator._id !== room.white._id || room.creator._id !== room.black._id
-        ? {
-            _id: room.opponent?._id,
-            username: room.opponent?.username,
-            role: "opponent",
-            color:
-              room.white && room.white._id.equals(room.opponent?._id)
-                ? "white"
-                : "black",
-          }
-        : null,
-    ].filter(Boolean);
-    roomObj.chessPlayers = chessPlayers;
+    // chessPlayers is already populated
     res.json(roomObj);
   } catch (err) {
     console.error("[ChessRoom] Get state error:", err);
@@ -106,52 +98,22 @@ export const makeChessMove = async (req, res) => {
     if (!from || !to || !san || !fen) {
       return res.status(400).json({ error: "Missing move data." });
     }
-    const room = await ChessRoom.findOne({ roomId })
-      .populate("creator", "_id username")
-      .populate("opponent", "_id username")
-      .populate("white", "_id username")
-      .populate("black", "_id username");
+    const room = await ChessRoom.findOne({ roomId }).populate({
+      path: "chessPlayers.user",
+      select: "_id username",
+    });
     if (!room) {
       return res.status(404).json({ error: "Room not found." });
     }
-    // Optionally: validate move legality with chess.js
-    // const chess = new Chess(room.fen || undefined);
-    // if (!chess.move({ from, to, san })) {
-    //   return res.status(400).json({ error: "Illegal move." });
-    // }
     // Save move
     room.moves.push({ from, to, san, timestamp: new Date() });
+    if (room.moves.length === 1) {
+      room.status = "ongoing";
+    }
     room.fen = fen;
     await room.save();
-    // Prepare response without opponent, white, black
+    await room.populate({ path: "chessPlayers.user", select: "_id username" });
     const roomObj = room.toObject();
-    delete roomObj.opponent;
-    delete roomObj.white;
-    delete roomObj.black;
-    // Rebuild chessPlayers array
-    const chessPlayers = [
-      {
-        _id: room.creator._id,
-        username: room.creator.username,
-        role: "creator",
-        color:
-          room.white && room.white._id.equals(room.creator._id)
-            ? "white"
-            : "black",
-      },
-      room.creator._id !== room.white._id || room.creator._id !== room.black._id
-        ? {
-            _id: room.opponent?._id,
-            username: room.opponent?.username,
-            role: "opponent",
-            color:
-              room.white && room.white._id.equals(room.opponent?._id)
-                ? "white"
-                : "black",
-          }
-        : null,
-    ].filter(Boolean);
-    roomObj.chessPlayers = chessPlayers;
     res.json(roomObj);
   } catch (err) {
     console.error("[ChessRoom] Move error:", err);

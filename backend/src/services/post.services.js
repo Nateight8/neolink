@@ -49,7 +49,13 @@ export const handleChessChallengeCreation = async (
     [
       {
         ...chessData,
-        creator: authorId,
+        chessPlayers: [
+          {
+            user: authorId,
+            isCreator: true,
+            color: "white", // default, will be randomized on accept
+          },
+        ],
         post: post._id,
         roomId: id,
       },

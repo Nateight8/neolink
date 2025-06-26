@@ -8,22 +8,20 @@ const chessRoomSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
-    creator: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    chessPlayers: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        isCreator: { type: Boolean, required: true },
+        color: { type: String, enum: ["white", "black"], required: true },
+      },
+    ],
     status: {
       type: String,
-      enum: [
-        "waiting",
-        "ongoing",
-        "finished",
-        "pending",
-        "accepted",
-        "completed",
-        "aborted",
-      ],
+      enum: ["waiting", "ongoing", "finished", "aborted"],
       default: "waiting",
     },
     post: {
@@ -44,21 +42,6 @@ const chessRoomSchema = new mongoose.Schema(
       enum: ["everyone", "ally", "clan"],
       required: false,
     },
-    opponent: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false,
-    },
-    white: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false,
-    },
-    black: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false,
-    },
     moves: [
       {
         from: { type: String, required: true },
@@ -69,7 +52,7 @@ const chessRoomSchema = new mongoose.Schema(
     ],
     fen: {
       type: String,
-      default: "",
+      default: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
     },
   },
   {
