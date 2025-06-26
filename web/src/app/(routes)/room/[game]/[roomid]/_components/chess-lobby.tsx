@@ -62,10 +62,10 @@ type ChessRoomMove = {
 };
 
 type ChessPlayer = {
-  _id: string;
-  username: string;
-  role: string;
+  user: { _id: string; username: string };
+  isCreator: boolean;
   color: PlayerColor;
+  _id: string;
 };
 
 export function ChessGameClean({
@@ -90,18 +90,18 @@ export function ChessGameClean({
   ) {
     const chessPlayers = (roomState as { chessPlayers: ChessPlayer[] })
       .chessPlayers;
-    const me = chessPlayers.find((p) => p._id === user._id);
-    const opponent = chessPlayers.find((p) => p._id !== user._id);
+    const me = chessPlayers.find((p) => p.user._id === user._id);
+    const opponent = chessPlayers.find((p) => p.user._id !== user._id);
     if (me) myColor = me.color;
     players = [
       {
-        id: opponent?._id || "1",
-        username: opponent?.username || "Opponent",
+        id: opponent?.user._id || "1",
+        username: opponent?.user.username || "Opponent",
         rating: 1500,
       },
       {
-        id: me?._id || "2",
-        username: me?.username || "You",
+        id: me?.user._id || "2",
+        username: me?.user.username || "You",
         rating: 1500,
       },
     ];
@@ -939,9 +939,7 @@ export function ChessGameClean({
                   customLightSquareStyle={{ backgroundColor: "#374151" }}
                   customSquareStyles={getCustomSquareStyles()}
                   customPieces={customPieces()}
-                  boardOrientation={
-                    myColor === ("black" as PlayerColor) ? "black" : "white"
-                  }
+                  boardOrientation={myColor}
                 />
 
                 {/* Animated piece overlay */}
