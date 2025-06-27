@@ -29,6 +29,15 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    hasChess: {
+      type: Boolean,
+      default: false,
+    },
+    chess: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ChessRoom",
+      default: null,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

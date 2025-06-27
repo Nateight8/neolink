@@ -51,8 +51,6 @@ export function AlertItem({
 }: AlertItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  console.log("Alert", alert);
-
   // Get icon based on alert type
   const getAlertIcon = () => {
     switch (alert.type) {
@@ -121,9 +119,9 @@ export function AlertItem({
 
   const relativeTime = getCompactRelativeTime(alert.time);
 
-  console.log("ALERTS", alert.requestId);
-
-  const [requestStatus, setRequestStatus] = useState<'idle' | 'accepting' | 'rejecting' | 'accepted' | 'rejected'>('idle');
+  const [requestStatus, setRequestStatus] = useState<
+    "idle" | "accepting" | "rejecting" | "accepted" | "rejected"
+  >("idle");
 
   const { mutate: respondToRequest } = useMutation({
     mutationFn: async (action: "accept" | "reject") => {
@@ -133,19 +131,19 @@ export function AlertItem({
       );
     },
     onSuccess: (_, action) => {
-      setRequestStatus(action === 'accept' ? 'accepted' : 'rejected');
+      setRequestStatus(action === "accept" ? "accepted" : "rejected");
       // Optionally, you can trigger a refresh of notifications
       // or update the parent component's state here
     },
     onError: (error) => {
-      console.error('Error responding to friend request:', error);
-      setRequestStatus('idle');
+      console.error("Error responding to friend request:", error);
+      setRequestStatus("idle");
       // Optionally show an error toast/message
-    }
+    },
   });
 
   const handleFriendRequestResponse = (action: "accept" | "reject") => {
-    setRequestStatus(action === 'accept' ? 'accepting' : 'rejecting');
+    setRequestStatus(action === "accept" ? "accepting" : "rejecting");
     respondToRequest(action);
   };
 
@@ -315,14 +313,12 @@ export function AlertItem({
         {alert.type === "follow" ? (
           // Friend request actions
           <div className="flex gap-2 items-center">
-            {requestStatus === 'accepted' ? (
+            {requestStatus === "accepted" ? (
               <div className="text-emerald-400 text-sm font-mono flex items-center">
                 <Check className="h-4 w-4 mr-1" /> ALLIES
               </div>
-            ) : requestStatus === 'rejected' ? (
-              <div className="text-red-400 text-sm font-mono">
-                REJECTED
-              </div>
+            ) : requestStatus === "rejected" ? (
+              <div className="text-red-400 text-sm font-mono">REJECTED</div>
             ) : (
               <>
                 <TooltipProvider>
@@ -332,10 +328,10 @@ export function AlertItem({
                         variant="ghost"
                         size="sm"
                         onClick={() => handleFriendRequestResponse("accept")}
-                        disabled={requestStatus !== 'idle'}
+                        disabled={requestStatus !== "idle"}
                         className="h-8 w-8 p-0 rounded-sm text-emerald-400 hover:text-emerald-300 hover:bg-emerald-950/30 disabled:opacity-50"
                       >
-                        {requestStatus === 'accepting' ? (
+                        {requestStatus === "accepting" ? (
                           <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <Check className="h-4 w-4" />
@@ -355,10 +351,10 @@ export function AlertItem({
                         variant="ghost"
                         size="sm"
                         onClick={() => handleFriendRequestResponse("reject")}
-                        disabled={requestStatus !== 'idle'}
+                        disabled={requestStatus !== "idle"}
                         className="h-8 w-8 p-0 rounded-sm text-red-400 hover:text-red-300 hover:bg-red-950/30 disabled:opacity-50"
                       >
-                        {requestStatus === 'rejecting' ? (
+                        {requestStatus === "rejecting" ? (
                           <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
                         ) : (
                           <X className="h-4 w-4" />

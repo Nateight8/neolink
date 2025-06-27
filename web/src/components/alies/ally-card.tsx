@@ -34,11 +34,9 @@ export function AllyCard({ ally, onAdd, onSkip }: AllyCardProps) {
         const response = await axiosInstance.post(
           `/users/friend-request/${ally._id}`
         );
-        console.log("Friend request sent successfully:", response.data);
         onAdd(); // Call onAdd after successful mutation
         return response.data;
       } catch (err) {
-        console.error("Error sending friend request:", err);
         throw err;
       }
     },

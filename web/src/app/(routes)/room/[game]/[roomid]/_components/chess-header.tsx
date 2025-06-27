@@ -46,7 +46,7 @@ export default function ChessHeader({
   onToggleSpectators,
   isPaused = false,
   showSpectators = false,
-  roomId = "#NX-7842", // Default value for backward compatibility
+  roomId, // Default value for backward compatibility
 }: ChessHeaderProps) {
   const router = useRouter();
 
@@ -59,7 +59,7 @@ export default function ChessHeader({
           </h1>
           <Badge
             variant="outline"
-            className="bg-cyan-950/50 border-cyan-500 text-cyan-400"
+            className="bg-cyan-950/50 uppercase border-cyan-500 text-cyan-400"
           >
             ROOM: {roomId}
           </Badge>

@@ -3,125 +3,76 @@ import Notification from "../models/notifications.js";
 import User from "../models/User.js";
 import Poll from "../models/poll.model.js";
 import mongoose from "mongoose";
+import {
+  handlePollCreation,
+  handleChessChallengeCreation,
+  handleMentionProcessing,
+} from "../services/post.services.js";
 
 export const createPost = async (req, res) => {
   const session = await mongoose.startSession();
+  let committed = false;
   session.startTransaction();
 
   try {
-    // Handle both old and new payload formats
-    const { content, image, poll, pollOptions, pollExpiresAt } = req.body;
+    const { content, image, poll, chess } = req.body;
     const authorId = req.user._id;
 
-    // Validate that we have either content, image, or poll data
-    if (
-      !content &&
-      !image &&
-      !poll &&
-      (!pollOptions || pollOptions.length === 0)
-    ) {
+    if (!content && !image && !poll && !chess) {
       await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ message: "Post cannot be empty." });
     }
 
-    // Create the post first
-    const post = await Post.create(
-      [
-        {
-          content,
-          image: image || null,
-          author: authorId,
-          hasPoll: !!(poll || pollOptions), // Set hasPoll flag if poll data exists
-        },
-      ],
-      { session }
-    );
+    const post = new Post({
+      content,
+      image: image || null,
+      author: authorId,
+      hasPoll: !!poll,
+      hasChess: !!chess,
+    });
 
-    // Handle poll creation - support both formats
-    if (poll || pollOptions) {
-      // Format options based on which format was used
-      const formattedOptions = (poll?.options || pollOptions).map((option) => ({
-        text: option,
-        votes: [],
-      }));
+    await post.save({ session });
 
-      // Create the poll
-      const newPoll = await Poll.create(
-        [
-          {
-            question: poll?.question || content, // Use poll question or post content
-            options: formattedOptions,
-            creator: authorId,
-            post: post[0]._id, // Link to the post
-            visibility: poll?.visibility || "public",
-            showResultsBeforeVoting: poll?.showResultsBeforeVoting || false,
-            anonymousVoting: poll?.anonymousVoting || false,
-            allowMultipleVotes: poll?.allowMultipleVotes || false,
-            expiresAt:
-              poll?.expiresAt || pollExpiresAt
-                ? new Date(poll?.expiresAt || pollExpiresAt)
-                : undefined,
-          },
-        ],
-        { session }
-      );
-
-      // Update the post with the poll reference
-      post[0].poll = newPoll[0]._id;
-      await post[0].save({ session });
+    if (poll) {
+      await handlePollCreation(post, poll, authorId, session);
     }
 
-    // Handle mentions
+    if (chess) {
+      await handleChessChallengeCreation(post, chess, authorId, session);
+    }
+
     if (content) {
-      const mentionPattern = /@([a-zA-Z0-9_]+)/g;
-      const mentions = [...content.matchAll(mentionPattern)].map((m) => m[1]);
-
-      if (mentions.length > 0) {
-        const mentionedUsers = await User.find({
-          $or: [
-            {
-              username: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) },
-            },
-            { handle: { $in: mentions.map((m) => new RegExp(`^${m}$`, "i")) } },
-          ],
-        }).session(session);
-
-        const notifications = mentionedUsers
-          .filter((user) => String(user._id) !== String(authorId))
-          .map((user) => ({
-            userId: user._id,
-            fromUserId: authorId,
-            type: "mention",
-            postId: post[0]._id,
-          }));
-
-        if (notifications.length) {
-          await Notification.insertMany(notifications, { session });
-        }
-      }
+      await handleMentionProcessing(post, authorId, session);
     }
 
-    // Commit the transaction
     await session.commitTransaction();
-    session.endSession();
+    committed = true;
 
-    // Return the complete post with poll data
-    const completePost = await Post.findById(post[0]._id)
+    const completePost = await Post.findById(post._id)
       .populate("author", "username fullName handle")
       .populate({
         path: "poll",
         select: "question options visibility expiresAt totalVotes",
-      });
+      })
+      .populate("chess");
 
-    res.status(201).json(completePost);
+    // Ensure roomId is present in the chess object
+    const completePostObj = completePost.toObject();
+    if (completePostObj.chess && completePostObj.chess.roomId) {
+      completePostObj.chess.roomId = completePostObj.chess.roomId;
+    }
+
+    res.status(201).json(completePostObj);
   } catch (err) {
-    // If anything fails, abort the transaction
-    await session.abortTransaction();
-    session.endSession();
-
+    if (!committed) {
+      try {
+        await session.abortTransaction();
+      } catch (e) {}
+    }
     console.error("Post creation error:", err);
     res.status(500).json({ message: err.message });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -129,7 +80,7 @@ export const createPost = async (req, res) => {
 export const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find()
-      .populate("author", "username name avatar verified handle")
+      .populate("author", "username name avatar verified handle participantId")
       .populate({
         path: "poll",
         select: "question options visibility expiresAt totalVotes",
@@ -138,9 +89,23 @@ export const getAllPosts = async (req, res) => {
           select: "_id text votes",
         },
       })
+      .populate({
+        path: "chess",
+        select:
+          "roomId timeControl rated challenger status createdAt updatedAt post creator opponent",
+      })
       .sort({ createdAt: -1 });
 
-    res.json(posts);
+    // Ensure roomId is present in the chess object for each post
+    const postsWithRoomId = posts.map((post) => {
+      const obj = post.toObject();
+      if (obj.chess && obj.chess.roomId) {
+        obj.chess.roomId = obj.chess.roomId;
+      }
+      return obj;
+    });
+
+    res.json(postsWithRoomId);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -224,13 +189,37 @@ export const reactToPost = async (req, res) => {
           postId: post._id,
         });
 
-        // TODO: optionally emit socket event for real-time updates
+        // TODO: optionally emit socket event for real-time updates or use invalidateQueries
       }
     } else {
       post[field].splice(index, 1);
     }
 
-    await post.save();
+    // Update the post without updating timestamps
+    const updatedPost = await Post.findByIdAndUpdate(
+      post._id,
+      { [field]: post[field] },
+      { new: true, timestamps: false } // `new: true` returns the updated doc
+    ).populate("author");
+
+    res.json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Get a single post by username and post ID
+export const getUserPostById = async (req, res) => {
+  try {
+    const { username, id } = req.params;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ message: "User not found" });
+    const post = await Post.findOne({ _id: id, author: user._id }).populate(
+      "author",
+      "username name avatar verified handle participantId"
+    );
+    if (!post)
+      return res.status(404).json({ message: "Post not found for this user" });
     res.json(post);
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -9,15 +9,86 @@ import {
 import { PaperclipIcon, Send, Sparkles, Gamepad2, Mic } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useSendMessage } from "@/hooks/api/use-message";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/auth-context";
+import { v4 as uuidv4 } from "uuid";
+import type { Message, MessageResponse } from "@/types/chat";
+import { socket } from "@/lib/socket";
+
+type OptimisticMessage = Message & { optimistic?: boolean; tempId?: string };
 
 export default function ChatInput({
   neuralLinkActive,
+  conversationId,
 }: {
   neuralLinkActive: boolean;
+  conversationId: string;
 }) {
   const [newMessage, setNewMessage] = useState("");
   const [showSendButton, setShowSendButton] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Emit typing events
+  useEffect(() => {
+    if (newMessage.trim().length > 0) {
+      socket.emit("typing", conversationId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit("stopTyping", conversationId);
+      }, 2000); // 2-second timeout
+    } else {
+      socket.emit("stopTyping", conversationId);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    }
+    // Cleanup on unmount
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [newMessage, conversationId]);
+
+  const { mutateAsync } = useSendMessage(conversationId, {
+    onSuccess: (data) => {
+      setNewMessage("");
+      inputRef.current?.focus();
+      // Replace the optimistic message with the real one
+      queryClient.setQueryData(
+        ["messages", conversationId],
+        (old: MessageResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: [
+              ...old.messages.filter((msg) => !msg.optimistic),
+              data.message,
+            ],
+          };
+        }
+      );
+    },
+    onError: () => {
+      // Remove the optimistic message on error
+      queryClient.setQueryData(
+        ["messages", conversationId],
+        (old: MessageResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: old.messages.filter((msg) => !msg.optimistic),
+          };
+        }
+      );
+    },
+  });
 
   // Update showSendButton based on input changes
   useEffect(() => {
@@ -25,11 +96,110 @@ export default function ChatInput({
   }, [newMessage]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Your send message logic here
-      console.log("Sending message:", newMessage);
-      setNewMessage("");
-      inputRef.current?.focus();
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      socket.emit("stopTyping", conversationId);
+    }
+    if (newMessage.trim() && user) {
+      const tempId = uuidv4();
+      const now = new Date().toISOString();
+      const senderIdFromParam = conversationId.split("-")[0];
+      // Construct optimistic message
+      const optimisticMessage = {
+        id: tempId,
+        conversationId,
+        senderId: user.participantId,
+        content: newMessage,
+        messageType: "text",
+        attachments: [],
+        readBy: [],
+        createdAt: now,
+        updatedAt: now,
+        isRead: true,
+        optimistic: true,
+        tempId, // for matching
+        sender: {
+          id: user._id,
+          participantId: user.participantId,
+          fullName: user.fullName || user.username || user.handle || "User",
+          username: user.username,
+          handle: user.handle,
+          avatarUrl: user.avatar,
+        },
+      };
+      // Only optimistically update if the sender is the logged-in user
+      if (optimisticMessage.senderId === user.participantId) {
+        queryClient.setQueryData(
+          ["messages", conversationId],
+          (old: MessageResponse | undefined) => {
+            if (!old) return old;
+            return {
+              ...old,
+              messages: [...old.messages, optimisticMessage],
+            };
+          }
+        );
+      }
+      setNewMessage(""); // Clear input immediately after optimistic update
+      mutateAsync(
+        { content: newMessage, tempId },
+        {
+          onSuccess: (data) => {
+            const patchedMessage = {
+              ...data.message,
+              sender:
+                (data.message as unknown as Message).sender ||
+                (data.message.senderId === senderIdFromParam
+                  ? {
+                      id: user._id,
+                      participantId: user.participantId,
+                      fullName:
+                        user.fullName || user.username || user.handle || "User",
+                      username: user.username,
+                      handle: user.handle,
+                      avatarUrl: user.avatar,
+                    }
+                  : undefined),
+            };
+            // Remove optimistic message by tempId
+            queryClient.setQueryData(
+              ["messages", conversationId],
+              (old: MessageResponse | undefined) => {
+                if (!old) return old;
+                const filtered = old.messages.filter(
+                  (msg: OptimisticMessage) => msg.tempId !== data.message.tempId
+                );
+                return {
+                  ...old,
+                  messages: [...filtered, patchedMessage],
+                };
+              }
+            );
+          },
+          onError: () => {
+            // Remove the optimistic message on error
+            queryClient.setQueryData(
+              ["messages", conversationId],
+              (old: MessageResponse | undefined) => {
+                if (!old) return old;
+                const filtered = old.messages.filter(
+                  (msg: OptimisticMessage) => {
+                    const match =
+                      msg.optimistic &&
+                      msg.content === newMessage &&
+                      msg.senderId === user.participantId;
+                    return !match;
+                  }
+                );
+                return {
+                  ...old,
+                  messages: filtered,
+                };
+              }
+            );
+          },
+        }
+      );
     }
   };
 

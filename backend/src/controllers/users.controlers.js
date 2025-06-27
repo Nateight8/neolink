@@ -8,23 +8,19 @@ export async function recommendedUsers(req, res) {
 
     // Ensure we have a valid user
     if (!currentUser || !currentUser._id) {
-      console.error("Current user is missing or invalid:", currentUser);
       return res.status(401).json({ message: "Unauthorized - Invalid user" });
     }
 
     // Convert ObjectId to string for safer comparison
     const userId = currentUser._id.toString();
-    console.log("Current user ID:", userId);
 
     // Ensure friends is an array
     const friendIds = Array.isArray(currentUser.friends)
       ? currentUser.friends.map((id) => id.toString())
       : [];
-    console.log("Friends count:", friendIds.length);
 
     // Get all users first (for debugging)
     const allUsers = await User.find({});
-    console.log("Total users in database:", allUsers.length);
 
     // Get pending requests that the current user has sent
     const pendingRequests = await FriendRequest.find({
@@ -36,22 +32,12 @@ export async function recommendedUsers(req, res) {
     const pendingUserIds = pendingRequests.map((request) =>
       request.recipient.toString()
     );
-    console.log("DEBUG - Current user:", { id: userId, friends: friendIds });
-    console.log("DEBUG - Pending requests sent by user:", pendingRequests);
-    console.log("DEBUG - Users with pending requests:", pendingUserIds);
 
     // Get incoming friend requests
     const incomingRequests = await FriendRequest.find({
       recipient: userId,
       status: "pending",
     }).populate("sender", "fullName handle");
-    console.log(
-      "DEBUG - Incoming friend requests:",
-      incomingRequests.map((r) => ({
-        from: r.sender.fullName,
-        senderId: r.sender._id,
-      }))
-    );
 
     // Query with explicit string conversion and proper handling
     const recommendedUsers = await User.find({
@@ -63,18 +49,8 @@ export async function recommendedUsers(req, res) {
       ],
     }).lean();
 
-    console.log(
-      "DEBUG - Recommended users:",
-      recommendedUsers.map((u) => ({
-        id: u._id,
-        name: u.fullName,
-        handle: u.handle,
-      }))
-    );
-
     return res.status(200).json(recommendedUsers);
   } catch (error) {
-    console.error("Error in recommendedUsers controller:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -91,7 +67,6 @@ export async function friends(req, res) {
 
     return res.status(200).json(user.friends); // Return the populated friends
   } catch (error) {
-    console.error("Error in friends controller:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 }
@@ -143,12 +118,6 @@ export async function friendRequest(req, res) {
     await newFriendRequest.save();
 
     // Create notification with the friend request ID
-    console.log("Creating notification for friend request:", {
-      recipientId: recipient._id,
-      senderId: currentUser._id,
-      requestId: newFriendRequest._id, // Include the request ID
-    });
-
     await Notification.create({
       userId: recipient._id, // who receives the notification
       fromUserId: currentUser._id, // who triggered it

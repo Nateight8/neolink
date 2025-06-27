@@ -1,5 +1,7 @@
 import express from "express";
 import { configDotenv } from "dotenv";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import authRoute from "./route/auth.route.js";
 import cookieParser from "cookie-parser";
 import session from "express-session";
@@ -8,10 +10,11 @@ import cors from "cors";
 
 import { connectDB } from "./lib/db.js";
 import usersRoute from "./route/user.route.js";
-import chatRoute from "./route/chat.route.js";
 import postRouter from "./route/post.route.js";
 import notificationRoute from "./route/notifications.js";
 import pollRouter from "./route/poll.route.js";
+import dmRoute from "./route/dm.route.js";
+import chessRoute from "./route/chess.route.js";
 
 configDotenv();
 
@@ -31,6 +34,18 @@ if (!process.env.CORS_ORIGIN) {
 const CORS_ORIGIN = process.env.CORS_ORIGIN;
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://neolink-2.onrender.com",
+      process.env.CORS_ORIGIN,
+      /https?:\/\/neolink-[a-z0-9-]+\.vercel\.app$/,
+    ],
+    credentials: true,
+  },
+});
 
 // Debug middleware with more detailed logging
 app.use((req, res, next) => {
@@ -158,13 +173,34 @@ app.use(session(sessionConfig));
 
 app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
-app.use("/api/chat", chatRoute);
 app.use("/api/posts", postRouter);
 app.use("/api/notifications", notificationRoute);
 app.use("/api/polls", pollRouter);
+app.use("/api/dm", dmRoute);
+app.use("/api/chess", chessRoute);
 
-app.listen(PORT, () => {
+// Socket.IO connection logic
+io.on("connection", async (socket) => {
+  // Conversation/DM and typing events
+  const { registerConversationSocketHandlers } = await import(
+    "./socket/conversation.socket.js"
+  );
+  registerConversationSocketHandlers(io, socket);
+
+  // --- Chess Real-Time Events ---
+  const { registerChessSocketHandlers } = await import(
+    "./socket/chess.socket.js"
+  );
+  registerChessSocketHandlers(io, socket);
+
+  // Optionally handle disconnects, typing, etc. here
+});
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`CORS origin: ${CORS_ORIGIN}`);
   connectDB();
 });
+
+// Export io for use in controllers
+export { io };

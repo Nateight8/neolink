@@ -1,3 +1,5 @@
+import type { Conversation } from "@/hooks/api/use-direct-message";
+
 export interface User {
   _id: string;
   username?: string;
@@ -6,32 +8,42 @@ export interface User {
   bio: string;
   friends?: string[];
   isOnboarder?: boolean;
+  participantId: string;
+}
+
+export interface ReadBy {
+  userId: string;
+  readAt: string;
+  _id: string;
 }
 
 export interface Message {
   id: string;
+  conversationId: string;
+  senderId: string;
   content: string;
-  sender: User;
-  timestamp: string;
+  messageType: string;
+  attachments: string[];
+  readBy: ReadBy[];
+  createdAt: string;
+  updatedAt: string;
+  isRead: boolean;
+  sender: {
+    id: string;
+    participantId: string;
+    fullName: string;
+    username?: string;
+    handle: string;
+    avatarUrl?: string;
+  };
+  optimistic?: boolean;
+  tempId?: string;
 }
 
-export interface MockMessage {
-  id: number;
-  sender: "other" | "self";
-  text?: string;
-  time: string;
-  status: "read" | "delivered" | "sent";
-  type: "text" | "neural" | "ar";
-  neuralData?: {
-    type: "sensation" | "data" | "sync";
-    intensity: number;
-    description: string;
-  };
-  arData?: {
-    model: string;
-    preview: string;
-    description?: string;
-  };
+export interface MessageResponse {
+  conversation: Conversation;
+  messages: Message[];
+  hasMore: boolean;
 }
 
 export interface Chat {
@@ -67,4 +79,9 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   poll?: Poll;
+  chess?: {
+    roomId: string;
+    timeControl: string;
+    rated: boolean;
+  };
 }

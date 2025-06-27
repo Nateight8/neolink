@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
 import { useStockfish } from "@/hooks/use-stockfish";
+import { useAuth } from "@/contexts/auth-context";
+import { useChessSocket, ChessRoom } from "@/hooks/api/use-chess-socket";
 
 type PiecePosition = {
   x: number;
@@ -48,21 +50,100 @@ interface ChessGameCleanProps {
   matchType: "friend" | "random" | "bot" | null;
   onDisconnect: () => void;
   botSettings?: BotGameSettings | null;
+  roomid: string;
+  roomState?: Record<string, unknown> | null;
 }
+
+type ChessRoomMove = {
+  from: string;
+  to: string;
+  san: string;
+  timestamp: string;
+};
+
+type ChessPlayer = {
+  user: { _id: string; username: string };
+  isCreator: boolean;
+  color: PlayerColor;
+  _id: string;
+};
 
 export function ChessGameClean({
   matchType,
   onDisconnect,
   botSettings = null,
+  roomid,
+  roomState,
 }: ChessGameCleanProps) {
+  const { user } = useAuth();
+
+  // Determine players and color for human vs human
+  let players: PlayerData[] = [];
+  let myColor: PlayerColor = "white";
+  if (
+    matchType === "friend" &&
+    roomState &&
+    Array.isArray(
+      (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers
+    ) &&
+    user
+  ) {
+    const chessPlayers = (roomState as { chessPlayers: ChessPlayer[] })
+      .chessPlayers;
+    const me = chessPlayers.find((p) => p.user._id === user._id);
+    const opponent = chessPlayers.find((p) => p.user._id !== user._id);
+    if (me) myColor = me.color;
+    // Top: opponent, Bottom: me (regardless of color)
+    players = [
+      {
+        id: opponent?.user._id || "1",
+        username: opponent?.user.username || "Opponent",
+        rating: 1500,
+        color: opponent?.color || "white",
+      },
+      {
+        id: me?.user._id || "2",
+        username: me?.user.username || "You",
+        rating: 1500,
+        color: me?.color || "white",
+      },
+    ];
+  } else {
+    // Fallback for bot games
+    const myColor: PlayerColor =
+      botSettings?.color === "black" ? "black" : "white";
+    const botColor: PlayerColor = myColor === "white" ? "black" : "white";
+    players = [
+      {
+        id: "1",
+        username: matchType === "bot" ? "AI Bot" : "Opponent",
+        rating: 1500,
+        color: botColor,
+      },
+      {
+        id: "2",
+        username: "You",
+        rating: 1500,
+        color: myColor,
+      },
+    ];
+  }
+
   // Log bot settings when they change
   useEffect(() => {
     if (matchType === "bot" && botSettings) {
-      console.log("Bot game started with settings:", botSettings);
       // Here you would initialize the bot with the settings
       // For example: initializeBot(botSettings);
     }
   }, [matchType, botSettings]);
+
+  // Log roomState for now
+  useEffect(() => {
+    if (roomState) {
+      console.log("[ChessGameClean] roomState:", roomState);
+    }
+  }, [roomState]);
+
   // Initialize state
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [game, setGame] = useState<Chess>(() => {
@@ -114,8 +195,6 @@ export function ChessGameClean({
     black: string[];
   }>({ white: [], black: [] });
   const boardRef = useRef<HTMLDivElement>(null);
-  const playerColor =
-    botSettings?.color === "black" ? ("black" as const) : ("white" as const);
 
   const skillLevel = botSettings?.difficulty; // Set to 1 for very easy, 10 for medium, 20 for strongest
   const { evaluatePosition, onBestMove } = useStockfish(game.fen(), skillLevel);
@@ -130,6 +209,30 @@ export function ChessGameClean({
     [game]
   );
 
+  // For human vs human, always use backend FEN and move history as source of truth
+  useEffect(() => {
+    if (
+      matchType === "friend" &&
+      roomState &&
+      typeof roomState === "object" &&
+      "fen" in roomState &&
+      typeof roomState.fen === "string"
+    ) {
+      setGame(new Chess(roomState.fen));
+      setGamePosition(roomState.fen);
+    }
+    if (
+      matchType === "friend" &&
+      roomState &&
+      Array.isArray((roomState as { moves?: ChessRoomMove[] }).moves)
+    ) {
+      const moves = (roomState as { moves: ChessRoomMove[] }).moves
+        .map((m) => m.san)
+        .filter(Boolean);
+      setMoveHistory(moves);
+    }
+  }, [roomState, matchType]);
+
   // Make bot move if it's the bot's turn
   useEffect(() => {
     let isMounted = true;
@@ -140,8 +243,8 @@ export function ChessGameClean({
         return;
 
       const isBotTurn =
-        (currentTurn === "w" && playerColor === "black") ||
-        (currentTurn === "b" && playerColor === "white");
+        (currentTurn === "w" && myColor === "black") ||
+        (currentTurn === "b" && myColor === "white");
 
       if (!isBotTurn || isGameOver) return;
 
@@ -197,7 +300,7 @@ export function ChessGameClean({
 
         // Update captured pieces if a piece was captured
         if (moveDetails.captured) {
-          const botColor = playerColor === "white" ? "black" : "white";
+          const botColor = myColor === "white" ? "black" : "white";
           const pieceType = moveDetails.captured;
           console.log(`Bot (${botColor}) captured piece: ${pieceType}`);
 
@@ -258,7 +361,7 @@ export function ChessGameClean({
     gameState,
     matchType,
     botSettings,
-    playerColor,
+    myColor,
     isAnimating,
     evaluatePosition,
     onBestMove,
@@ -272,8 +375,19 @@ export function ChessGameClean({
     };
   };
 
-  // Get time control from bot settings or use default (10+0)
-  const timeControl = botSettings?.timeControl || "10+0";
+  // Get time control from backend for human vs human, or from bot settings/default for bot games
+  let timeControl = "10+0";
+  if (
+    matchType === "friend" &&
+    roomState &&
+    typeof roomState === "object" &&
+    "timeControl" in roomState &&
+    typeof roomState.timeControl === "string"
+  ) {
+    timeControl = roomState.timeControl;
+  } else if (botSettings?.timeControl) {
+    timeControl = botSettings.timeControl;
+  }
   const { baseTime } = parseTimeControl(timeControl);
 
   const [gameTime, setGameTime] = useState<{ white: number; black: number }>({
@@ -285,20 +399,6 @@ export function ChessGameClean({
   const [showSpectators, setShowSpectators] = useState(false);
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
-
-  // Player data
-  const [players] = useState<PlayerData[]>([
-    {
-      id: "1",
-      username: matchType === "bot" ? "AI Bot" : "Opponent",
-      rating: 1500,
-    },
-    {
-      id: "2",
-      username: "You",
-      rating: 1500,
-    },
-  ]);
 
   // Spectators
   const [spectators] = useState([
@@ -403,44 +503,44 @@ export function ChessGameClean({
     return () => clearInterval(timer);
   }, []);
 
-  // Apply increment when a move is made
-  const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
-    // Initialize move processing
+  // --- WebSocket for real-time multiplayer ---
+  const handleSocketRoomState = (newRoomState: ChessRoom) => {
+    if (matchType === "friend") {
+      if (newRoomState.fen) {
+        setGame(new Chess(newRoomState.fen));
+        setGamePosition(newRoomState.fen);
+      }
+      if (Array.isArray(newRoomState.moves)) {
+        const moves = newRoomState.moves.map((m) => m.san).filter(Boolean);
+        setMoveHistory(moves);
+      }
+    }
+  };
+  const { sendMove } = useChessSocket(
+    matchType === "friend" ? roomid : "",
+    handleSocketRoomState
+  );
 
-    // Prevent move if animation is in progress
+  const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
     if (isAnimatingRef.current || isAnimating) {
       return false;
     }
-
-    // Set both ref and state
     isAnimatingRef.current = true;
     setIsAnimating(true);
-
     const gameCopy = new Chess(game.fen());
     const { increment } = parseTimeControl(timeControl);
-    console.log(
-      "Move details - From:",
-      sourceSquare,
-      "To:",
-      targetSquare,
-      "Promotion: q"
-    );
-
     try {
-      // Check if the move would capture a piece
-      const targetPiece = gameCopy.get(targetSquare as Square);
-      console.log(
-        "Target piece:",
-        targetPiece ? `${targetPiece.color}${targetPiece.type}` : "empty"
-      );
-
       const move = gameCopy.move({
         from: sourceSquare as Square,
         to: targetSquare as Square,
         promotion: "q",
       });
-
       if (move) {
+        if (matchType === "bot") {
+          setGame(gameCopy);
+          setGamePosition(gameCopy.fen());
+          setMoveHistory((prev) => [...prev, move.san]);
+        }
         // Update captured pieces if a piece was captured (en passant or regular capture)
         if (move.captured) {
           // The capturing player is the one who made the move (move.color)
@@ -525,14 +625,24 @@ export function ChessGameClean({
               setIsAnimating(false);
             }
           }, 300); // Match this with your CSS transition duration
+
+          // Persist move for human vs human
+          if (matchType === "friend") {
+            sendMove({
+              from: move.from,
+              to: move.to,
+              san: move.san,
+              fen: gameCopy.fen(),
+            });
+          }
+
+          return true;
         } catch {
           // Reset state on error
           isAnimatingRef.current = false;
           setAnimatedPiece(null);
           setIsAnimating(false);
         }
-
-        return true;
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -546,8 +656,8 @@ export function ChessGameClean({
     // Check if it's the current player's turn based on the game state
     const currentTurn = game.turn();
     const isPlayerTurn =
-      (currentTurn === "w" && playerColor === "white") ||
-      (currentTurn === "b" && playerColor === "black");
+      (currentTurn === "w" && myColor === "white") ||
+      (currentTurn === "b" && myColor === "black");
 
     if (!isPlayerTurn) {
       return false;
@@ -644,7 +754,7 @@ export function ChessGameClean({
   const isPlayersTurn = (): boolean => {
     const currentTurn = game.turn();
     const currentPlayerColor = currentTurn === "w" ? "white" : "black";
-    return playerColor === currentPlayerColor;
+    return myColor === currentPlayerColor;
   };
 
   const onSquareClick = (square: string) => {
@@ -763,14 +873,12 @@ export function ChessGameClean({
             onPauseResume={() => setIsPaused(!isPaused)}
             onSurrender={() => {
               // Handle surrender logic here
-              console.log("Surrender requested");
             }}
             onOfferDraw={() => {
               // Handle draw offer logic here
-              console.log("Draw offered");
             }}
             onToggleSpectators={() => setShowSpectators(!showSpectators)}
-            roomId="NX-7842"
+            roomId={roomid}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 max-w-7xl mx-auto mt-6">
@@ -806,17 +914,17 @@ export function ChessGameClean({
             </div>
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
-              {/* Top Player (Black) */}
+              {/* Top Player (Opponent) */}
               <Player
                 player={players[0]}
                 isCurrentPlayer={
-                  playerColor === ("black" as PlayerColor) && !game.isGameOver()
+                  myColor === players[0].color && !game.isGameOver()
                 }
-                timeRemaining={gameTime.black}
-                capturedPieces={capturedPieces.white} // White's captures are black pieces
-                color="black"
-                isLoggedIn={playerColor === "black"}
-                key={`black-${capturedPieces.white.join("")}`}
+                timeRemaining={gameTime[players[0].color]}
+                capturedPieces={capturedPieces[players[1].color]} // Opponent's captures are my pieces
+                color={players[0].color}
+                isLoggedIn={myColor === players[0].color}
+                key={`top-${players[0].id}`}
               />
 
               {/* Chess Board */}
@@ -838,9 +946,7 @@ export function ChessGameClean({
                   customLightSquareStyle={{ backgroundColor: "#374151" }}
                   customSquareStyles={getCustomSquareStyles()}
                   customPieces={customPieces()}
-                  boardOrientation={
-                    playerColor === ("black" as PlayerColor) ? "black" : "white"
-                  }
+                  boardOrientation={myColor}
                 />
 
                 {/* Animated piece overlay */}
@@ -899,14 +1005,61 @@ export function ChessGameClean({
                     gameTime.black <= 0) && (
                     <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm p-4">
                       <div className="text-center mb-6">
-                        <h2 className="text-3xl font-bold text-cyan-400 mb-2 font-cyber neon-text">
-                          {gameTime.white <= 0
-                            ? "BLACK WINS!"
-                            : gameTime.black <= 0
-                            ? "WHITE WINS!"
-                            : game.isCheckmate()
-                            ? `${game.turn() === "w" ? "BLACK" : "WHITE"} WINS!`
-                            : "NEURAL DRAW"}
+                        <h2
+                          className={`text-4xl font-extrabold mb-2 font-cyber neon-text ${(() => {
+                            const result =
+                              roomState &&
+                              typeof roomState === "object" &&
+                              "result" in roomState &&
+                              typeof roomState.result === "object" &&
+                              roomState.result !== null &&
+                              "status" in roomState.result &&
+                              "winner" in roomState.result
+                                ? (roomState.result as {
+                                    status?: string;
+                                    winner?: string | null;
+                                  })
+                                : undefined;
+                            if (result?.status === "draw")
+                              return "text-cyan-400";
+                            if (result?.winner && user) {
+                              return result.winner === user._id
+                                ? "text-emerald-600 drop-shadow-[0_0_16px_#10b981]"
+                                : "text-rose-600 drop-shadow-[0_0_16px_#f43f5e]";
+                            }
+                            return "text-cyan-400";
+                          })()}`}
+                        >
+                          {(() => {
+                            const result =
+                              roomState &&
+                              typeof roomState === "object" &&
+                              "result" in roomState &&
+                              typeof roomState.result === "object" &&
+                              roomState.result !== null &&
+                              "status" in roomState.result &&
+                              "winner" in roomState.result
+                                ? (roomState.result as {
+                                    status?: string;
+                                    winner?: string | null;
+                                  })
+                                : undefined;
+                            if (result?.status === "draw") return "DRAW";
+                            if (result?.winner && user) {
+                              return result.winner === user._id
+                                ? "YOU WON"
+                                : "YOU LOST";
+                            }
+                            return gameTime.white <= 0
+                              ? "BLACK WINS!"
+                              : gameTime.black <= 0
+                              ? "WHITE WINS!"
+                              : game.isCheckmate()
+                              ? `${
+                                  game.turn() === "w" ? "BLACK" : "WHITE"
+                                } WINS!`
+                              : "NEURAL DRAW";
+                          })()}
                         </h2>
                         <p className="text-cyan-300 mb-6">
                           {gameTime.white <= 0 || gameTime.black <= 0
@@ -926,17 +1079,17 @@ export function ChessGameClean({
                   )}
               </div>
 
-              {/* Bottom Player (White) */}
+              {/* Bottom Player (Me) */}
               <Player
                 player={players[1]}
                 isCurrentPlayer={
-                  playerColor === ("white" as PlayerColor) && !game.isGameOver()
+                  myColor === players[1].color && !game.isGameOver()
                 }
-                timeRemaining={gameTime.white}
-                capturedPieces={capturedPieces.black} // Black's captures are white pieces
-                color="white"
-                isLoggedIn={playerColor === "white"}
-                key={`white-${capturedPieces.black.join("")}`}
+                timeRemaining={gameTime[players[1].color]}
+                capturedPieces={capturedPieces[players[0].color]} // My captures are opponent's pieces
+                color={players[1].color}
+                isLoggedIn={myColor === players[1].color}
+                key={`bottom-${players[1].id}`}
               />
             </div>
 

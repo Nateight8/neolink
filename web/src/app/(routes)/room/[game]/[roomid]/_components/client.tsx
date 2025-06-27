@@ -1,18 +1,39 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChessGameClean } from "./_components/chess-lobby";
+
 import { useTransition } from "@/components/provider/page-transition-provider";
+import { ChessGameClean } from "./chess-lobby";
+import { usePathname } from "next/navigation";
+import { useChessRoomState } from "@/hooks/api/use-chess-play";
+
 interface BotGameSettings {
   difficulty: number;
   timeControl: string;
   color: "white" | "black" | "random";
 }
 
-export default function ChessGameCleanPage() {
+export default function ChessClient({ roomid }: { roomid: string }) {
   const [botSettings, setBotSettings] = useState<BotGameSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { navigateWithTransition, isTransitioning } = useTransition();
+  const pathname = usePathname();
+
+  // Extract the last segment from pathname to determine game type
+  const lastPathSegment = pathname.split("/").pop() || "";
+  const isBotGame = lastPathSegment === "bot";
+  const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
+
+  // Only fetch room state if not a bot game
+  const query = useChessRoomState(roomid, !isBotGame);
+  let roomState = null;
+  let isRoomLoading = false;
+  let roomError = null;
+  if (!isBotGame) {
+    roomState = query.data;
+    isRoomLoading = query.isLoading;
+    roomError = query.error;
+  }
 
   useEffect(() => {
     // Load bot settings from localStorage
@@ -24,7 +45,7 @@ export default function ChessGameCleanPage() {
           setBotSettings(parsedSettings);
         } else {
           if (!isTransitioning) {
-            navigateWithTransition("/lobby");
+            navigateWithTransition("/");
           }
         }
       } catch (error) {
@@ -47,7 +68,7 @@ export default function ChessGameCleanPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isRoomLoading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center space-y-4">
@@ -58,14 +79,29 @@ export default function ChessGameCleanPage() {
     );
   }
 
-  // Determine if this is a bot game based on the presence of botSettings
-  const gameType = botSettings ? ("bot" as const) : ("friend" as const);
+  if (roomError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-center space-y-4">
+          <p className="text-red-400">
+            Failed to load chess room:{" "}
+            {roomError instanceof Error ? roomError.message : "Unknown error"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // For now, log the room state
+  console.log("Chess room state:", roomState);
 
   return (
     <ChessGameClean
+      roomid={roomid}
       matchType={gameType}
       onDisconnect={handleDisconnect}
       botSettings={botSettings}
+      roomState={roomState}
     />
   );
 }

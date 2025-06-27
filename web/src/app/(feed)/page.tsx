@@ -10,30 +10,38 @@ export default function Home() {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  console.log("USER FROM HOME", user);
-
+  // Redirect to login if not authenticated
   useEffect(() => {
-    // Only run redirect checks after auth is loaded
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user && (!user.handle || !user.username)) {
-        router.push("/account-setup");
-      }
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Redirect to account setup if missing required profile info
+  useEffect(() => {
+    if (
+      !isLoading &&
+      isAuthenticated &&
+      user &&
+      (!user.handle || !user.username)
+    ) {
+      router.replace("/account-setup");
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  // Show loading screen while checking auth state
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // If missing required profile info, we'll be redirected by the effect
-  if (!user?.handle || !user?.username) {
-    return router.push("/account-setup");
+  // Prevent rendering if redirecting
+  if (!isAuthenticated || !user) {
+    return null;
   }
 
-  // Show Allies component only if user hasn't seen suggestions
+  if (!user.handle || !user.username) {
+    return null;
+  }
+
   if (!user.hasSeenSuggestions) {
     return <AlliesRecommendation />;
   }

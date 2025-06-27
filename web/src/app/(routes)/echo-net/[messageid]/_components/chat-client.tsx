@@ -1,115 +1,93 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { socket } from "@/lib/socket";
+import type { Message, MessageResponse } from "@/types/chat";
 import ChatHeader from "./header";
 import ChatInput from "./chat-input";
 import Messages from "./messages";
 import NeuralLink from "./neural-link";
+import { useGetMessages } from "@/hooks/api/use-message";
 
-export default function ChatClient() {
+export default function ChatClient({
+  conversationId,
+}: {
+  conversationId: string;
+}) {
   const [activateNeuralLink, setActivateNeuralLink] = useState(false);
+  const [isOpponentTyping, setIsOpponentTyping] = useState(false);
   const neuralLinkStrength = 6;
+
+  const { data } = useGetMessages(conversationId);
+  const messages = data?.messages;
+  const conversation = data?.conversation;
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!conversationId) return;
+    // Connect and join room
+    if (!socket.connected) socket.connect();
+    socket.emit("joinConversation", conversationId);
+
+    // Listen for new messages
+    const handleNewMessage = (newMessage: Message) => {
+      queryClient.setQueryData(
+        ["messages", conversationId],
+        (old: MessageResponse | undefined) => {
+          if (!old) return old;
+          // Avoid duplicates (by id or tempId)
+          const exists = old.messages.some(
+            (msg) =>
+              msg.id === newMessage.id ||
+              (msg.tempId && msg.tempId === newMessage.tempId)
+          );
+          if (exists) return old;
+          return {
+            ...old,
+            messages: [...old.messages, newMessage],
+          };
+        }
+      );
+    };
+    socket.on("newMessage", handleNewMessage);
+
+    // Listen for typing indicators
+    socket.on("isTyping", () => setIsOpponentTyping(true));
+    socket.on("isNotTyping", () => setIsOpponentTyping(false));
+
+    // Cleanup
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("isTyping");
+      socket.off("isNotTyping");
+      // Optionally leave room or disconnect if needed
+    };
+  }, [conversationId, queryClient]);
+
   return (
     <div className="flex flex-col h-full w-full">
       <ChatHeader
         activeNeuralLink={activateNeuralLink}
         setActiveNeuralLink={setActivateNeuralLink}
-      />{" "}
+        user={conversation?.otherParticipant}
+      />
       {activateNeuralLink && (
         <NeuralLink neuralLinkStrength={neuralLinkStrength} />
       )}
       <div className="flex-1 overflow-scroll">
         <Messages
           neuralLinkActive={activateNeuralLink}
-          neuralLinkStrength={neuralLinkStrength}
-          messages={ACTIVE_CONVERSATION_MESSAGES || []}
+          // neuralLinkStrength={neuralLinkStrength}
+          messages={messages || []}
+          isOpponentTyping={isOpponentTyping}
+          otherParticipant={conversation?.otherParticipant}
         />
       </div>
-      <ChatInput neuralLinkActive={activateNeuralLink} />
+      <ChatInput
+        conversationId={conversationId}
+        neuralLinkActive={activateNeuralLink}
+      />
     </div>
   );
 }
-
-// Mock data for active conversation messages
-const ACTIVE_CONVERSATION_MESSAGES = [
-  {
-    id: "1",
-    sender: "other",
-    text: "Hey, did you see the new neural implant upgrade?",
-    time: "10:30",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "2",
-    sender: "other",
-    text: "It's supposed to increase bandwidth by 200%",
-    time: "10:31",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "3",
-    sender: "self",
-    text: "Yeah, I heard about it. But I'm skeptical about the security implications.",
-    time: "10:35",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "4",
-    sender: "other",
-    text: "I've already installed it. The neural feedback is incredible.",
-    time: "10:36",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "5",
-    sender: "other",
-    type: "neural",
-    neuralData: {
-      type: "sensation",
-      intensity: 0.7,
-      description: "Neural sensation: Increased processing speed",
-    },
-    time: "10:37",
-    status: "read",
-  },
-  {
-    id: "6",
-    sender: "self",
-    text: "Whoa, I felt that through the link. That's intense!",
-    time: "10:38",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "7",
-    sender: "other",
-    text: "Check out this AR model of the implant",
-    time: "10:40",
-    status: "read",
-    type: "text",
-  },
-  {
-    id: "8",
-    sender: "other",
-    type: "ar",
-    arData: {
-      preview: "/placeholder.svg?height=300&width=400&text=NEURAL_IMPLANT_AR",
-      model: "/ar-models/implant.glb",
-      description: "Neural Implant X-7500",
-    },
-    time: "10:41",
-    status: "read",
-  },
-  {
-    id: "9",
-    sender: "self",
-    text: "That looks advanced. Where did you get it installed?",
-    time: "10:42",
-    status: "delivered",
-    type: "text",
-  },
-];
