@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import User from "../models/User.js";
 import ChessRoom from "../models/chessRoom.model.js";
 import { Chess } from "chess.js";
+import { getGameOverResult } from "../services/chess.service.js";
 
 export const acceptChessChallenge = async (req, res) => {
   try {
@@ -20,13 +21,16 @@ export const acceptChessChallenge = async (req, res) => {
 
     // Find creator
     const creatorPlayer = chessRoom.chessPlayers.find((p) => p.isCreator);
+
     if (!creatorPlayer) {
       return res.status(400).json({ error: "No creator found for this room." });
     }
+
     if (creatorPlayer.user._id.toString() === opponentId.toString()) {
-      return res.status(400).json({
-        error:
-          "You can't jack into your own neural challenge. Await a worthy opponent.",
+      // If the user is the creator, just return the room (no error)
+      return res.status(200).json({
+        message: "You are the creator of this challenge.",
+        room: chessRoom,
       });
     }
 
@@ -41,6 +45,18 @@ export const acceptChessChallenge = async (req, res) => {
       });
     }
     if (chessRoom.chessPlayers.length >= 2) {
+      // If the user is already a player, let them in
+      const isPlayer = chessRoom.chessPlayers.some(
+        (p) =>
+          p.user._id.toString() === opponentId.toString() ||
+          p.user.toString() === opponentId.toString()
+      );
+      if (isPlayer) {
+        return res.status(200).json({
+          message: "You are already a player in this challenge.",
+          room: chessRoom,
+        });
+      }
       return res.status(400).json({
         error: "Challenge already jacked in. Find another grid to conquer.",
       });
@@ -82,8 +98,22 @@ export const getChessRoomState = async (req, res) => {
     if (!room) {
       return res.status(404).json({ error: "Room not found." });
     }
+
+    // If status is ongoing, check if the FEN is actually game over
+    if (room.status === "ongoing") {
+      const result = getGameOverResult(
+        room.fen,
+        room.chessPlayers,
+        room.createdAt
+      );
+      if (result) {
+        room.status = "finished";
+        room.result = result;
+        await room.save();
+      }
+    }
+
     const roomObj = room.toObject();
-    // chessPlayers is already populated
     res.json(roomObj);
   } catch (err) {
     console.error("[ChessRoom] Get state error:", err);
@@ -95,15 +125,33 @@ export const makeChessMove = async (req, res) => {
   try {
     const { roomId } = req.params;
     const { from, to, san, fen } = req.body;
+    console.log("[makeChessMove] Incoming move:", {
+      roomId,
+      from,
+      to,
+      san,
+      fen,
+    });
     if (!from || !to || !san || !fen) {
-      return res.status(400).json({ error: "Missing move data." });
+      console.error("[makeChessMove] Missing move data", {
+        from,
+        to,
+        san,
+        fen,
+      });
+      return res.status(400).json({
+        error: "Missing move data. All of from, to, san, and fen are required.",
+      });
     }
     const room = await ChessRoom.findOne({ roomId }).populate({
       path: "chessPlayers.user",
       select: "_id username",
     });
     if (!room) {
-      return res.status(404).json({ error: "Room not found." });
+      console.error(`[makeChessMove] Room not found for roomId: ${roomId}`);
+      return res
+        .status(404)
+        .json({ error: `Room not found for roomId: ${roomId}` });
     }
     // Save move
     room.moves.push({ from, to, san, timestamp: new Date() });
@@ -111,12 +159,21 @@ export const makeChessMove = async (req, res) => {
       room.status = "ongoing";
     }
     room.fen = fen;
+
+    // Use chess.js and the new FEN to check for game over
+    const result = getGameOverResult(fen, room.chessPlayers, room.createdAt);
+    if (result) {
+      room.status = "finished";
+      room.result = result;
+    }
     await room.save();
     await room.populate({ path: "chessPlayers.user", select: "_id username" });
     const roomObj = room.toObject();
     res.json(roomObj);
   } catch (err) {
     console.error("[ChessRoom] Move error:", err);
-    res.status(500).json({ error: "Failed to make move." });
+    res
+      .status(500)
+      .json({ error: "Failed to make move.", details: err?.message || err });
   }
 };

@@ -6,6 +6,7 @@ export interface PlayerData {
   username: string;
   avatar?: string;
   rating: number;
+  color: "white" | "black";
 }
 
 interface PlayerProps {

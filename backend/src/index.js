@@ -180,20 +180,18 @@ app.use("/api/dm", dmRoute);
 app.use("/api/chess", chessRoute);
 
 // Socket.IO connection logic
-io.on("connection", (socket) => {
-  // Join a conversation room
-  socket.on("joinConversation", (conversationId) => {
-    socket.join(conversationId);
-  });
+io.on("connection", async (socket) => {
+  // Conversation/DM and typing events
+  const { registerConversationSocketHandlers } = await import(
+    "./socket/conversation.socket.js"
+  );
+  registerConversationSocketHandlers(io, socket);
 
-  // Handle typing indicators
-  socket.on("typing", (conversationId) => {
-    socket.broadcast.to(conversationId).emit("isTyping");
-  });
-
-  socket.on("stopTyping", (conversationId) => {
-    socket.broadcast.to(conversationId).emit("isNotTyping");
-  });
+  // --- Chess Real-Time Events ---
+  const { registerChessSocketHandlers } = await import(
+    "./socket/chess.socket.js"
+  );
+  registerChessSocketHandlers(io, socket);
 
   // Optionally handle disconnects, typing, etc. here
 });

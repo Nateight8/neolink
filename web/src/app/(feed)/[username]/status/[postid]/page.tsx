@@ -1,7 +1,7 @@
 import { Comment } from "./_components/comments-thread";
 import PostThread from "./_components/post-thread";
 
-export const comments = [
+const comments = [
   {
     id: "1",
     author: "GHOST_IN_THE_CODE",

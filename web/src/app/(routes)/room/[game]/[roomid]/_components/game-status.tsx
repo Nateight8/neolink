@@ -12,6 +12,8 @@ interface GameStatusProps {
   onExit?: () => void;
   onViewBoard?: () => void;
   className?: string;
+  winnerUserId?: string;
+  loggedInUserId?: string;
 }
 
 export default function GameStatus({
@@ -21,8 +23,30 @@ export default function GameStatus({
   onExit,
   onViewBoard,
   className = "",
+  winnerUserId,
+  loggedInUserId,
 }: GameStatusProps) {
   const getStatusMessage = () => {
+    if (
+      (game.isGameOver() || gameTime.white <= 0 || gameTime.black <= 0) &&
+      winnerUserId &&
+      loggedInUserId
+    ) {
+      return {
+        result: winnerUserId === loggedInUserId ? "YOU WON" : "YOU LOST",
+        reason: game.isCheckmate()
+          ? "CHECKMATE"
+          : gameTime.white <= 0 || gameTime.black <= 0
+          ? "TIME FORFEIT"
+          : game.isStalemate()
+          ? "STALEMATE"
+          : game.isThreefoldRepetition()
+          ? "THREEFOLD REPETITION"
+          : game.isInsufficientMaterial()
+          ? "INSUFFICIENT MATERIAL"
+          : "GAME OVER",
+      };
+    }
     if (gameTime.white <= 0)
       return { result: "BLACK WINS", reason: "TIME FORFEIT" };
     if (gameTime.black <= 0)

@@ -21,7 +21,7 @@ const mockPost = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   chess: {
-    gameId: "abc123xyz",
+    roomId: "abc123xyz",
     timeControl: "5+0",
     rated: true,
   },

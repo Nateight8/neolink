@@ -24,6 +24,29 @@ const chessRoomSchema = new mongoose.Schema(
       enum: ["waiting", "ongoing", "finished", "aborted"],
       default: "waiting",
     },
+    result: {
+      status: { type: String, enum: ["win", "draw"] },
+      reason: {
+        type: String,
+        enum: [
+          "checkmate",
+          "timeout",
+          "resignation",
+          "stalemate",
+          "threefold_repetition",
+          "insufficient_material",
+          "agreement",
+          "abandonment",
+        ],
+      },
+      winner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null,
+      },
+      ended: { type: Date },
+      duration: { type: Number }, // in seconds
+    },
     post: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Post",

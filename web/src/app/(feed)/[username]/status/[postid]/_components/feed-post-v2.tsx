@@ -11,25 +11,18 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "@/components/provider/page-transition-provider";
 import { cn } from "@/lib/utils";
 import { useAcceptChessChallenge } from "@/hooks/api/use-chess-play";
-
-// Temporary interface extension until backend is updated
-interface PostWithChess extends Post {
-  chess?: {
-    gameId: string;
-    timeControl: string;
-    rated: boolean;
-  };
-}
+import { useAuth } from "@/contexts/auth-context";
 
 export default function FeedPost({
   post,
   className,
 }: {
-  post: PostWithChess;
+  post: Post;
   className?: string;
 }) {
   const { navigateWithTransition } = useTransition();
   const acceptChallenge = useAcceptChessChallenge();
+  const { user } = useAuth();
   // Use avatar (not present on User), fallback to placeholder
   const avatar = "/placeholder.svg"; // TODO: Replace with real avatar field if added to User
   const pathname = usePathname();
@@ -42,10 +35,15 @@ export default function FeedPost({
     e.preventDefault();
     e.stopPropagation();
     if (acceptChallenge.isPending) return;
+    // If user is the creator, route directly to the chess room
+    if (user && post.author && user._id === post.author._id) {
+      navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
+      return;
+    }
     acceptChallenge.mutate(post._id, {
       onSuccess: () => {
         // Navigate to the chess room after successful acceptance
-        navigateWithTransition(`/room/chess/${post.chess?.gameId}`);
+        navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
       },
       // onError is handled in the hook
     });
@@ -97,7 +95,7 @@ export default function FeedPost({
             {post.chess && (
               <div className="my-4">
                 <ChessInvite
-                  gameId={post.chess.gameId}
+                  gameId={post.chess.roomId}
                   timeControl={post.chess.timeControl}
                   rated={post.chess.rated}
                   onClick={handleIt}

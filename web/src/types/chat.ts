@@ -80,7 +80,7 @@ export interface Post {
   updatedAt: string;
   poll?: Poll;
   chess?: {
-    gameId: string;
+    roomId: string;
     timeControl: string;
     rated: boolean;
   };
