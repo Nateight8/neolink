@@ -93,33 +93,40 @@ export function ChessGameClean({
     const me = chessPlayers.find((p) => p.user._id === user._id);
     const opponent = chessPlayers.find((p) => p.user._id !== user._id);
     if (me) myColor = me.color;
+    // Top: opponent, Bottom: me (regardless of color)
     players = [
       {
         id: opponent?.user._id || "1",
         username: opponent?.user.username || "Opponent",
         rating: 1500,
+        color: opponent?.color || "white",
       },
       {
         id: me?.user._id || "2",
         username: me?.user.username || "You",
         rating: 1500,
+        color: me?.color || "white",
       },
     ];
   } else {
     // Fallback for bot games
+    const myColor: PlayerColor =
+      botSettings?.color === "black" ? "black" : "white";
+    const botColor: PlayerColor = myColor === "white" ? "black" : "white";
     players = [
       {
         id: "1",
         username: matchType === "bot" ? "AI Bot" : "Opponent",
         rating: 1500,
+        color: botColor,
       },
       {
         id: "2",
         username: "You",
         rating: 1500,
+        color: myColor,
       },
     ];
-    myColor = botSettings?.color === "black" ? "black" : "white";
   }
 
   // Log bot settings when they change
@@ -907,17 +914,17 @@ export function ChessGameClean({
             </div>
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
-              {/* Top Player (Black) */}
+              {/* Top Player (Opponent) */}
               <Player
                 player={players[0]}
                 isCurrentPlayer={
-                  myColor === ("black" as PlayerColor) && !game.isGameOver()
+                  myColor === players[0].color && !game.isGameOver()
                 }
-                timeRemaining={gameTime.black}
-                capturedPieces={capturedPieces.white} // White's captures are black pieces
-                color="black"
-                isLoggedIn={myColor === "black"}
-                key={`black-${capturedPieces.white.join("")}`}
+                timeRemaining={gameTime[players[0].color]}
+                capturedPieces={capturedPieces[players[1].color]} // Opponent's captures are my pieces
+                color={players[0].color}
+                isLoggedIn={myColor === players[0].color}
+                key={`top-${players[0].id}`}
               />
 
               {/* Chess Board */}
@@ -998,14 +1005,61 @@ export function ChessGameClean({
                     gameTime.black <= 0) && (
                     <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center rounded-sm p-4">
                       <div className="text-center mb-6">
-                        <h2 className="text-3xl font-bold text-cyan-400 mb-2 font-cyber neon-text">
-                          {gameTime.white <= 0
-                            ? "BLACK WINS!"
-                            : gameTime.black <= 0
-                            ? "WHITE WINS!"
-                            : game.isCheckmate()
-                            ? `${game.turn() === "w" ? "BLACK" : "WHITE"} WINS!`
-                            : "NEURAL DRAW"}
+                        <h2
+                          className={`text-4xl font-extrabold mb-2 font-cyber neon-text ${(() => {
+                            const result =
+                              roomState &&
+                              typeof roomState === "object" &&
+                              "result" in roomState &&
+                              typeof roomState.result === "object" &&
+                              roomState.result !== null &&
+                              "status" in roomState.result &&
+                              "winner" in roomState.result
+                                ? (roomState.result as {
+                                    status?: string;
+                                    winner?: string | null;
+                                  })
+                                : undefined;
+                            if (result?.status === "draw")
+                              return "text-cyan-400";
+                            if (result?.winner && user) {
+                              return result.winner === user._id
+                                ? "text-emerald-600 drop-shadow-[0_0_16px_#10b981]"
+                                : "text-rose-600 drop-shadow-[0_0_16px_#f43f5e]";
+                            }
+                            return "text-cyan-400";
+                          })()}`}
+                        >
+                          {(() => {
+                            const result =
+                              roomState &&
+                              typeof roomState === "object" &&
+                              "result" in roomState &&
+                              typeof roomState.result === "object" &&
+                              roomState.result !== null &&
+                              "status" in roomState.result &&
+                              "winner" in roomState.result
+                                ? (roomState.result as {
+                                    status?: string;
+                                    winner?: string | null;
+                                  })
+                                : undefined;
+                            if (result?.status === "draw") return "DRAW";
+                            if (result?.winner && user) {
+                              return result.winner === user._id
+                                ? "YOU WON"
+                                : "YOU LOST";
+                            }
+                            return gameTime.white <= 0
+                              ? "BLACK WINS!"
+                              : gameTime.black <= 0
+                              ? "WHITE WINS!"
+                              : game.isCheckmate()
+                              ? `${
+                                  game.turn() === "w" ? "BLACK" : "WHITE"
+                                } WINS!`
+                              : "NEURAL DRAW";
+                          })()}
                         </h2>
                         <p className="text-cyan-300 mb-6">
                           {gameTime.white <= 0 || gameTime.black <= 0
@@ -1025,17 +1079,17 @@ export function ChessGameClean({
                   )}
               </div>
 
-              {/* Bottom Player (White) */}
+              {/* Bottom Player (Me) */}
               <Player
                 player={players[1]}
                 isCurrentPlayer={
-                  myColor === ("white" as PlayerColor) && !game.isGameOver()
+                  myColor === players[1].color && !game.isGameOver()
                 }
-                timeRemaining={gameTime.white}
-                capturedPieces={capturedPieces.black} // Black's captures are white pieces
-                color="white"
-                isLoggedIn={myColor === "white"}
-                key={`white-${capturedPieces.black.join("")}`}
+                timeRemaining={gameTime[players[1].color]}
+                capturedPieces={capturedPieces[players[0].color]} // My captures are opponent's pieces
+                color={players[1].color}
+                isLoggedIn={myColor === players[1].color}
+                key={`bottom-${players[1].id}`}
               />
             </div>
 
