@@ -29,14 +29,14 @@ export function useAcceptChessChallenge() {
   });
 }
 
-export function useChessRoomState(roomId: string) {
+export function useChessRoomState(roomId: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ["chess-room", roomId],
     queryFn: async () => {
       const res = await axiosInstance.get(`/chess/room/${roomId}`);
       return res.data;
     },
-    enabled: !!roomId,
+    enabled,
   });
 }
 

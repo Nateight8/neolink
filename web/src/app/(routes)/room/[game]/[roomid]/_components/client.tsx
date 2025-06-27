@@ -25,11 +25,15 @@ export default function ChessClient({ roomid }: { roomid: string }) {
   const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
 
   // Only fetch room state if not a bot game
-  const {
-    data: roomState,
-    isLoading: isRoomLoading,
-    error: roomError,
-  } = useChessRoomState(!isBotGame ? roomid : "");
+  const query = useChessRoomState(roomid, !isBotGame);
+  let roomState = null;
+  let isRoomLoading = false;
+  let roomError = null;
+  if (!isBotGame) {
+    roomState = query.data;
+    isRoomLoading = query.isLoading;
+    roomError = query.error;
+  }
 
   useEffect(() => {
     // Load bot settings from localStorage
