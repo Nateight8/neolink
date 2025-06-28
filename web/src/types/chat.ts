@@ -83,5 +83,11 @@ export interface Post {
     roomId: string;
     timeControl: string;
     rated: boolean;
+    chessPlayers: {
+      user: User;
+      color: "white" | "black";
+      isCreator: boolean;
+    }[];
+    isCreator: boolean;
   };
 }

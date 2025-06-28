@@ -2,16 +2,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import UserData from "./user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
-import ChessInvite from "@/app/(feed)/chess/_components/chess-invite";
 import { FeedPoll } from "@/components/feed/feed-poll";
 
 import { Post } from "@/types/chat";
 import PostActions from "./post-actions";
 import { usePathname, useRouter } from "next/navigation";
-import { useTransition } from "@/components/provider/page-transition-provider";
 import { cn } from "@/lib/utils";
-import { useAcceptChessChallenge } from "@/hooks/api/use-chess-play";
-import { useAuth } from "@/contexts/auth-context";
+import ChallengeInvite from "@/app/test/_components/challenge-iv";
 
 export default function FeedPost({
   post,
@@ -20,34 +17,12 @@ export default function FeedPost({
   post: Post;
   className?: string;
 }) {
-  const { navigateWithTransition } = useTransition();
-  const acceptChallenge = useAcceptChessChallenge();
-  const { user } = useAuth();
-  // Use avatar (not present on User), fallback to placeholder
   const avatar = "/placeholder.svg"; // TODO: Replace with real avatar field if added to User
   const pathname = usePathname();
   const router = useRouter();
 
   const postUrl = `/${post.author.username}/status/${post._id}`;
   const isOnPostRoute = pathname === postUrl;
-
-  const handleIt = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (acceptChallenge.isPending) return;
-    // If user is the creator, route directly to the chess room
-    if (user && post.author && user._id === post.author._id) {
-      navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
-      return;
-    }
-    acceptChallenge.mutate(post._id, {
-      onSuccess: () => {
-        // Navigate to the chess room after successful acceptance
-        navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
-      },
-      // onError is handled in the hook
-    });
-  };
 
   return (
     <>
@@ -94,13 +69,15 @@ export default function FeedPost({
             )}
             {post.chess && (
               <div className="my-4">
-                <ChessInvite
+                {/* <ChessInvite
                   gameId={post.chess.roomId}
                   timeControl={post.chess.timeControl}
                   rated={post.chess.rated}
                   onClick={handleIt}
                   disabled={acceptChallenge.isPending}
-                />
+                /> */}
+
+                <ChallengeInvite post={post} />
               </div>
             )}
             {/* Post Actions */}

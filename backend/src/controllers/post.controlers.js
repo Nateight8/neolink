@@ -92,7 +92,13 @@ export const getAllPosts = async (req, res) => {
       .populate({
         path: "chess",
         select:
-          "roomId timeControl rated challenger status createdAt updatedAt post creator opponent",
+          "roomId timeControl rated challenger status createdAt updatedAt post chessPlayers fen moves result",
+        populate: [
+          {
+            path: "chessPlayers.user",
+            select: "username name avatar verified handle participantId",
+          },
+        ],
       })
       .sort({ createdAt: -1 });
 

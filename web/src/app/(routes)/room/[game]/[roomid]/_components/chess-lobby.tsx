@@ -77,57 +77,89 @@ export function ChessGameClean({
 }: ChessGameCleanProps) {
   const { user } = useAuth();
 
-  // Determine players and color for human vs human
-  let players: PlayerData[] = [];
-  let myColor: PlayerColor = "white";
-  if (
-    matchType === "friend" &&
-    roomState &&
-    Array.isArray(
-      (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers
-    ) &&
-    user
-  ) {
-    const chessPlayers = (roomState as { chessPlayers: ChessPlayer[] })
-      .chessPlayers;
-    const me = chessPlayers.find((p) => p.user._id === user._id);
-    const opponent = chessPlayers.find((p) => p.user._id !== user._id);
-    if (me) myColor = me.color;
-    // Top: opponent, Bottom: me (regardless of color)
-    players = [
-      {
-        id: opponent?.user._id || "1",
-        username: opponent?.user.username || "Opponent",
-        rating: 1500,
-        color: opponent?.color || "white",
-      },
-      {
-        id: me?.user._id || "2",
-        username: me?.user.username || "You",
-        rating: 1500,
-        color: me?.color || "white",
-      },
-    ];
-  } else {
-    // Fallback for bot games
-    const myColor: PlayerColor =
-      botSettings?.color === "black" ? "black" : "white";
-    const botColor: PlayerColor = myColor === "white" ? "black" : "white";
-    players = [
-      {
-        id: "1",
-        username: matchType === "bot" ? "AI Bot" : "Opponent",
-        rating: 1500,
-        color: botColor,
-      },
-      {
-        id: "2",
-        username: "You",
-        rating: 1500,
-        color: myColor,
-      },
-    ];
-  }
+  // Determine players and color based on game type
+  // Check if there's an opponent in the game
+  const hasOpponent = useMemo(() => {
+    if (matchType === 'bot') return true; // Always true for bot games
+    if (!roomState || !('chessPlayers' in roomState)) return false;
+    const chessPlayers = (roomState.chessPlayers as ChessPlayer[]) || [];
+    return chessPlayers.length >= 2 && chessPlayers.some(p => p.user._id !== user?._id);
+  }, [matchType, roomState, user]);
+
+  const { players, myColor } = useMemo(() => {
+    let playersList: PlayerData[] = [];
+    let playerColor: PlayerColor = "white";
+    
+    if (matchType === "friend" && roomState) {
+      // Friend game logic
+      const chessPlayers = (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers || [];
+      const me = chessPlayers.find((p) => p.user._id === user?._id);
+      const opponent = chessPlayers.find((p) => p.user._id !== user?._id);
+      
+      if (me) playerColor = me.color;
+      
+      // Top: opponent, Bottom: me (regardless of color)
+      playersList = [
+        {
+          id: opponent?.user._id || "1",
+          username: opponent?.user.username || "Opponent",
+          rating: 1500, // Default rating
+          color: opponent?.color || (playerColor === "white" ? "black" : "white"),
+          avatar: "",
+        },
+        {
+          id: user?._id || "2",
+          username: user?.username || "You",
+          rating: 1500, // Default rating
+          color: playerColor,
+          avatar: "",
+        },
+      ];
+    } else if (matchType === "bot" && botSettings) {
+      // Bot game logic
+      const botColor = botSettings.color === "random" 
+        ? (Math.random() > 0.5 ? "white" : "black") 
+        : botSettings.color;
+      playerColor = botColor === "white" ? "black" : "white";
+      
+      playersList = [
+        {
+          id: "bot-1",
+          username: "AI Bot",
+          rating: 2000, // Bot rating
+          color: botColor,
+          avatar: "",
+        },
+        {
+          id: user?._id || "2",
+          username: user?.username || "You",
+          rating: 1500,
+          color: playerColor,
+          avatar: "",
+        },
+      ];
+    } else {
+      // Default/fallback for random or unknown game types
+      playersList = [
+        {
+          id: "1",
+          username: "Opponent",
+          rating: 1500,
+          color: "black",
+          avatar: "",
+        },
+        {
+          id: user?._id || "2",
+          username: user?.username || "You",
+          rating: 1500,
+          color: "white",
+          avatar: "",
+        },
+      ];
+    }
+    
+    return { players: playersList, myColor: playerColor };
+  }, [matchType, roomState, user, botSettings]);
 
   // Log bot settings when they change
   useEffect(() => {
@@ -432,7 +464,15 @@ export function ChessGameClean({
 
   // Timer countdown effect
   useEffect(() => {
-    if (game.isGameOver() || isPaused) return;
+    // Only start the timer if the game is in progress, has both players, and is not paused
+    if (game.isGameOver() || isPaused || !hasOpponent) {
+      // Reset the timer if there's no opponent
+      if (!hasOpponent && !game.isGameOver()) {
+        const initialTime = timeControl.split("+")[0];
+        setCurrentPlayerTime(parseInt(initialTime) * 60);
+      }
+      return;
+    }
 
     const timer = setInterval(() => {
       const now = Date.now();
@@ -461,7 +501,7 @@ export function ChessGameClean({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [game, timeControl, isPaused]);
+  }, [game, timeControl, isPaused, hasOpponent]);
 
   // Update game time for display
   useEffect(() => {
@@ -653,6 +693,12 @@ export function ChessGameClean({
   };
 
   const onDrop = (sourceSquare: string, targetSquare: string): boolean => {
+    // Prevent move if no opponent has joined
+    if (!hasOpponent && matchType !== 'bot') {
+      console.log('Waiting for opponent to join...');
+      return false;
+    }
+    
     // Check if it's the current player's turn based on the game state
     const currentTurn = game.turn();
     const isPlayerTurn =
@@ -831,8 +877,28 @@ export function ChessGameClean({
     }
   };
 
+  // Show waiting overlay if no opponent has joined
+  const showWaitingOverlay = !hasOpponent && matchType !== 'bot' && !game.isGameOver();
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
+      {showWaitingOverlay && (
+        <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center">
+          <div className="bg-gray-900/90 border border-gray-800 rounded-lg p-6 max-w-md mx-4 text-center">
+            <div className="animate-pulse text-2xl text-cyan-400 mb-4">
+              Waiting for opponent...
+            </div>
+            <p className="text-gray-300 mb-4">
+              Share this room link with a friend to start playing!
+            </p>
+            <div className="bg-gray-800/50 p-3 rounded border border-dashed border-gray-700">
+              <code className="text-cyan-300 break-all">
+                {typeof window !== 'undefined' ? window.location.href : 'Loading...'}
+              </code>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Cyberpunk background */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900 to-black" />
 
@@ -915,17 +981,24 @@ export function ChessGameClean({
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
               {/* Top Player (Opponent) */}
-              <Player
-                player={players[0]}
-                isCurrentPlayer={
-                  myColor === players[0].color && !game.isGameOver()
-                }
-                timeRemaining={gameTime[players[0].color]}
-                capturedPieces={capturedPieces[players[1].color]} // Opponent's captures are my pieces
-                color={players[0].color}
-                isLoggedIn={myColor === players[0].color}
-                key={`top-${players[0].id}`}
-              />
+              {players[0].id !== '1' ? (
+                <Player
+                  player={players[0]}
+                  isCurrentPlayer={
+                    myColor === players[0].color && !game.isGameOver()
+                  }
+                  timeRemaining={gameTime[players[0].color]}
+                  capturedPieces={capturedPieces[players[1].color]} // Opponent's captures are my pieces
+                  color={players[0].color}
+                  isLoggedIn={myColor === players[0].color}
+                  key={`top-${players[0].id}`}
+                />
+              ) : (
+                <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
+                  <p className="text-cyan-400 font-medium">Awaiting opponent...</p>
+                  <p className="text-sm text-gray-400 mt-1">Share the room link to invite a friend</p>
+                </div>
+              )}
 
               {/* Chess Board */}
               <div

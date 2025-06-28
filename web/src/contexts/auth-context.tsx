@@ -29,6 +29,9 @@ interface AuthUser {
   xp?: number;
   maxXp?: number;
   participantId: string;
+  wins?: number; //<===TODO: Add to backend
+  losses?: number; //<===TODO: Add to backend
+  totalGames?: number; //<===TODO: Add to backend
 }
 
 type User = AuthUser;
