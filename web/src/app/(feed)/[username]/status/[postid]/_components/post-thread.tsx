@@ -1,6 +1,6 @@
 "use client";
 import { usePost } from "@/hooks/api/use-post";
-import FeedPost from "./feed-post-v2";
+import FeedPost from "../../../../../../components/feed/post/feed-post";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
 

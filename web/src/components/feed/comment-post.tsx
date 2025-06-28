@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, MessageSquare } from "lucide-react";
-import UserData from "@/app/(feed)/[username]/status/[postid]/_components/user-data";
+import UserData from "@/components/feed/post/user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
 
 // This should probably be in a shared types file

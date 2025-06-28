@@ -50,7 +50,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
 
   //user is player
   const isPlayer =
-    user && post.chess?.chessPlayers.find((p) => p.user._id === user._id);
+    post && post.chess?.chessPlayers.find((p) => p.user._id === user?._id);
 
   // Get player data from post
 
@@ -66,6 +66,9 @@ export default function ChallengeInvite({ post }: { post: Post }) {
   const handleMouseLeave = useCallback(() => {
     setShowUserStats(false);
   }, []);
+
+  const totalGames = (user?.wins || 0) + (user?.losses || 0);
+
   return (
     <>
       <div className="max-w-md gap-1 relative w-full grid grid-cols-2">
@@ -253,7 +256,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
                           animate={{
                             width: `${calculateWinRate(
                               user.wins,
-                              user.totalGames
+                              totalGames
                             )}%`,
                           }}
                           transition={{
@@ -269,7 +272,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
                       >
-                        {calculateWinRate(user.wins, user.totalGames)}% WIN RATE
+                        {calculateWinRate(user.wins, totalGames)}% WIN RATE
                       </motion.p>
                     </motion.div>
                   ) : (
@@ -333,7 +336,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
                 </BeveledButton>
               );
             }
-            
+
             if (opponent) {
               return (
                 <BeveledButton
@@ -346,7 +349,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
                 </BeveledButton>
               );
             }
-            
+
             return (
               <BeveledButton
                 className="w-full"

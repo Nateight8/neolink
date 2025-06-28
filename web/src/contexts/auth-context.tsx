@@ -12,7 +12,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 
-interface AuthUser {
+export interface User {
   _id: string;
   email: string;
   fullName: string;
@@ -27,17 +27,15 @@ interface AuthUser {
   title?: string;
   status?: "online" | "offline" | "playing";
   xp?: number;
-  maxXp?: number;
+  // maxXp?: number;
   participantId: string;
   wins?: number; //<===TODO: Add to backend
   losses?: number; //<===TODO: Add to backend
-  totalGames?: number; //<===TODO: Add to backend
+  // totalGames?: number; //<===TODO: Add to backend
 }
 
-type User = AuthUser;
-
 interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
   isLoading: boolean;
   isError: boolean;
   isAuthenticated: boolean;
@@ -48,11 +46,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const queryClient = useQueryClient();
 
-  const fetchUser = useCallback(async (): Promise<AuthUser | null> => {
+  const fetchUser = useCallback(async (): Promise<User | null> => {
     try {
       const response = await axiosInstance.get("/auth/me");
       return response.data.user;
@@ -67,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isError,
     refetch,
-  } = useQuery<AuthUser | null, Error>({
+  } = useQuery<User | null, Error>({
     queryKey: ["authUser"],
     queryFn: fetchUser,
     staleTime: 1000 * 60 * 5, // 5 minutes

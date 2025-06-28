@@ -165,6 +165,8 @@ export const makeChessMove = async (req, res) => {
     if (result) {
       room.status = "finished";
       room.result = result;
+      //we should update the user table here with xp,wins and lost also add these fields to user model
+      //create an xp service. for now,
     }
     await room.save();
     await room.populate({ path: "chessPlayers.user", select: "_id username" });

@@ -1,15 +1,5 @@
+import { User } from "@/contexts/auth-context";
 import type { Conversation } from "@/hooks/api/use-direct-message";
-
-export interface User {
-  _id: string;
-  username?: string;
-  fullName: string;
-  handle: string;
-  bio: string;
-  friends?: string[];
-  isOnboarder?: boolean;
-  participantId: string;
-}
 
 export interface ReadBy {
   userId: string;

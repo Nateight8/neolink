@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronUp } from "lucide-react";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
-import FeedPost from "@/app/(feed)/[username]/status/[postid]/_components/feed-post-v2";
+import FeedPost from "@/components/feed/post/feed-post";
 import AppBar from "@/app/(feed)/_components/appbar";
 // import { FeedPost } from "../feed-post";
 

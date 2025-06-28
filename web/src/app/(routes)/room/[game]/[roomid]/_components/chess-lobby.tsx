@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, type JSX } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, type JSX } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Chessboard } from "react-chessboard";
 import { Chess, type Square } from "chess.js";
@@ -449,20 +449,6 @@ export function ChessGameClean({
   const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
   const [possibleMoves, setPossibleMoves] = useState<string[]>([]);
 
-  // Spectators
-  const [spectators] = useState([
-    {
-      id: "3",
-      username: "GridWatcher",
-      avatar: "/placeholder.svg?height=32&width=32&text=GW",
-    },
-    {
-      id: "4",
-      username: "NeonBishop",
-      avatar: "/placeholder.svg?height=32&width=32&text=NB",
-    },
-  ]);
-
   // Timer management
   const lastMoveTime = useRef<number>(Date.now());
   const [currentPlayerTime, setCurrentPlayerTime] = useState<number>(() => {
@@ -561,7 +547,7 @@ export function ChessGameClean({
   }, []);
 
   // --- WebSocket for real-time multiplayer ---
-  const handleSocketRoomState = (newRoomState: ChessRoom) => {
+  const handleSocketRoomState = useCallback((newRoomState: ChessRoom) => {
     if (matchType === "friend") {
       if (newRoomState.fen) {
         setGame(new Chess(newRoomState.fen));
@@ -572,11 +558,44 @@ export function ChessGameClean({
         setMoveHistory(moves);
       }
     }
-  };
-  const { sendMove } = useChessSocket(
+  }, [matchType]);
+  
+  // Get WebSocket connection and spectators
+  const { sendMove, spectators } = useChessSocket(
     matchType === "friend" ? roomid : "",
     handleSocketRoomState
   );
+  
+  // Format spectators data for the Spectators component, ensuring players are not included
+  const formattedSpectators = useMemo(() => {
+    if (!spectators) return [];
+    
+    // Get player IDs from the current room state
+    const chessPlayers = (roomState as { chessPlayers?: ChessPlayer[] })?.chessPlayers || [];
+    const playerIds = new Set(chessPlayers.map(p => p.user._id));
+    
+    // Filter out any spectators that are actually players
+    return spectators
+      .filter(spec => !playerIds.has(spec._id))
+      .map(spec => ({
+        id: spec._id,
+        username: spec.username,
+        avatar: "/placeholder.svg?height=32&width=32&text=" + (spec.username?.charAt(0) || 'U')
+      }));
+  }, [spectators, roomState]);
+  
+  // Update document title with spectator count
+  useEffect(() => {
+    if (formattedSpectators.length > 0) {
+      document.title = `NeoLink Chess (${formattedSpectators.length} spectators)`;
+    } else {
+      document.title = 'NeoLink Chess';
+    }
+    
+    return () => {
+      document.title = 'NeoLink';
+    };
+  }, [formattedSpectators.length]);
 
   const makeMove = (sourceSquare: string, targetSquare: string): boolean => {
     if (isAnimatingRef.current || isAnimating) {
@@ -1013,17 +1032,17 @@ export function ChessGameClean({
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
               {/* Top Player (Opponent) */}
-              {players[0].id !== "1" ? (
+              {players[0]?.id !== "1" ? (
                 <Player
                   player={players[0]}
                   isCurrentPlayer={
-                    myColor === players[0].color && !game.isGameOver()
+                    players[0]?.color && myColor === players[0].color && !game.isGameOver()
                   }
-                  timeRemaining={gameTime[players[0].color]}
-                  capturedPieces={capturedPieces[players[1].color]} // Opponent's captures are my pieces
-                  color={players[0].color}
-                  isLoggedIn={myColor === players[0].color}
-                  key={`top-${players[0].id}`}
+                  timeRemaining={players[0]?.color ? gameTime[players[0].color] : 0}
+                  capturedPieces={players[1]?.color ? capturedPieces[players[1].color] : []} // Opponent's captures are my pieces
+                  color={players[0]?.color || 'white'}
+                  isLoggedIn={players[0]?.color && myColor === players[0].color}
+                  key={`top-${players[0]?.id || '1'}`}
                 />
               ) : (
                 <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
@@ -1220,21 +1239,29 @@ export function ChessGameClean({
               </div>
 
               {/* Bottom Player (Me) */}
-              <Player
-                player={players[1]}
-                isCurrentPlayer={
-                  myColor === players[1].color && !game.isGameOver()
-                }
-                timeRemaining={gameTime[players[1].color]}
-                capturedPieces={capturedPieces[players[0].color]} // My captures are opponent's pieces
-                color={players[1].color}
-                isLoggedIn={myColor === players[1].color}
-                key={`bottom-${players[1].id}`}
-              />
+              {players[1] ? (
+                <Player
+                  player={players[1]}
+                  isCurrentPlayer={
+                    players[1]?.color && myColor === players[1].color && !game.isGameOver()
+                  }
+                  timeRemaining={players[1]?.color ? gameTime[players[1].color] : 0}
+                  capturedPieces={players[0]?.color ? capturedPieces[players[0].color] : []} // My captures are opponent's pieces
+                  color={players[1]?.color || 'black'}
+                  isLoggedIn={players[1]?.color && myColor === players[1].color}
+                  key={`bottom-${players[1]?.id || '2'}`}
+                />
+              ) : (
+                <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
+                  <p className="text-cyan-400 font-medium">
+                    Connecting to game...
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Right Panel - Spectators */}
-            <Spectators spectators={spectators} moveHistory={moveHistory} />
+            <Spectators spectators={formattedSpectators} moveHistory={moveHistory} />
           </div>
         </div>
       </div>

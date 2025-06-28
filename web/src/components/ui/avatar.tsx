@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
+import { User } from "@phosphor-icons/react"
 
 import { cn } from "@/lib/utils"
 
@@ -36,17 +37,20 @@ function AvatarImage({
 
 function AvatarFallback({
   className,
+  children,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Fallback>) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        "bg-muted flex size-full items-center justify-center rounded-full",
+        "bg-black text-cyan-400 flex size-full items-center justify-center rounded-full border border-cyan-500",
         className
       )}
       {...props}
-    />
+    >
+      {children || <User className="size-4" />}
+    </AvatarPrimitive.Fallback>
   )
 }
 

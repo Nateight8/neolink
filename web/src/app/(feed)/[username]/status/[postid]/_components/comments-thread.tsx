@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import UserData from "./user-data";
+import UserData from "../../../../../../components/feed/post/user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
 import { Button } from "@/components/ui/button";
 import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";

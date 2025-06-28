@@ -8,7 +8,7 @@ import { Post } from "@/types/chat";
 import PostActions from "./post-actions";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import ChallengeInvite from "@/app/test/_components/challenge-iv";
+import ChallengeInvite from "@/components/navigation/chess/challenge-iv";
 
 export default function FeedPost({
   post,
@@ -30,12 +30,12 @@ export default function FeedPost({
       <div
         role="button"
         onClick={!isOnPostRoute ? () => router.push(postUrl) : undefined}
-        className={`border-cyan-900/50 ${
+        className={`w-full border-cyan-900/50 ${
           !isOnPostRoute ? "cursor-pointer" : ""
         } ${className}`}
       >
-        <div className="flex space-x-3 p-4">
-          <div>
+        <div className="flex w-full space-x-3 px-0 md:px-4 py-4">
+          <div className="flex-shrink-0">
             <Avatar className="h-10 w-10 border border-cyan-700">
               <AvatarImage src={avatar} alt={""} />
               {post.author && (
@@ -49,19 +49,23 @@ export default function FeedPost({
               )}
             </Avatar>
           </div>
-          <div className="flex-1">
-            <UserData
-              name={post.author.username || "UN"}
-              handle={post.author.handle || ""}
-              timestamp={post.updatedAt || ""}
-              participantId={post.author.participantId}
-              avatar={avatar || ""}
-              bio={post.author.bio || ""}
-            />
-            <FormattedContent
-              content={post.content}
-              className={cn(className)}
-            />
+          <div className="flex-1 min-w-0">
+            <div className="w-full">
+              <UserData
+                name={post.author.username || "UN"}
+                handle={post.author.handle || ""}
+                timestamp={post.updatedAt || ""}
+                participantId={post.author.participantId}
+                avatar={avatar || ""}
+                bio={post.author.bio || ""}
+              />
+              <div className="w-full break-words">
+                <FormattedContent
+                  content={post.content}
+                  className={cn("break-words w-full line-clamp-5")}
+                />
+              </div>
+            </div>
             {post.hasPoll && post.poll && (
               <div className="my-4">
                 <FeedPoll poll={post.poll} />

@@ -11,7 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import UserData from "./user-data";
+import UserData from "../../../../../../components/feed/post/user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
 
 // Types

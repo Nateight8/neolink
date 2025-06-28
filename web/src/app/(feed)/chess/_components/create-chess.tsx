@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import {
+  useState,
+  useEffect,
+  ForwardRefExoticComponent,
+  RefAttributes,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,11 +34,23 @@ import {
   Globe,
   Users,
   Lock,
+  LucideProps,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { IconChessQueenFilled } from "@tabler/icons-react";
 
 type ChallengerType = "everyone" | "ally" | "clan";
+
+interface ChessMode {
+  side: "left" | "bottom" | "right" | "top";
+  name: string;
+  timeControl: string;
+  Icon: ForwardRefExoticComponent<
+    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+  >;
+  color: string;
+  description: string;
+}
 
 interface CreateChessProps {
   onSettingsChange?: (settings: {
@@ -43,13 +60,14 @@ interface CreateChessProps {
   }) => void;
 }
 
-const chessGameModes = [
+const chessGameModes: ChessMode[] = [
   {
     name: "Bullet",
     timeControl: "1+0",
     description: "Lightning-fast games where every second counts.",
     Icon: BulletIcon,
     color: "text-yellow-400",
+    side: "left",
   },
   {
     name: "Blitz",
@@ -57,6 +75,7 @@ const chessGameModes = [
     description: "Quick-paced games with a small time increment.",
     Icon: BlitzIcon,
     color: "text-orange-400",
+    side: "left",
   },
   {
     name: "Rapid",
@@ -64,6 +83,7 @@ const chessGameModes = [
     description: "Balanced games with time for tactical thinking.",
     Icon: RapidIcon,
     color: "text-green-400",
+    side: "left",
   },
   {
     name: "Classical",
@@ -71,6 +91,7 @@ const chessGameModes = [
     description: "Traditional chess with time for deep strategy.",
     Icon: ClassicalIcon,
     color: "text-blue-400",
+    side: "left",
   },
 ];
 
@@ -177,7 +198,11 @@ export default function CreateChess({ onSettingsChange }: CreateChessProps) {
                       )}
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent variant="production" className="max-w-xs">
+                  <TooltipContent
+                    side={mode.side}
+                    variant="production"
+                    className="max-w-xs"
+                  >
                     <p className="font-medium">
                       {mode.name} ({mode.timeControl})
                     </p>
