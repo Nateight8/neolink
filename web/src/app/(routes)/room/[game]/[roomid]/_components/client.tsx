@@ -24,16 +24,11 @@ export default function ChessClient({ roomid }: { roomid: string }) {
   const isBotGame = lastPathSegment === "bot";
   const gameType = isBotGame ? ("bot" as const) : ("friend" as const);
 
-  // Only fetch room state if not a bot game
-  const query = useChessRoomState(roomid, !isBotGame);
-  let roomState = null;
-  let isRoomLoading = false;
-  let roomError = null;
-  if (!isBotGame) {
-    roomState = query.data;
-    isRoomLoading = query.isLoading;
-    roomError = query.error;
-  }
+  // Fetch room state for both bot games and friend games
+  const query = useChessRoomState(roomid, true);
+  const roomState = query.data;
+  const isRoomLoading = query.isLoading;
+  const roomError = query.error;
 
   useEffect(() => {
     // Load bot settings from localStorage
@@ -43,9 +38,11 @@ export default function ChessClient({ roomid }: { roomid: string }) {
         if (savedSettings) {
           const parsedSettings = JSON.parse(savedSettings) as BotGameSettings;
           setBotSettings(parsedSettings);
-        } else {
+        } else if (isBotGame) {
+          // Only redirect to home if this is a bot game and we don't have settings
           if (!isTransitioning) {
             navigateWithTransition("/");
+            return;
           }
         }
       } catch (error) {
@@ -56,7 +53,7 @@ export default function ChessClient({ roomid }: { roomid: string }) {
     };
 
     loadBotSettings();
-  }, [isTransitioning, navigateWithTransition]);
+  }, [isTransitioning, navigateWithTransition, isBotGame]);
 
   const handleDisconnect = () => {
     localStorage.removeItem("botGameSettings");
@@ -68,12 +65,14 @@ export default function ChessClient({ roomid }: { roomid: string }) {
     }
   };
 
-  if (isLoading || isRoomLoading) {
+  if (isLoading || (isRoomLoading && !isBotGame)) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gray-900">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500 mx-auto"></div>
-          <p className="text-cyan-400">Loading game configuration...</p>
+          <p className="text-cyan-400">
+            {isBotGame ? 'Setting up bot game...' : 'Loading game configuration...'}
+          </p>
         </div>
       </div>
     );
@@ -92,16 +91,49 @@ export default function ChessClient({ roomid }: { roomid: string }) {
     );
   }
 
-  // For now, log the room state
-  console.log("Chess room state:", roomState);
+  // For bot games, we can proceed directly with the bot settings
+  if (isBotGame && botSettings) {
+    return (
+      <ChessGameClean
+        roomid={roomid}
+        matchType={gameType}
+        onDisconnect={handleDisconnect}
+        botSettings={botSettings}
+        roomState={roomState}
+      />
+    );
+  }
 
+  // For friend games, check if we have valid room state
+  if (!isBotGame && roomState) {
+    return (
+      <ChessGameClean
+        roomid={roomid}
+        matchType={gameType}
+        onDisconnect={handleDisconnect}
+        botSettings={null}
+        roomState={roomState}
+      />
+    );
+  }
+
+  // If we get here, something went wrong
   return (
-    <ChessGameClean
-      roomid={roomid}
-      matchType={gameType}
-      onDisconnect={handleDisconnect}
-      botSettings={botSettings}
-      roomState={roomState}
-    />
+    <div className="w-full h-screen flex items-center justify-center bg-gray-900">
+      <div className="text-center space-y-4">
+        <p className="text-red-400">
+          {isBotGame 
+            ? 'Failed to load bot settings. Please try again.'
+            : 'Failed to load game. The room may not exist or you may not have permission to view it.'
+          }
+        </p>
+        <button
+          onClick={() => navigateWithTransition('/')}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded text-white"
+        >
+          Return to Home
+        </button>
+      </div>
+    </div>
   );
 }

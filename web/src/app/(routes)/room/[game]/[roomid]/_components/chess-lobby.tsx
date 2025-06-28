@@ -80,53 +80,70 @@ export function ChessGameClean({
   // Determine players and color based on game type
   // Check if there's an opponent in the game
   const hasOpponent = useMemo(() => {
-    if (matchType === 'bot') return true; // Always true for bot games
-    if (!roomState || !('chessPlayers' in roomState)) return false;
+    if (matchType === "bot") return true; // Always true for bot games
+    if (!roomState || !("chessPlayers" in roomState)) return false;
     const chessPlayers = (roomState.chessPlayers as ChessPlayer[]) || [];
-    return chessPlayers.length >= 2 && chessPlayers.some(p => p.user._id !== user?._id);
+    return (
+      chessPlayers.length >= 2 &&
+      chessPlayers.some((p) => p.user._id !== user?._id)
+    );
   }, [matchType, roomState, user]);
 
   const { players, myColor } = useMemo(() => {
     let playersList: PlayerData[] = [];
     let playerColor: PlayerColor = "white";
-    
+
     if (matchType === "friend" && roomState) {
       // Friend game logic
-      const chessPlayers = (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers || [];
+      const chessPlayers =
+        (roomState as { chessPlayers?: ChessPlayer[] }).chessPlayers || [];
       const me = chessPlayers.find((p) => p.user._id === user?._id);
-      const opponent = chessPlayers.find((p) => p.user._id !== user?._id);
-      
+
       if (me) playerColor = me.color;
-      
-      // Top: opponent, Bottom: me (regardless of color)
-      playersList = [
-        {
-          id: opponent?.user._id || "1",
-          username: opponent?.user.username || "Opponent",
-          rating: 1500, // Default rating
-          color: opponent?.color || (playerColor === "white" ? "black" : "white"),
+
+      // Only include actual players in the game
+      if (chessPlayers.length > 0) {
+        playersList = chessPlayers.map((p, index) => ({
+          id: p.user._id || String(index + 1),
+          username: p.user.username || `Player ${index + 1}`,
+          rating: 1500,
+          color: p.color,
           avatar: "",
-        },
-        {
-          id: user?._id || "2",
-          username: user?.username || "You",
-          rating: 1500, // Default rating
-          color: playerColor,
-          avatar: "",
-        },
-      ];
+        }));
+      } else {
+        // Fallback if no players found
+        playersList = [
+          {
+            id: "1",
+            username: "Player 1",
+            rating: 1500,
+            color: "white",
+            avatar: "",
+          },
+          {
+            id: "2",
+            username: "Player 2",
+            rating: 1500,
+            color: "black",
+            avatar: "",
+          },
+        ];
+      }
     } else if (matchType === "bot" && botSettings) {
-      // Bot game logic
-      const botColor = botSettings.color === "random" 
-        ? (Math.random() > 0.5 ? "white" : "black") 
-        : botSettings.color;
+      // Bot game logic - always treat as player
+      const botColor =
+        botSettings.color === "random"
+          ? Math.random() > 0.5
+            ? "white"
+            : "black"
+          : botSettings.color;
       playerColor = botColor === "white" ? "black" : "white";
-      
+
       playersList = [
         {
           id: "bot-1",
           username: "AI Bot",
-          rating: 2000, // Bot rating
+          rating: 2000,
           color: botColor,
           avatar: "",
         },
@@ -143,21 +160,21 @@ export function ChessGameClean({
       playersList = [
         {
           id: "1",
-          username: "Opponent",
-          rating: 1500,
-          color: "black",
-          avatar: "",
-        },
-        {
-          id: user?._id || "2",
-          username: user?.username || "You",
+          username: "Player 1",
           rating: 1500,
           color: "white",
           avatar: "",
         },
+        {
+          id: "2",
+          username: "Player 2",
+          rating: 1500,
+          color: "black",
+          avatar: "",
+        },
       ];
     }
-    
+
     return { players: playersList, myColor: playerColor };
   }, [matchType, roomState, user, botSettings]);
 
@@ -693,12 +710,23 @@ export function ChessGameClean({
   };
 
   const onDrop = (sourceSquare: string, targetSquare: string): boolean => {
-    // Prevent move if no opponent has joined
-    if (!hasOpponent && matchType !== 'bot') {
-      console.log('Waiting for opponent to join...');
+    // Check if the user is a player in this game
+    const chessPlayers =
+      (roomState as { chessPlayers?: ChessPlayer[] })?.chessPlayers || [];
+    const isPlayer =
+      matchType === "bot" || chessPlayers.some((p) => p.user._id === user?._id);
+
+    if (!isPlayer) {
+      console.log("Spectators cannot make moves");
       return false;
     }
-    
+
+    // Prevent move if no opponent has joined (for non-bot games)
+    if (!hasOpponent && matchType !== "bot") {
+      console.log("Waiting for opponent to join...");
+      return false;
+    }
+
     // Check if it's the current player's turn based on the game state
     const currentTurn = game.turn();
     const isPlayerTurn =
@@ -708,6 +736,7 @@ export function ChessGameClean({
     if (!isPlayerTurn) {
       return false;
     }
+
     return makeMove(sourceSquare, targetSquare);
   };
 
@@ -878,7 +907,8 @@ export function ChessGameClean({
   };
 
   // Show waiting overlay if no opponent has joined
-  const showWaitingOverlay = !hasOpponent && matchType !== 'bot' && !game.isGameOver();
+  const showWaitingOverlay =
+    !hasOpponent && matchType !== "bot" && !game.isGameOver();
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -893,7 +923,9 @@ export function ChessGameClean({
             </p>
             <div className="bg-gray-800/50 p-3 rounded border border-dashed border-gray-700">
               <code className="text-cyan-300 break-all">
-                {typeof window !== 'undefined' ? window.location.href : 'Loading...'}
+                {typeof window !== "undefined"
+                  ? window.location.href
+                  : "Loading..."}
               </code>
             </div>
           </div>
@@ -981,7 +1013,7 @@ export function ChessGameClean({
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
               {/* Top Player (Opponent) */}
-              {players[0].id !== '1' ? (
+              {players[0].id !== "1" ? (
                 <Player
                   player={players[0]}
                   isCurrentPlayer={
@@ -995,32 +1027,67 @@ export function ChessGameClean({
                 />
               ) : (
                 <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
-                  <p className="text-cyan-400 font-medium">Awaiting opponent...</p>
-                  <p className="text-sm text-gray-400 mt-1">Share the room link to invite a friend</p>
+                  <p className="text-cyan-400 font-medium">
+                    Awaiting opponent...
+                  </p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Share the room link to invite a friend
+                  </p>
                 </div>
               )}
 
               {/* Chess Board */}
-              <div
-                ref={boardRef}
-                className="w-full aspect-square max-w-[600px] relative"
-              >
+              {/* Chessboard Container */}
+              <div className="w-full aspect-square max-w-[600px] relative">
                 <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-fuchsia-500 rounded-sm opacity-50 blur-sm -z-10" />
+                
+                {/* Spectator overlay - blocks interactions */}
+                {(() => {
+                  const chessPlayers = (roomState as { chessPlayers?: ChessPlayer[] })?.chessPlayers || [];
+                  const isPlayer = matchType === 'bot' || chessPlayers.some(p => p.user._id === user?._id);
+                  
+                  if (!isPlayer) {
+                    return (
+                      <div 
+                        className="absolute inset-0 z-10 cursor-not-allowed"
+                        style={{ pointerEvents: 'auto' }}
+                        onClick={(e) => e.preventDefault()}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+                
+                <div ref={boardRef} className="w-full h-full">
+                  <Chessboard
+                    position={gamePosition}
+                    onPieceDrop={onDrop}
+                    onSquareClick={onSquareClick}
+                    isDraggablePiece={({ piece }) => {
+                      // Only allow dragging if the user is a player and it's their turn
+                      const chessPlayers = (roomState as { chessPlayers?: ChessPlayer[] })?.chessPlayers || [];
+                      const isPlayer = matchType === 'bot' || chessPlayers.some(p => p.user._id === user?._id);
+                      if (!isPlayer) return false;
 
-                <Chessboard
-                  position={gamePosition}
-                  onPieceDrop={onDrop}
-                  onSquareClick={onSquareClick}
-                  customBoardStyle={{
-                    borderRadius: "4px",
-                    boxShadow: "0 0 30px rgba(0, 255, 255, 0.3)",
-                  }}
-                  customDarkSquareStyle={{ backgroundColor: "#1f2937" }}
-                  customLightSquareStyle={{ backgroundColor: "#374151" }}
-                  customSquareStyles={getCustomSquareStyles()}
-                  customPieces={customPieces()}
-                  boardOrientation={myColor}
-                />
+                      // Only allow dragging pieces of the current player's color
+                      const pieceColor = piece[0] === 'w' ? 'white' : 'black';
+                      return (
+                        pieceColor === myColor && 
+                        ((game.turn() === 'w' && myColor === 'white') || 
+                         (game.turn() === 'b' && myColor === 'black'))
+                      );
+                    }}
+                    customBoardStyle={{
+                      borderRadius: "4px",
+                      boxShadow: "0 0 30px rgba(0, 255, 255, 0.3)",
+                    }}
+                    customDarkSquareStyle={{ backgroundColor: "#1f2937" }}
+                    customLightSquareStyle={{ backgroundColor: "#374151" }}
+                    customSquareStyles={getCustomSquareStyles()}
+                    customPieces={customPieces()}
+                    boardOrientation={myColor}
+                  />
+                </div>
 
                 {/* Animated piece overlay */}
                 <AnimatePresence>
