@@ -27,7 +27,7 @@ export interface User {
   title?: string;
   status?: "online" | "offline" | "playing";
   xp?: number;
-  // maxXp?: number;
+  maxXp?: number;
   participantId: string;
   wins?: number; //<===TODO: Add to backend
   losses?: number; //<===TODO: Add to backend

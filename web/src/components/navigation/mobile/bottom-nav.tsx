@@ -11,13 +11,13 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { BeveledButton } from "@/components/ui/beveled-button";
 import {
-  BellSimpleIcon,
   ChatCenteredIcon,
   HouseSimpleIcon,
   Icon,
   IconProps,
   MagnifyingGlassIcon,
   PlusIcon,
+  GameControllerIcon,
 } from "@phosphor-icons/react";
 
 const navItems = [
@@ -32,19 +32,19 @@ const navItems = [
     Icon: MagnifyingGlassIcon,
   },
   {
-    name: "About",
-    link: "/about",
+    name: "Chess",
+    link: "/",
     Icon: PlusIcon,
   },
   {
     name: "Notification",
     link: "/",
-    Icon: BellSimpleIcon,
+    Icon: GameControllerIcon,
   },
 
   {
     name: "Profile",
-    link: "/contact",
+    link: "/",
     Icon: ChatCenteredIcon,
   },
 ];

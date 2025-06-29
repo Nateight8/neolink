@@ -14,7 +14,7 @@ import { AllyCard } from "./ally-card";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { axiosInstance } from "@/lib/axios-instance";
-import { User } from "@/types/chat";
+import { User } from "@/contexts/auth-context";
 
 export default function AlliesRecommendation() {
   const queryClient = useQueryClient();

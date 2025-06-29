@@ -94,7 +94,7 @@ export default function MainFeed() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <FeedPost className="line-clamp-5" post={post} />
+                <FeedPost post={post} />
               </motion.div>
             ))}
           </AnimatePresence>

@@ -1,4 +1,4 @@
-import { User } from "@/types/chat";
+import { User } from "@/contexts/auth-context";
 import { axiosInstance } from "./axios-instance";
 
 export default async function getStreamToken() {

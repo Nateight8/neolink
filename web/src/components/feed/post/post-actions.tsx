@@ -1,13 +1,7 @@
 import { useAuth } from "@/contexts/auth-context";
 import { useEngagement } from "@/hooks/api/use-engagement";
 import { Post } from "@/types/chat";
-import {
-  MessageSquare,
-  Heart,
-  Flag,
-  Bookmark,
-  ArrowBigUpDash,
-} from "lucide-react";
+
 import React, { useState } from "react";
 import { motion } from "motion/react";
 import {
@@ -16,6 +10,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  BookmarkSimpleIcon,
+  ChatCenteredTextIcon,
+  FlagIcon,
+  HeartIcon,
+  RepeatIcon,
+} from "@phosphor-icons/react";
 
 export default function PostActions({ post }: { post: Post }) {
   const { user } = useAuth();
@@ -51,8 +52,8 @@ export default function PostActions({ post }: { post: Post }) {
               }
               className="flex-1 flex items-center justify-center p-2 rounded-md transition-colors duration-200 hover:bg-muted hover:text-cyan-400"
             >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              <span>Reply</span>
+              <ChatCenteredTextIcon className="w-4 h-4 mr-2" />
+              <span>{0}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>comment</TooltipContent>
@@ -85,7 +86,7 @@ export default function PostActions({ post }: { post: Post }) {
                   times: [0, 0.2, 0.4, 0.6, 0.8, 1],
                 }}
               >
-                <Heart
+                <HeartIcon
                   className={`w-4 h-4 mr-2 transition-all duration-300 ${
                     isLiked ? "fill-current" : ""
                   }`}
@@ -117,8 +118,8 @@ export default function PostActions({ post }: { post: Post }) {
               }
               className="flex-1 flex items-center justify-center p-2 rounded-md transition-colors duration-200 hover:bg-muted hover:text-green-400"
             >
-              <ArrowBigUpDash className="w-4 h-4 mr-2" />
-              <span>Share</span>
+              <RepeatIcon className="w-4 h-4 mr-2" />
+              <span> {0}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>Share post</TooltipContent>
@@ -133,10 +134,10 @@ export default function PostActions({ post }: { post: Post }) {
                 isBookmarked ? "text-yellow-400" : "hover:text-yellow-400"
               }`}
             >
-              <Bookmark
+              <BookmarkSimpleIcon
                 className={`w-4 h-4 mr-2 ${isBookmarked ? "fill-current" : ""}`}
               />
-              <span>{isBookmarked ? "Saved" : "Save"}</span>
+              {/* <span>{0}</span> */}
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -153,8 +154,8 @@ export default function PostActions({ post }: { post: Post }) {
               }
               className="flex-1 flex items-center justify-center p-2 rounded-md transition-colors duration-200 hover:bg-muted hover:text-red-500"
             >
-              <Flag className="w-4 h-4 mr-2" />
-              <span>Report</span>
+              <FlagIcon className="w-4 h-4 mr-2" />
+              {/* <span>Report</span> */}
             </button>
           </TooltipTrigger>
           <TooltipContent>Report post</TooltipContent>

@@ -73,13 +73,13 @@ export default function ChallengeInvite({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="max-w-md gap-1 relative w-full flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="max-w-md gap-1 relative w-full grid grid-cols-2">
         <PlayerCard creator={creator} post={post} />
         {opponent ? (
           <PlayerCard creator={opponent} post={post} />
         ) : (
           <button
-            className="relative group size-64 aspect-square hover:cursor-pointer"
+            className="relative group aspect-square hover:cursor-pointer"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleAcceptChallenge}
@@ -220,51 +220,51 @@ export default function ChallengeInvite({ post }: { post: Post }) {
                 </AnimatePresence>
               </div>
             </div>
-            <div className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center justify-center">
-              <p className="font-mono text-2xl">VS</p>
-            </div>
           </button>
         )}
-      </div>
-      <div className="col-span-full pt-3 max-w-md">
-        {(() => {
-          if (isPlayer) {
+        <div className="absolute inset-0 flex items-center justify-center">
+          <p className="font-mono text-2xl">VS</p>
+        </div>
+        <div className="col-span-full pt-3">
+          {(() => {
+            if (isPlayer) {
+              return (
+                <BeveledButton
+                  className="w-full"
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={handleRoomEnter}
+                >
+                  Continue
+                </BeveledButton>
+              );
+            }
+
+            if (opponent) {
+              return (
+                <BeveledButton
+                  className="w-full"
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={handleRoomEnter}
+                >
+                  Spectate
+                </BeveledButton>
+              );
+            }
+
             return (
               <BeveledButton
                 className="w-full"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                onClick={handleRoomEnter}
+                onClick={handleAcceptChallenge}
               >
-                Continue
+                Accept Challenge
               </BeveledButton>
             );
-          }
-
-          if (opponent) {
-            return (
-              <BeveledButton
-                className="w-full"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onClick={handleRoomEnter}
-              >
-                Spectate
-              </BeveledButton>
-            );
-          }
-
-          return (
-            <BeveledButton
-              className="w-full"
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onClick={handleAcceptChallenge}
-            >
-              Accept Challenge
-            </BeveledButton>
-          );
-        })()}
+          })()}
+        </div>
       </div>
     </>
   );
@@ -278,7 +278,7 @@ function PlayerCard({
   post: Post;
 }) {
   return (
-    <div className="relative group size-64 aspect-square">
+    <div className="relative group aspect-square">
       <div className="h-full w-full p-4 overflow-hidden transition-all duration-300 bg-gray-900/50 hover:bg-gray-800/50 border border-gray-800 hover:border-fuchsia-500/30 rounded-lg">
         <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">

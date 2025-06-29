@@ -62,7 +62,7 @@ export default function FeedPost({
               <div className="w-full break-words">
                 <FormattedContent
                   content={post.content}
-                  className={cn("break-words w-full line-clamp-5")}
+                  className={cn("break-words w-full", className)}
                 />
               </div>
             </div>
@@ -73,14 +73,6 @@ export default function FeedPost({
             )}
             {post.chess && (
               <div className="my-4">
-                {/* <ChessInvite
-                  gameId={post.chess.roomId}
-                  timeControl={post.chess.timeControl}
-                  rated={post.chess.rated}
-                  onClick={handleIt}
-                  disabled={acceptChallenge.isPending}
-                /> */}
-
                 <ChallengeInvite post={post} />
               </div>
             )}

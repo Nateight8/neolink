@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 // import { Badge } from "@/components/ui/badge";
 import { UserPlus, X, Users } from "lucide-react";
 // import { NeuralIndicator } from "@/components/messages/neural-indicator";
-import { User } from "@/types/chat";
+import { User } from "@/contexts/auth-context";
 import { useMutation } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios-instance";
 

@@ -12,15 +12,6 @@ import {
   useSpring,
   useTransform,
 } from "motion/react";
-import {
-  Home,
-  Search,
-  Bell,
-  MessageSquare,
-  User,
-  Plus,
-  ArrowBigLeftDashIcon,
-} from "lucide-react";
 
 import { useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -29,6 +20,15 @@ import { useDoorTransition } from "@/hooks/use-page-transition";
 import { Button } from "../ui/button";
 import { CreatePostDialog } from "@/components/navigation/create-post-modal";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  ArrowFatLineLeftIcon,
+  BellIcon,
+  ChatCenteredIcon,
+  HouseSimpleIcon,
+  PlusIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 
 export const FloatingDock = ({
   desktopClassName,
@@ -44,8 +44,8 @@ export const FloatingDock = ({
   const navItemsTOUse = pathname.startsWith("/echo-net")
     ? [
         {
-          title: "HOME",
-          icon: <ArrowBigLeftDashIcon className="w-full h-full" />,
+          title: "Back",
+          icon: <ArrowFatLineLeftIcon className="w-full h-full" />,
           href: "/",
           action: () => router.back(),
         },
@@ -200,7 +200,7 @@ const FloatingDockMobile = ({
 
                 {/* Icon */}
                 <div className="h-6 w-6 relative z-10">
-                  <Plus className="w-full h-full" />
+                  <PlusIcon className="w-full h-full" />
                 </div>
 
                 {/* Hover state background */}
@@ -316,7 +316,7 @@ const FloatingDockDesktop = ({
             <IconContainer
               mouseX={mouseX}
               title="Post"
-              icon={<Plus className="w-full h-full" />}
+              icon={<PlusIcon className="w-full h-full" />}
               href="#"
               action={() => setIsCreatePostOpen(true)}
             />
@@ -499,28 +499,28 @@ function IconContainer({
 const navItems = [
   {
     title: "HOME",
-    icon: <Home className="w-full h-full" />,
+    icon: <HouseSimpleIcon className="w-full h-full" />,
     href: "/",
   },
   {
     title: "SEARCH",
-    icon: <Search className="w-full h-full" />,
+    icon: <MagnifyingGlassIcon className="w-full h-full" />,
     href: "/search",
     action: () => {},
   },
   {
     title: "ALERTS",
-    icon: <Bell className="w-full h-full" />,
+    icon: <BellIcon className="w-full h-full" />,
     href: "/alerts",
   },
   {
     title: "MESSAGES",
-    icon: <MessageSquare className="w-full h-full" />,
+    icon: <ChatCenteredIcon className="w-full h-full" />,
     href: "/echo-net",
   },
   {
     title: "PROFILE",
-    icon: <User className="w-full h-full" />,
+    icon: <UserIcon className="w-full h-full" />,
     href: "/biochip",
   },
 ];
