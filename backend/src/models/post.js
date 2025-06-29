@@ -44,6 +44,22 @@ const postSchema = new mongoose.Schema(
   }
 );
 
+// Add pre-remove middleware to delete associated chess room when a post is deleted
+postSchema.pre('remove', async function(next) {
+  try {
+    // Only proceed if the post has a chess room
+    if (this.chess) {
+      const ChessRoom = mongoose.model('ChessRoom');
+      await ChessRoom.findByIdAndDelete(this.chess);
+      console.log(`Deleted chess room ${this.chess} associated with post ${this._id}`);
+    }
+    next();
+  } catch (error) {
+    console.error('Error in post pre-remove middleware:', error);
+    next(error);
+  }
+});
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;

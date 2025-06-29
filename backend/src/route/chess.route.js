@@ -3,6 +3,7 @@ import {
   acceptChessChallenge,
   getChessRoomState,
   makeChessMove,
+  getActiveGameStatus,
 } from "../controllers/chess.controllers.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
@@ -16,5 +17,8 @@ router.get("/room/:roomId", authMiddleware, getChessRoomState);
 
 // Make a chess move (auth required)
 router.post("/room/:roomId/move", authMiddleware, makeChessMove);
+
+// Get active game status for the current user (auth required)
+router.get("/status", authMiddleware, getActiveGameStatus);
 
 export default router;

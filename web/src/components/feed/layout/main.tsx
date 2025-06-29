@@ -55,6 +55,7 @@ export default function MainFeed() {
     <>
       <>
         {/* Navigation bar */}
+        <AppBar />
 
         {/* Posts */}
         {isLoading ? (

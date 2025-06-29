@@ -121,6 +121,30 @@ export const getChessRoomState = async (req, res) => {
   }
 };
 
+export const getActiveGameStatus = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    // Find any active games where the user is a player
+    const activeGame = await ChessRoom.findOne({
+      'chessPlayers.user': userId,
+      status: 'ongoing'
+    }, 'roomId').lean();
+
+    if (!activeGame) {
+      return res.status(200).json({ hasActiveGame: false });
+    }
+
+    return res.status(200).json({
+      hasActiveGame: true,
+      roomId: activeGame.roomId
+    });
+  } catch (error) {
+    console.error('Error fetching active game status:', error);
+    return res.status(500).json({ error: 'Failed to fetch active game status' });
+  }
+};
+
 export const makeChessMove = async (req, res) => {
   try {
     const { roomId } = req.params;

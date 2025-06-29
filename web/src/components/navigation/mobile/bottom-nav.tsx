@@ -13,47 +13,10 @@ import { BeveledButton } from "@/components/ui/beveled-button";
 import {
   ChatCenteredIcon,
   HouseSimpleIcon,
-  Icon,
-  IconProps,
   MagnifyingGlassIcon,
   PlusIcon,
-  GameControllerIcon,
 } from "@phosphor-icons/react";
-
-const navItems = [
-  {
-    name: "Home",
-    link: "/",
-    Icon: HouseSimpleIcon,
-  },
-  {
-    name: "Search",
-    link: "/",
-    Icon: MagnifyingGlassIcon,
-  },
-  {
-    name: "Chess",
-    link: "/",
-    Icon: PlusIcon,
-  },
-  {
-    name: "Notification",
-    link: "/",
-    Icon: GameControllerIcon,
-  },
-
-  {
-    name: "Profile",
-    link: "/",
-    Icon: ChatCenteredIcon,
-  },
-];
-
-interface NavItem {
-  name: string;
-  link: string;
-  Icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<Icon>>;
-}
+import GameButton from "./game-button";
 
 export const BottomNav = ({ className }: { className?: string }) => {
   const { scrollYProgress } = useScroll();
@@ -102,15 +65,52 @@ export const BottomNav = ({ className }: { className?: string }) => {
           {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/20 to-transparent animate-ping" /> */}
         </div>
         <div className="flex items-center h-14 w-full">
-          <NavItem {...navItems[0]} />
-          <NavItem {...navItems[1]} />
+          {/* Home */}
+          <div className="flex-1">
+            <Link
+              href="/"
+              className={cn(
+                "flex flex-col items-center justify-center transition-colors"
+              )}
+            >
+              <HouseSimpleIcon className="size-6 text-muted-foreground" />
+              {/* <span className="text-xs text-muted-foreground">{name}</span> */}
+            </Link>
+          </div>
+          {/* Search */}
+          <div className="flex-1">
+            <Link
+              href="/"
+              className={cn(
+                "flex flex-col items-center justify-center transition-colors"
+              )}
+            >
+              <MagnifyingGlassIcon className="size-6 text-muted-foreground" />
+              {/* <span className="text-xs text-muted-foreground">{name}</span> */}
+            </Link>
+          </div>
+          {/* Add */}
           <div className="flex-1 flex justify-center">
             <BeveledButton variant="cyan" size="icon">
               <PlusIcon size={24} className="text-cyan-500/40" />
             </BeveledButton>
           </div>
-          <NavItem {...navItems[3]} />
-          <NavItem {...navItems[4]} />
+          {/* Notification */}
+          {/* Game */}
+          <GameButton />
+
+          <div className="flex-1">
+            <Link
+              href="/"
+              className={cn(
+                "flex flex-col items-center justify-center transition-colors"
+              )}
+            >
+              <ChatCenteredIcon className="size-6 text-muted-foreground" />
+              {/* <span className="text-xs text-muted-foreground">{name}</span> */}
+            </Link>
+          </div>
+
           {/* {navItems.map((item) => (
             <NavItem key={item.name} {...item} />
           ))} */}
@@ -119,20 +119,3 @@ export const BottomNav = ({ className }: { className?: string }) => {
     </AnimatePresence>
   );
 };
-
-function NavItem({ Icon, link, name }: NavItem) {
-  return (
-    <div className="flex-1">
-      <Link
-        key={`link-${name}`}
-        href={link}
-        className={cn(
-          "flex flex-col items-center justify-center transition-colors"
-        )}
-      >
-        <Icon className="size-6 text-muted-foreground" />
-        {/* <span className="text-xs text-muted-foreground">{name}</span> */}
-      </Link>
-    </div>
-  );
-}
