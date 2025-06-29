@@ -10,32 +10,49 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BellSimpleIcon, UserIcon } from "@phosphor-icons/react";
+import { usePathname, useRouter } from "next/navigation";
 
 export function AppBar() {
   const { scrollYProgress } = useScroll();
   const [visible, setVisible] = useState(false);
-
-  const handleProfileClick = () => {
-    // Navigate to profile or open profile menu
-    console.log("Profile clicked");
+  const router = useRouter();
+  const handleRoute = (route: string) => {
+    router.push(route);
   };
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
     // Check if current is not undefined and is a number
     if (typeof current === "number") {
+      const scrollPosition = window.scrollY;
       const direction = current! - scrollYProgress.getPrevious()!;
 
-      if (scrollYProgress.get() < 0.05) {
-        setVisible(false);
+      // Always show when at the top of the page
+      if (scrollPosition <= 5) {
+        setVisible(true);
       } else {
-        if (direction < 0) {
-          setVisible(true);
-        } else {
-          setVisible(false);
-        }
+        // Show when scrolling up, hide when scrolling down
+        setVisible(direction < 0);
       }
     }
   });
+
+  // Initial check for page load
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      setVisible(window.scrollY <= 5);
+    }
+  }, []);
+
+  const pathname = usePathname();
+
+  const hideBottomNavRoutes = [""];
+
+  if (
+    hideBottomNavRoutes.includes(pathname) ||
+    pathname.startsWith("/chats/")
+  ) {
+    return null;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -59,7 +76,7 @@ export function AppBar() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleProfileClick}
+            onClick={() => handleRoute("/profile")}
             className="rounded-full h-8 w-8"
             aria-label="User profile"
           >
@@ -78,6 +95,7 @@ export function AppBar() {
         <div className="flex flex-1 pr-4 items-center justify-end">
           {/* Right side content can be added here if needed */}
           <button
+            onClick={() => handleRoute("/alerts")}
             className={cn(
               "flex flex-col items-center justify-center transition-colors"
             )}

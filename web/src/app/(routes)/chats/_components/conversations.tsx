@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
-import { ConversationList } from "@/app/(routes)/echo-net/_components/list";
+// import { ConversationList } from "@/app/(routes)/echo-net/_components/list";
 import { useConversationParticipants } from "@/hooks/api/use-direct-message";
+import { ConversationList } from "./list";
 
 export default function Conversations() {
   const [searchQuery, setSearchQuery] = useState("");

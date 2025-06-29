@@ -7,7 +7,6 @@ import {
   useMotionValueEvent,
 } from "motion/react";
 import { cn } from "@/lib/utils";
-
 import Link from "next/link";
 import { BeveledButton } from "@/components/ui/beveled-button";
 import {
@@ -17,28 +16,51 @@ import {
   PlusIcon,
 } from "@phosphor-icons/react";
 import GameButton from "./game-button";
+import { usePathname } from "next/navigation";
+import { CreatePostDialog } from "../create-post-modal";
 
 export const BottomNav = ({ className }: { className?: string }) => {
   const { scrollYProgress } = useScroll();
-
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
     // Check if current is not undefined and is a number
     if (typeof current === "number") {
+      const scrollPosition = window.scrollY;
+      const scrollHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       const direction = current! - scrollYProgress.getPrevious()!;
 
-      if (scrollYProgress.get() < 0.05) {
-        setVisible(false);
+      // Always show when at the bottom of the page or when scrolling up
+      if (scrollPosition >= scrollHeight - 10 || direction < 0) {
+        setVisible(true);
       } else {
-        if (direction < 0) {
-          setVisible(true);
-        } else {
-          setVisible(false);
-        }
+        // Hide when scrolling down (unless near bottom)
+        setVisible(false);
       }
     }
   });
+
+  // Initial check for page load
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const scrollHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      setVisible(window.scrollY >= scrollHeight - 10);
+    }
+  }, []);
+
+  const pathname = usePathname();
+
+  const hideBottomNavRoutes = [""];
+
+  if (
+    hideBottomNavRoutes.includes(pathname) ||
+    pathname.startsWith("/chats/")
+  ) {
+    return null;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -80,7 +102,7 @@ export const BottomNav = ({ className }: { className?: string }) => {
           {/* Search */}
           <div className="flex-1">
             <Link
-              href="/"
+              href="#"
               className={cn(
                 "flex flex-col items-center justify-center transition-colors"
               )}
@@ -91,7 +113,11 @@ export const BottomNav = ({ className }: { className?: string }) => {
           </div>
           {/* Add */}
           <div className="flex-1 flex justify-center">
-            <BeveledButton variant="cyan" size="icon">
+            <BeveledButton 
+              variant="cyan" 
+              size="icon"
+              onClick={() => setIsCreatePostOpen(true)}
+            >
               <PlusIcon size={24} className="text-cyan-500/40" />
             </BeveledButton>
           </div>
@@ -101,7 +127,7 @@ export const BottomNav = ({ className }: { className?: string }) => {
 
           <div className="flex-1">
             <Link
-              href="/"
+              href="/chats"
               className={cn(
                 "flex flex-col items-center justify-center transition-colors"
               )}
@@ -116,6 +142,10 @@ export const BottomNav = ({ className }: { className?: string }) => {
           ))} */}
         </div>
       </motion.div>
+      <CreatePostDialog 
+        open={isCreatePostOpen} 
+        onOpenChange={setIsCreatePostOpen} 
+      />
     </AnimatePresence>
   );
 };

@@ -54,7 +54,7 @@ export function ConversationList({ conversations }: ConversationListProps) {
         sortedConversations.map((conversation) => (
           <div
             key={conversation.id}
-            onClick={() => router.push(`/echo-net/${conversation.id}`)}
+            onClick={() => router.push(`/chats/${conversation.id}`)}
             className={`p-4 hover:bg-cyan-950/20  cursor-pointer transition-colors ${
               activeConversation === conversation.id
                 ? "bg-cyan-950/30 border-l border-y border-cyan-500"

@@ -516,11 +516,11 @@ const navItems = [
   {
     title: "MESSAGES",
     icon: <ChatCenteredIcon className="w-full h-full" />,
-    href: "/echo-net",
+    href: "/chats",
   },
   {
     title: "PROFILE",
     icon: <UserIcon className="w-full h-full" />,
-    href: "/biochip",
+    href: "/profile",
   },
 ];
