@@ -73,7 +73,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
 
   return (
     <>
-      <div className="max-w-md gap-1 relative w-full flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="max-w-lg gap-1 relative w-full flex overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <PlayerCard creator={creator} post={post} />
         {opponent ? (
           <PlayerCard creator={opponent} post={post} />
@@ -226,7 +226,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
           </button>
         )}
       </div>
-      <div className="col-span-full pt-3 max-w-md">
+      <div className="col-span-full pt-3 max-w-lg">
         {(() => {
           if (isPlayer) {
             return (

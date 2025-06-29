@@ -55,7 +55,6 @@ export default function MainFeed() {
     <>
       <>
         {/* Navigation bar */}
-        <AppBar />
 
         {/* Posts */}
         {isLoading ? (
@@ -94,7 +93,7 @@ export default function MainFeed() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <FeedPost post={post} />
+                <FeedPost className="line-clamp-5" post={post} />
               </motion.div>
             ))}
           </AnimatePresence>
