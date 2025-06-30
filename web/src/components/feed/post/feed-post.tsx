@@ -51,14 +51,7 @@ export default function FeedPost({
           </div>
           <div className="flex-1 min-w-0">
             <div className="w-full">
-              <UserData
-                name={post.author.username || "UN"}
-                handle={post.author.handle || ""}
-                timestamp={post.updatedAt || ""}
-                participantId={post.author.participantId}
-                avatar={avatar || ""}
-                bio={post.author.bio || ""}
-              />
+              <UserData post={post} />
               <div className="w-full break-words">
                 <FormattedContent
                   content={post.content}

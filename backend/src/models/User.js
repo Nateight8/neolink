@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import { Snowflake } from '@theinternetfolks/snowflake';
+import { Snowflake } from "@theinternetfolks/snowflake";
 
 const userSchema = new mongoose.Schema(
   {
@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       unique: true,
-      sparse: true, // <-- important username can be null for a shortwhile
+      sparse: true,
       trim: true,
     },
 
@@ -39,17 +39,42 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
+    stats: {
+      posts: {
+        type: Number,
+        default: 0,
+      },
+      allies: {
+        type: Number,
+        default: 0,
+      },
+      power: {
+        type: Number,
+        default: 0,
+      },
+    },
+
+    achievements: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Achievement",
+      },
+    ],
+
     hasSeenSuggestions: {
       type: Boolean,
       default: false,
     },
+
     isEmailVerified: {
       type: Boolean,
       default: false,
     },
+
     emailVerificationToken: {
       type: String,
     },
+
     emailVerificationTokenExpires: {
       type: Date,
     },
@@ -60,6 +85,7 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
     participantId: {
       type: String,
       unique: true,

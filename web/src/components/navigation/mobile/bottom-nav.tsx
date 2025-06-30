@@ -7,6 +7,7 @@ import {
   useMotionValueEvent,
 } from "motion/react";
 import { cn } from "@/lib/utils";
+
 import Link from "next/link";
 import { BeveledButton } from "@/components/ui/beveled-button";
 import {
@@ -17,11 +18,10 @@ import {
 } from "@phosphor-icons/react";
 import GameButton from "./game-button";
 import { usePathname } from "next/navigation";
-import { CreatePostDialog } from "../create-post-modal";
 
 export const BottomNav = ({ className }: { className?: string }) => {
   const { scrollYProgress } = useScroll();
-  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+
   const [visible, setVisible] = useState(false);
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
@@ -57,7 +57,8 @@ export const BottomNav = ({ className }: { className?: string }) => {
 
   if (
     hideBottomNavRoutes.includes(pathname) ||
-    pathname.startsWith("/chats/")
+    pathname.startsWith("/chats/") ||
+    pathname.startsWith("/room")
   ) {
     return null;
   }
@@ -113,11 +114,7 @@ export const BottomNav = ({ className }: { className?: string }) => {
           </div>
           {/* Add */}
           <div className="flex-1 flex justify-center">
-            <BeveledButton 
-              variant="cyan" 
-              size="icon"
-              onClick={() => setIsCreatePostOpen(true)}
-            >
+            <BeveledButton variant="cyan" size="icon">
               <PlusIcon size={24} className="text-cyan-500/40" />
             </BeveledButton>
           </div>
@@ -142,10 +139,6 @@ export const BottomNav = ({ className }: { className?: string }) => {
           ))} */}
         </div>
       </motion.div>
-      <CreatePostDialog 
-        open={isCreatePostOpen} 
-        onOpenChange={setIsCreatePostOpen} 
-      />
     </AnimatePresence>
   );
 };

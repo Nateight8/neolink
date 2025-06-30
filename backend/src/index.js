@@ -8,6 +8,7 @@ import session from "express-session";
 import MongoStore from "connect-mongo";
 import cors from "cors";
 
+import "./models/achievement.model.js";
 import { connectDB } from "./lib/db.js";
 import usersRoute from "./route/user.route.js";
 import postRouter from "./route/post.route.js";
@@ -15,6 +16,7 @@ import notificationRoute from "./route/notifications.js";
 import pollRouter from "./route/poll.route.js";
 import dmRoute from "./route/dm.route.js";
 import chessRoute from "./route/chess.route.js";
+import userProfileRouter from "./route/user-profile.route.js";
 
 configDotenv();
 
@@ -178,6 +180,7 @@ app.use("/api/notifications", notificationRoute);
 app.use("/api/polls", pollRouter);
 app.use("/api/dm", dmRoute);
 app.use("/api/chess", chessRoute);
+app.use("/api/profiles", userProfileRouter);
 
 // Socket.IO connection logic
 io.on("connection", async (socket) => {

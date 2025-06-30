@@ -69,16 +69,16 @@ export default function Conversations() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-black border-r border-cyan-900 text-white">
+    <div className="flex flex-col h-full bg-black md:border-r border-cyan-900 text-white">
       {/* Header */}
-      <div className="p-4 md:border-b md:border-cyan-900/50">
+      <div className="p-4 md:border-b md:border-cyan-900/50 opacity-0 md:opacity-100 ">
         <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
           Echo Net
         </h1>
       </div>
 
       {/* Search */}
-      <div className="px-4 py-2">
+      <div className="px-4 py-2 mt">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input

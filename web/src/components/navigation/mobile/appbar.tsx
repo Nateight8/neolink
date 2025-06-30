@@ -9,8 +9,13 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BellSimpleIcon, UserIcon } from "@phosphor-icons/react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  ArrowFatLeftIcon,
+  BellSimpleIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { GlitchText } from "@/components/feed/glitch-text";
 
 export function AppBar() {
   const { scrollYProgress } = useScroll();
@@ -44,12 +49,19 @@ export function AppBar() {
   }, []);
 
   const pathname = usePathname();
+  const params = useParams();
 
-  const hideBottomNavRoutes = [""];
+  console.log(params.username);
+  const username = params.username;
+  // Check if we have a username parameter
+  const isUsernamePage = username && typeof username === "string";
+
+  const hideBottomNavRoutes = ["/chess", ""];
 
   if (
     hideBottomNavRoutes.includes(pathname) ||
-    pathname.startsWith("/chats/")
+    pathname.startsWith("/chats/") ||
+    pathname.startsWith("/room")
   ) {
     return null;
   }
@@ -76,21 +88,46 @@ export function AppBar() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => handleRoute("/profile")}
+            onClick={() => {
+              if (pathname === "/profile") {
+                router.back();
+              } else {
+                handleRoute("/profile");
+              }
+            }}
             className="rounded-full h-8 w-8"
             aria-label="User profile"
           >
-            <Avatar className="size-6">
-              <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-              <AvatarFallback className="bg-black text-cyan-400 font-bold">
-                <UserIcon size={32} />
-              </AvatarFallback>
-            </Avatar>
+            {pathname === "/profile" ||
+            pathname.startsWith("/chats") ||
+            isUsernamePage ? (
+              <ArrowFatLeftIcon size={24} />
+            ) : (
+              <Avatar className="size-6">
+                <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
+                <AvatarFallback className="bg-black text-cyan-400 font-bold">
+                  <UserIcon size={32} />
+                </AvatarFallback>
+              </Avatar>
+            )}
           </Button>
         </div>
         <div className="flex flex-1 items-center justify-center">
           {/* Center content can be added here if needed */}
-          <p className="font-mono text-xl">N</p>
+          <p className="font-mono text-xl text-center tracking-wider">
+            {(() => {
+              switch (true) {
+                case pathname === "/profile":
+                  return "PROFILE";
+                case isUsernamePage:
+                  return (
+                    <GlitchText text={username} className="text-cyan-400" />
+                  );
+                default:
+                  return "NOE";
+              }
+            })()}
+          </p>
         </div>
         <div className="flex flex-1 pr-4 items-center justify-end">
           {/* Right side content can be added here if needed */}

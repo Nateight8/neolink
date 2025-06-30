@@ -29,17 +29,18 @@ export function FormattedContent({
 
   return (
     <>
-      <div className={className}>
+      <div
+        className={cn("break-words w-full text-muted-foreground", className)}
+      >
         {paragraphs.map((paragraph, paragraphIndex) => {
           const isLastParagraph = paragraphIndex === paragraphs.length - 1;
           const lines = paragraph.split("\n");
           return (
             <p
               key={paragraphIndex}
-              className={cn(
-                "text-sm leading-relaxed text-muted-foreground text-pretty",
-                { "mb-6": !isLastParagraph }
-              )}
+              className={cn("text-sm leading-relaxed  text-pretty", {
+                "mb-6": !isLastParagraph,
+              })}
             >
               {lines.map((line, lineIndex) => {
                 const processedLine = line.split(" ").map((word, wordIndex) => {

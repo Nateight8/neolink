@@ -22,7 +22,7 @@ export default function ProfilePage() {
       <div className="relative z-10 h-screen bg-gradient-to-b from-black/40 to-gray-900/60 overflow-y-auto">
         <div className="container max-w-3xl mx-auto px-4 py-8 text-center">
           {/* Fixed neon header bar */}
-          <div className="sticky top-0 z-20 pt-4 pb-6 bg-black/80 backdrop-blur-sm">
+          <div className="sticky hidden md:block top-0 z-20 pt-4 pb-6 bg-black/80 backdrop-blur-sm">
             <div className="w-full h-2 bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-cyan-500 rounded-full shadow-[0_0_15px_rgba(0,255,255,0.7)] animate-pulse"></div>
           </div>
 
