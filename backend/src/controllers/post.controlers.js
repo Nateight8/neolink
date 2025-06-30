@@ -8,6 +8,7 @@ import {
   handleChessChallengeCreation,
   handleMentionProcessing,
 } from "../services/post.services.js";
+import { getPosts } from "../services/post.service.js";
 
 export const createPost = async (req, res) => {
   const session = await mongoose.startSession();
@@ -79,39 +80,8 @@ export const createPost = async (req, res) => {
 // Get all posts
 export const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate("author", "username name avatar verified handle participantId")
-      .populate({
-        path: "poll",
-        select: "question options visibility expiresAt totalVotes",
-        populate: {
-          path: "options",
-          select: "_id text votes",
-        },
-      })
-      .populate({
-        path: "chess",
-        select:
-          "roomId timeControl rated challenger status createdAt updatedAt post chessPlayers fen moves result",
-        populate: [
-          {
-            path: "chessPlayers.user",
-            select: "username name avatar verified handle participantId",
-          },
-        ],
-      })
-      .sort({ createdAt: -1 });
-
-    // Ensure roomId is present in the chess object for each post
-    const postsWithRoomId = posts.map((post) => {
-      const obj = post.toObject();
-      if (obj.chess && obj.chess.roomId) {
-        obj.chess.roomId = obj.chess.roomId;
-      }
-      return obj;
-    });
-
-    res.json(postsWithRoomId);
+    const posts = await getPosts();
+    res.json(posts);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

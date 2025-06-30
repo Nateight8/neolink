@@ -3,6 +3,7 @@ import { axiosInstance } from "@/lib/axios-instance";
 import { AxiosError } from "axios";
 import { User } from "@/contexts/auth-context";
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
+import type { Post } from "@/types/chat";
 
 export interface Achievement {
   name: string;
@@ -14,16 +15,6 @@ export interface Stats {
   posts: number;
   allies: number;
   power: number;
-}
-
-export interface Post {
-  _id: string;
-  content: string;
-  image?: string;
-  createdAt: string;
-  likes: number;
-  comments: number;
-  isLiked: boolean;
 }
 
 export interface ProfileResponse {

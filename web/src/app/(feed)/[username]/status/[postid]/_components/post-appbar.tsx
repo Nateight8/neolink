@@ -5,7 +5,7 @@ import { ArrowBigLeftDash } from "lucide-react";
 export default function PostAppBar() {
   const router = useRouter();
   return (
-    <div className="sticky top-0 pb-4 z-20 bg-background">
+    <div className="sticky hidden md:block top-0 pb-4 z-20 bg-background">
       <div className="h-0.5 border-b border-cyan-900 border-x "></div>
       <div className=" flex items-center gap-2 h-14 bg-black/80 backdrop-blur border-b border-cyan-900">
         <button

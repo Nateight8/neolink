@@ -11,7 +11,7 @@ export default async function Page({ params }: PageProps) {
   const postParams = await params;
 
   return (
-    <div className="">
+    <div className="mt-12 md:mt-0">
       <PostThread username={postParams.username} postid={postParams.postid} />
     </div>
   );

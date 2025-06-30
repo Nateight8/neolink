@@ -29,6 +29,7 @@ import {
   UserIcon,
 } from "@phosphor-icons/react";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import { useAuth } from "@/contexts/auth-context";
 
 export const FloatingDock = ({
   desktopClassName,
@@ -41,6 +42,40 @@ export const FloatingDock = ({
   const router = useRouter();
   // const isMobile = useMediaQuery("(max-width: 768px)");
   const isMobile = useIsMobile();
+
+  const { user } = useAuth();
+
+  const profileUrl = user?.username;
+
+  const navItems = [
+    {
+      title: "HOME",
+      icon: <HouseSimpleIcon className="w-full h-full" />,
+      href: "/",
+    },
+    {
+      title: "SEARCH",
+      icon: <MagnifyingGlassIcon className="w-full h-full" />,
+      href: "/search",
+      action: () => {},
+    },
+    {
+      title: "ALERTS",
+      icon: <BellIcon className="w-full h-full" />,
+      href: "/alerts",
+    },
+    {
+      title: "MESSAGES",
+      icon: <ChatCenteredIcon className="w-full h-full" />,
+      href: "/chats",
+    },
+    {
+      title: "PROFILE",
+      icon: <UserIcon className="w-full h-full" />,
+      href: `/${profileUrl}`,
+    },
+  ];
+
   const navItemsTOUse = pathname.startsWith("/echo-net")
     ? [
         {
@@ -495,32 +530,3 @@ function IconContainer({
     </motion.button>
   );
 }
-
-const navItems = [
-  {
-    title: "HOME",
-    icon: <HouseSimpleIcon className="w-full h-full" />,
-    href: "/",
-  },
-  {
-    title: "SEARCH",
-    icon: <MagnifyingGlassIcon className="w-full h-full" />,
-    href: "/search",
-    action: () => {},
-  },
-  {
-    title: "ALERTS",
-    icon: <BellIcon className="w-full h-full" />,
-    href: "/alerts",
-  },
-  {
-    title: "MESSAGES",
-    icon: <ChatCenteredIcon className="w-full h-full" />,
-    href: "/chats",
-  },
-  {
-    title: "PROFILE",
-    icon: <UserIcon className="w-full h-full" />,
-    href: "/profile",
-  },
-];

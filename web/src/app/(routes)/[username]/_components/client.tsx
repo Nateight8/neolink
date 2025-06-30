@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // import { Badge } from "@/components/ui/badge";
 
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
-import Posts from "@/components/profile/posts";
+// import FeedPost from "@/components/feed/post/feed-post";
 import { useAuth } from "@/contexts/auth-context";
 import {
   ChatCenteredIcon,
@@ -18,6 +18,8 @@ import { useProfile } from "@/hooks/api/use-profile";
 import { LoadingIndicator } from "@/components/loading-indicator";
 import { FormattedContent } from "@/components/shared/formatted-content";
 import { cn } from "@/lib/utils";
+// import { FeedPost } from "@/components/feed/feed-post";
+import FeedPost from "@/components/feed/post/feed-post";
 
 export default function ProfileClient({ username }: { username: string }) {
   const { user, logout } = useAuth();
@@ -39,9 +41,9 @@ export default function ProfileClient({ username }: { username: string }) {
   return (
     <div className="min-h-screen  relative">
       {/* Fixed Cyberpunk background with grid lines */}
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black z-0">
+      {/* <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black z-0">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-      </div>
+      </div> */}
 
       {/* Scrollable content container */}
       <div className="relative z-10 h-screen bg-gradient-to-b from-black/40 to-gray-900/60 overflow-y-auto">
@@ -157,7 +159,7 @@ export default function ProfileClient({ username }: { username: string }) {
           <div className="mb-8 max-w-xl mx-auto bg-black/80 border border-fuchsia-900 p-4 rounded-sm relative">
             <div className="absolute -inset-[1px] bg-gradient-to-r from-fuchsia-500 to-cyan-500 rounded-sm opacity-50 blur-[2px] -z-10"></div>
 
-            <p className="mb-3 text-lg text-white text-left">
+            <div className="mb-3 text-lg text-white text-left">
               {data?.user?.bio && data.user.bio.trim() !== "" ? (
                 <FormattedContent
                   content={data.user.bio}
@@ -168,7 +170,7 @@ export default function ProfileClient({ username }: { username: string }) {
                   {isLoggedInUser ? "TODO: add bio" : "ERROR: BIO_NOT_FOUND]"}
                 </span>
               )}
-            </p>
+            </div>
             {/* <div className="flex flex-wrap justify-center gap-2">
               <Badge
                 variant="outline"
@@ -214,8 +216,10 @@ export default function ProfileClient({ username }: { username: string }) {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="posts" className="mt-0">
-              <Posts />
+            <TabsContent value="posts" className="mt-0 text-left">
+              {data?.posts.map((post) => (
+                <FeedPost key={post._id} post={post} className="line-clamp-5" />
+              ))}
             </TabsContent>
 
             <TabsContent value="allies" className="mt-0">

@@ -3,7 +3,7 @@ import React from "react";
 
 import { IconHome, IconMessage, IconUser } from "@tabler/icons-react";
 import { FloatingNav } from "../ui/floating-nav";
-export function FloatingNavDemo() {
+export function BottomNav() {
   const navItems = [
     {
       name: "Home",

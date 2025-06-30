@@ -10,12 +10,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  ArrowFatLeftIcon,
+  ArrowFatLineLeftIcon,
   BellSimpleIcon,
   UserIcon,
 } from "@phosphor-icons/react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { GlitchText } from "@/components/feed/glitch-text";
+import { useAuth } from "@/contexts/auth-context";
 
 export function AppBar() {
   const { scrollYProgress } = useScroll();
@@ -48,18 +49,33 @@ export function AppBar() {
     }
   }, []);
 
+  const { username } = useParams();
   const pathname = usePathname();
-  const params = useParams();
 
-  console.log(params.username);
-  const username = params.username;
-  // Check if we have a username parameter
-  const isUsernamePage = username && typeof username === "string";
+  // Split the pathname into segments
+  const segments = pathname.split("/").filter(Boolean);
 
-  const hideBottomNavRoutes = ["/chess", ""];
+  // Check if it's a username page (only one segment, matches username)
+  const isUsernamePage =
+    segments.length === 1 &&
+    segments[0] === username &&
+    typeof username === "string";
+
+  // Hide BottomNav on /[username]/status/[postid]
+  const isPostPage =
+    segments.length === 3 &&
+    typeof segments[0] === "string" &&
+    segments[1] === "status" &&
+    typeof segments[2] === "string";
+
+  const { user } = useAuth();
+
+  const profileUrl = user?.username;
+
+  const hideAppNavRoutes = ["/chess", ""];
 
   if (
-    hideBottomNavRoutes.includes(pathname) ||
+    hideAppNavRoutes.includes(pathname) ||
     pathname.startsWith("/chats/") ||
     pathname.startsWith("/room")
   ) {
@@ -89,10 +105,10 @@ export function AppBar() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              if (pathname === "/profile") {
+              if (pathname === `/${profileUrl}`) {
                 router.back();
               } else {
-                handleRoute("/profile");
+                handleRoute(`/${profileUrl}`);
               }
             }}
             className="rounded-full h-8 w-8"
@@ -100,8 +116,9 @@ export function AppBar() {
           >
             {pathname === "/profile" ||
             pathname.startsWith("/chats") ||
-            isUsernamePage ? (
-              <ArrowFatLeftIcon size={24} />
+            isUsernamePage ||
+            isPostPage ? (
+              <ArrowFatLineLeftIcon size={24} />
             ) : (
               <Avatar className="size-6">
                 <AvatarImage src="/placeholder-avatar.jpg" alt="User" />

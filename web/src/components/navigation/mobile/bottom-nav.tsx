@@ -17,7 +17,7 @@ import {
   PlusIcon,
 } from "@phosphor-icons/react";
 import GameButton from "./game-button";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 export const BottomNav = ({ className }: { className?: string }) => {
   const { scrollYProgress } = useScroll();
@@ -52,8 +52,21 @@ export const BottomNav = ({ className }: { className?: string }) => {
   }, []);
 
   const pathname = usePathname();
+  const { username } = useParams();
+  const segments = pathname.split("/").filter(Boolean);
 
-  const hideBottomNavRoutes = [""];
+  // Hide BottomNav on /[username]/status/[postid]
+  const isStatusPage =
+    segments.length === 3 &&
+    typeof segments[0] === "string" &&
+    segments[1] === "status" &&
+    typeof segments[2] === "string";
+
+  if (isStatusPage) return null;
+
+  const userName = username && typeof username === "string";
+
+  const hideBottomNavRoutes = [`${userName}/`];
 
   if (
     hideBottomNavRoutes.includes(pathname) ||

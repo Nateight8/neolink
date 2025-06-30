@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import FriendRequest from "../models/friend-request.js";
 import Post from "../models/post.js";
 import mongoose from "mongoose";
+import { getPosts } from "./post.service.js";
 
 export class UserProfileService {
   /**
@@ -28,25 +29,21 @@ export class UserProfileService {
       throw new Error("User not found");
     }
 
-    // Get recent posts
-    const posts = await Post.find({ author: user._id })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("_id content image createdAt likes comments")
-      .lean();
+    // Get recent posts using the new service
+    const posts = await getPosts({ authorId: user._id });
 
     // Add isLiked field to posts
-    const postsWithLikeStatus = await Promise.all(
-      posts.map(async (post) => {
-        const isLiked = post.likes?.includes(currentUserId) || false;
-        return {
-          ...post,
-          likes: post.likes?.length || 0,
-          comments: post.comments?.length || 0,
-          isLiked,
-        };
-      })
-    );
+    const postsWithLikeStatus = posts.map((post) => {
+      const isLiked = post.likedBy?.some(
+        (id) => id.toString() === currentUserId.toString()
+      );
+      return {
+        ...post,
+        likes: post.likedBy?.length || 0,
+        comments: post.comments?.length || 0,
+        isLiked,
+      };
+    });
 
     // Format the response according to the expected structure
     return {
@@ -187,29 +184,25 @@ export class UserProfileService {
         throw new Error("User not found");
       }
 
-      // Get recent posts for the response
-      const posts = await Post.find({ author: userId })
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .select("_id content image createdAt likes comments")
-        .lean();
+      // Get recent posts for the response using the new service
+      const posts = await getPosts({ authorId: userId });
 
       // Add isLiked field to posts
-      const postsWithLikeStatus = await Promise.all(
-        posts.map(async (post) => {
-          const isLiked = post.likes?.includes(userId) || false;
-          return {
-            ...post,
-            likes: post.likes?.length || 0,
-            comments: post.comments?.length || 0,
-            isLiked,
-          };
-        })
-      );
+      const postsWithLikeStatus = posts.map((post) => {
+        const isLiked = post.likedBy?.some(
+          (id) => id.toString() === userId.toString()
+        );
+        return {
+          ...post,
+          likes: post.likedBy?.length || 0,
+          comments: post.comments?.length || 0,
+          isLiked,
+        };
+      });
 
       await session.commitTransaction();
+      session.endSession();
 
-      // Format the response
       return {
         user: {
           _id: updatedUser._id,
@@ -237,9 +230,8 @@ export class UserProfileService {
       };
     } catch (error) {
       await session.abortTransaction();
-      throw error;
-    } finally {
       session.endSession();
+      throw error;
     }
   }
 }

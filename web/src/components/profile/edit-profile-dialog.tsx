@@ -231,7 +231,7 @@ export function EditProfileDialog({ trigger }: EditProfileDialogProps) {
                       bioValue.length > bioMax
                         ? "border-red-500"
                         : "border-cyan-900"
-                    } text-white relative min-h-[80px] focus-visible:ring-cyan-500 caret-cyan-400 px-3 py-2 font-mono text-sm`}
+                    } text-white relative min-h-[80px] focus-visible:ring-cyan-500 caret-cyan-400 px-3 py-2 text-sm`}
                   />
                 </div>
                 <div

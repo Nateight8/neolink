@@ -26,7 +26,7 @@ export default function AppNavbar() {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return null; // Optionally, you can show a loader here
+    return null; // Optionally, show a loader here
   }
 
   const isActive = (href: string) => {
