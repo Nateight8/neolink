@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FormattedContent } from "@/components/shared/formatted-content";
 import { Button } from "@/components/ui/button";
 import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";
-import UserData from "@/components/feed/post/user-data";
+// import UserData from "@/components/feed/post/user-data";
 
 // Types
 interface Reply {
@@ -45,14 +45,7 @@ export const Comment = ({
 
       <div className="flex-1">
         {/* Comment header */}
-        <UserData
-          name={comment.author}
-          handle={comment.handle}
-          timestamp={comment.timestamp}
-          avatar={comment.avatar}
-          bio={comment.bio}
-          participantId="123"
-        />
+        {/* <UserData post={post} /> */}
 
         {/* Comment body */}
         <FormattedContent content={comment.content} className="text-gray-300" />

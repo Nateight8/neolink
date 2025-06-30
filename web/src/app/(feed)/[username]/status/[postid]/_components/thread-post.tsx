@@ -11,7 +11,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import UserData from "../../../../../../components/feed/post/user-data";
+// import UserData from "../../../../../../components/feed/post/user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
 
 // Types
@@ -127,14 +127,7 @@ const Comment = ({
 
       <div className="flex-1">
         {/* Comment header */}
-        <UserData
-          name={comment.author}
-          handle={comment.handle}
-          timestamp={comment.timestamp}
-          avatar={comment.avatar}
-          bio={comment.bio}
-          participantId="123"
-        />
+        {/* <UserData /> */}
 
         {/* Comment body */}
         <FormattedContent content={comment.content} className="text-gray-300" />
@@ -209,14 +202,14 @@ export default function Thread() {
               </Avatar>
             </div>
             <div className="flex-1">
-              <UserData
+              {/* <UserData
                 name={mainPost.author}
                 handle={mainPost.handle}
                 timestamp={mainPost.timestamp}
                 avatar={mainPost.avatar}
                 bio={mainPost.bio}
                 participantId="1234"
-              />
+              /> */}
               <FormattedContent content={mainPost.content} users={users} />
               {/* Post Actions */}
               <div className="mt-4 flex items-center space-x-6 text-gray-400">

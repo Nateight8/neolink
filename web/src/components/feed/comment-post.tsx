@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowBigUp, ArrowBigDown, MessageSquare } from "lucide-react";
-import UserData from "@/components/feed/post/user-data";
+// import UserData from "@/components/feed/post/user-data";
 import { FormattedContent } from "@/components/shared/formatted-content";
 
 // This should probably be in a shared types file
@@ -45,14 +45,14 @@ export const CommentPost = ({
 
       <div className="flex-1">
         {/* Comment header */}
-        <UserData
+        {/* <UserData
           name={comment.author}
           handle={comment.handle}
           timestamp={comment.timestamp}
           avatar={comment.avatar}
           bio={comment.bio}
           participantId="2"
-        />
+        /> */}
 
         {/* Comment body */}
         <FormattedContent content={comment.content} />
