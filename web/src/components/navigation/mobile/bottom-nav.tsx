@@ -18,11 +18,16 @@ import {
 } from "@phosphor-icons/react";
 import GameButton from "./game-button";
 import { usePathname } from "next/navigation";
+import { CreatePostDialog } from "@/components/navigation/create-post-modal";
+import { useAuth } from "@/contexts/auth-context";
 
 export const BottomNav = ({ className }: { className?: string }) => {
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
   const { scrollYProgress } = useScroll();
 
   const [visible, setVisible] = useState(false);
+  const { user } = useAuth();
+  const profileUrl = `/@${user?.username}`;
 
   useMotionValueEvent(scrollYProgress, "change", (current) => {
     // Check if current is not undefined and is a number
@@ -52,7 +57,9 @@ export const BottomNav = ({ className }: { className?: string }) => {
   }, []);
 
   const pathname = usePathname();
-  // const { username } = useParams();
+
+  // Disable the create post button if not on home, feed, or profile pages
+  const isCreatePostDisabled = ["/", profileUrl].includes(pathname);
   const segments = pathname.split("/").filter(Boolean);
 
   // Hide BottomNav on /[username]/status/[postid]
@@ -139,9 +146,18 @@ export const BottomNav = ({ className }: { className?: string }) => {
           </div>
           {/* Add */}
           <div className="flex-1 flex justify-center">
-            <BeveledButton variant="cyan" size="icon">
+            <BeveledButton
+              variant="cyan"
+              size="icon"
+              disabled={!isCreatePostDisabled}
+              onClick={() => setIsCreatePostOpen(true)}
+            >
               <PlusIcon size={24} className="text-cyan-500/40" />
             </BeveledButton>
+            <CreatePostDialog
+              open={isCreatePostOpen}
+              onOpenChange={setIsCreatePostOpen}
+            />
           </div>
           {/* Notification */}
           {/* Game */}
