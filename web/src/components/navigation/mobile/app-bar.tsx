@@ -322,7 +322,7 @@ export function AppBarWithTabs() {
                 </nav>
                 <ScrollBar
                   orientation="horizontal"
-                  className="h-1"
+                  className="h-0"
                   forceMount
                 />
               </ScrollArea>
