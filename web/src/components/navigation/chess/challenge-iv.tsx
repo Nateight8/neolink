@@ -45,7 +45,7 @@ export default function ChallengeInvite({ post }: { post: Post }) {
     acceptChallenge.mutate(post._id, {
       onSuccess: (data) => {
         // The backend should return the room in the response
-        const roomId = data?.room?._id;
+        const roomId = data.room.roomId;
         if (!roomId) {
           console.error("No roomId in response:", data);
           return;

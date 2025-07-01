@@ -89,11 +89,10 @@ export function ChessGameClean({
   const hasOpponent = useMemo(() => {
     if (matchType === "bot") return true; // Always true for bot games
     if (!roomState || !("chessPlayers" in roomState)) return false;
+    
     const chessPlayers = (roomState.chessPlayers as ChessPlayer[]) || [];
-    return (
-      chessPlayers.length >= 2 &&
-      chessPlayers.some((p) => p.user._id !== user?._id)
-    );
+    const opponent = chessPlayers.find(p => p.user._id !== user?._id);
+    return chessPlayers.length >= 2 && !!opponent;
   }, [matchType, roomState, user]);
 
   const { players, myColor } = useMemo(() => {
@@ -1045,23 +1044,22 @@ export function ChessGameClean({
             {/* Center - Game Area */}
             <div className="lg:col-span-3 border flex flex-col items-center space-y-6">
               {/* Top Player (Opponent) */}
-              {players[0]?.id !== "1" ? (
+              {players.find(p => p.id !== user?._id) ? (
                 <Player
-                  player={players[0]}
+                  player={players.find(p => p.id !== user?._id)!}
                   isCurrentPlayer={
-                    players[0]?.color &&
-                    myColor === players[0].color &&
+                    myColor === players.find(p => p.id !== user?._id)?.color &&
                     !game.isGameOver()
                   }
                   timeRemaining={
-                    players[0]?.color ? gameTime[players[0].color] : 0
+                    myColor === 'white' ? gameTime.black : gameTime.white
                   }
                   capturedPieces={
-                    players[1]?.color ? capturedPieces[players[1].color] : []
-                  } // Opponent's captures are my pieces
-                  color={players[0]?.color || "white"}
-                  isLoggedIn={players[0]?.color && myColor === players[0].color}
-                  key={`top-${players[0]?.id || "1"}`}
+                    myColor === 'white' ? capturedPieces.black : capturedPieces.white
+                  }
+                  color={myColor === 'white' ? 'black' : 'white'}
+                  isLoggedIn={false}
+                  key={`opponent-${players.find(p => p.id !== user?._id)?.id || 'ai'}`}
                 />
               ) : (
                 <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
@@ -1265,24 +1263,23 @@ export function ChessGameClean({
                   )}
               </div>
 
-              {/* Bottom Player (Me) */}
-              {players[1] ? (
+              {/* Bottom Player (Current User) */}
+              {players.find(p => p.id === user?._id) ? (
                 <Player
-                  player={players[1]}
+                  player={players.find(p => p.id === user?._id)!}
                   isCurrentPlayer={
-                    players[1]?.color &&
-                    myColor === players[1].color &&
+                    myColor === players.find(p => p.id === user?._id)?.color &&
                     !game.isGameOver()
                   }
                   timeRemaining={
-                    players[1]?.color ? gameTime[players[1].color] : 0
+                    myColor ? gameTime[myColor] : 0
                   }
                   capturedPieces={
-                    players[0]?.color ? capturedPieces[players[0].color] : []
-                  } // My captures are opponent's pieces
-                  color={players[1]?.color || "black"}
-                  isLoggedIn={players[1]?.color && myColor === players[1].color}
-                  key={`bottom-${players[1]?.id || "2"}`}
+                    myColor === 'white' ? capturedPieces.white : capturedPieces.black
+                  }
+                  color={myColor || "black"}
+                  isLoggedIn={true}
+                  key={`current-user-${user?._id || 'guest'}`}
                 />
               ) : (
                 <div className="w-full bg-black/30 border border-cyan-500/20 rounded-xl p-4 text-center">
