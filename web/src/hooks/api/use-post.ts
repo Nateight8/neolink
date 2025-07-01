@@ -6,6 +6,7 @@ export function usePost(username: string, postId: string) {
     queryKey: ["post", username, postId],
     queryFn: async () => {
       const res = await axiosInstance.get(`/posts/${username}/${postId}`);
+      console.log('Post data received:', res.data);
       return res.data;
     },
     enabled: !!username && !!postId,

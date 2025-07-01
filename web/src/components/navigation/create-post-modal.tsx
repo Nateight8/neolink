@@ -4,7 +4,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import {
   X,
   Plus,
@@ -205,8 +206,14 @@ export function CreatePostDialog({
       return response.data;
     },
     onSuccess: () => {
+      // Invalidate both the main feed and the user's profile posts
       queryClient.invalidateQueries({
         queryKey: ["post-feed"],
+      });
+      // Invalidate the profile posts query
+      queryClient.invalidateQueries({
+        queryKey: ["profile"],
+        exact: false, // This will match any query key that starts with ["profile"]
       });
       // Reset form and states
       form.reset();

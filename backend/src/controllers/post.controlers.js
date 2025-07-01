@@ -55,7 +55,13 @@ export const createPost = async (req, res) => {
         path: "poll",
         select: "question options visibility expiresAt totalVotes",
       })
-      .populate("chess");
+      .populate({
+        path: "chess",
+        populate: {
+          path: "chessPlayers.user",
+          select: "_id username displayName avatar",
+        },
+      });
 
     // Ensure roomId is present in the chess object
     const completePostObj = completePost.toObject();
@@ -190,10 +196,15 @@ export const getUserPostById = async (req, res) => {
     const { username, id } = req.params;
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ message: "User not found" });
-    const post = await Post.findOne({ _id: id, author: user._id }).populate(
-      "author",
-      "username name avatar verified handle participantId"
-    );
+    const post = await Post.findOne({ _id: id, author: user._id })
+      .populate("author", "username name avatar verified handle participantId")
+      .populate({
+        path: "chess",
+        populate: {
+          path: "chessPlayers.user",
+          select: "_id username displayName avatar"
+        }
+      });
     if (!post)
       return res.status(404).json({ message: "Post not found for this user" });
     res.json(post);

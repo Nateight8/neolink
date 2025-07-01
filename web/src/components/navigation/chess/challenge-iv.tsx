@@ -30,18 +30,32 @@ export default function ChallengeInvite({ post }: { post: Post }) {
   const handleAcceptChallenge = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
     if (acceptChallenge.isPending) return;
+
     // If user is the creator, route directly to the chess room
     if (user && post.author && user._id === post.author._id) {
-      navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
+      if (!post.chess?.roomId) {
+        return;
+      }
+      navigateWithTransition(`/room/chess/${post.chess.roomId}`);
       return;
     }
+
     acceptChallenge.mutate(post._id, {
-      onSuccess: () => {
-        // Navigate to the chess room after successful acceptance
-        navigateWithTransition(`/room/chess/${post.chess?.roomId}`);
+      onSuccess: (data) => {
+        // The backend should return the room in the response
+        const roomId = data?.room?._id;
+        if (!roomId) {
+          console.error("No roomId in response:", data);
+          return;
+        }
+        console.log("Navigating to room:", roomId);
+        navigateWithTransition(`/room/chess/${roomId}`);
       },
-      // onError is handled in the hook
+      onError: (error) => {
+        console.error("Error accepting challenge:", error);
+      },
     });
   };
 

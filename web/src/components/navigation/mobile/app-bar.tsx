@@ -11,10 +11,15 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ArrowLeft, Bell, User } from "lucide-react";
+
 import { useParams, usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
+import {
+  ArrowFatLineLeftIcon,
+  BellIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 
 // Mock GlitchText component for demo
 const GlitchText = ({
@@ -32,7 +37,11 @@ export function AppBarWithTabs() {
   const [tabsVisible, setTabsVisible] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const { username } = useParams();
+  const { username: encodedUsername } = useParams();
+  // Decode the username and remove the '@' symbol if present
+  const username = encodedUsername
+    ? decodeURIComponent(encodedUsername as string).replace(/^@/, "")
+    : null;
 
   const handleRoute = (route: string) => {
     router.push(route);
@@ -103,17 +112,23 @@ export function AppBarWithTabs() {
   const { user } = useAuth();
   const profileUrl = user?.username;
 
-  console.log(profileUrl);
-
   // Split the pathname into segments
   const segments = pathname.split("/").filter(Boolean);
   const isUsernamePage =
     segments.length === 1 &&
-    segments[0] === username &&
-    typeof username === "string";
+    typeof segments[0] === "string" &&
+    segments[0] !== "explore" &&
+    segments[0] !== "notifications" &&
+    segments[0] !== "messages" &&
+    segments[0] !== "bookmarks" &&
+    segments[0] !== "lists" &&
+    segments[0] !== "topics" &&
+    segments[0] !== "settings" &&
+    segments[0] !== "privacy";
+
+  // Check if current route matches /[username]/status/[postid] pattern
   const isPostPage =
     segments.length === 3 &&
-    typeof segments[0] === "string" &&
     segments[1] === "status" &&
     typeof segments[2] === "string";
 
@@ -168,7 +183,7 @@ export function AppBarWithTabs() {
               pathname.startsWith("/chats") ||
               isUsernamePage ||
               isPostPage ? (
-                <ArrowLeft size={24} />
+                <ArrowFatLineLeftIcon size={24} />
               ) : (
                 <Avatar className="size-6">
                   <AvatarImage
@@ -176,7 +191,7 @@ export function AppBarWithTabs() {
                     alt="User"
                   />
                   <AvatarFallback className="bg-black text-cyan-400 font-bold">
-                    <User size={16} />
+                    <UserIcon size={16} />
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -192,7 +207,10 @@ export function AppBarWithTabs() {
                   case isUsernamePage:
                     return (
                       <GlitchText
-                        text={username as string}
+                        text={decodeURIComponent(username as string).replace(
+                          /^@/,
+                          ""
+                        )}
                         className="text-cyan-400"
                       />
                     );
@@ -210,128 +228,129 @@ export function AppBarWithTabs() {
                 "flex flex-col items-center justify-center transition-colors"
               )}
             >
-              <Bell className="size-6 text-muted-foreground" />
+              <BellIcon className="size-6 text-muted-foreground" />
             </button>
           </div>
         </div>
 
         {/* Tabs Section - slides under main bar */}
-        {profileRoute && (
-          <AnimatePresence>
-            {tabsVisible && (
-              <motion.div
-                initial={{ opacity: 1 }}
-                animate={{
-                  opacity: 1,
-                  transform: `translateY(${tabsOffset}px)`,
-                }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  transform: { duration: 0 },
-                  opacity: { duration: 0.1 },
-                }}
-                className="bg-background relative z-0"
-              >
-                <ScrollArea className="w-full border-b border-foreground/10">
-                  <nav className="flex items-center justify-start h-9 w-max">
-                    <Link href="/" className="h-full">
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "group relative h-full px-3 text-xs font-mono tracking-tight",
-                          "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
-                          "data-[active=true]:text-foreground"
-                        )}
-                        data-active={pathname === "/"}
-                      >
-                        <span className="relative">
-                          FOR_YOU
-                          <span
-                            className={cn(
-                              "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
-                              "group-data-[active=true]:scale-x-100"
-                            )}
-                          />
-                        </span>
-                      </Button>
-                    </Link>
+        {profileRoute ||
+          (isPostPage && (
+            <AnimatePresence>
+              {tabsVisible && (
+                <motion.div
+                  initial={{ opacity: 1 }}
+                  animate={{
+                    opacity: 1,
+                    transform: `translateY(${tabsOffset}px)`,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    transform: { duration: 0 },
+                    opacity: { duration: 0.1 },
+                  }}
+                  className="bg-background relative z-0"
+                >
+                  <ScrollArea className="w-full border-b border-foreground/10">
+                    <nav className="flex items-center justify-start h-9 w-max">
+                      <Link href="/" className="h-full">
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "group relative h-full px-3 text-xs font-mono tracking-tight",
+                            "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
+                            "data-[active=true]:text-foreground"
+                          )}
+                          data-active={pathname === "/"}
+                        >
+                          <span className="relative">
+                            FOR_YOU
+                            <span
+                              className={cn(
+                                "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
+                                "group-data-[active=true]:scale-x-100"
+                              )}
+                            />
+                          </span>
+                        </Button>
+                      </Link>
 
-                    <Link href="/following" className="h-full">
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "group relative h-full px-3 text-xs font-mono tracking-tight",
-                          "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
-                          "data-[active=true]:text-foreground"
-                        )}
-                        data-active={pathname === "/following"}
-                      >
-                        <span className="relative">
-                          FOLLOWING
-                          <span
-                            className={cn(
-                              "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
-                              "group-data-[active=true]:scale-x-100"
-                            )}
-                          />
-                        </span>
-                      </Button>
-                    </Link>
+                      <Link href="/following" className="h-full">
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "group relative h-full px-3 text-xs font-mono tracking-tight",
+                            "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
+                            "data-[active=true]:text-foreground"
+                          )}
+                          data-active={pathname === "/following"}
+                        >
+                          <span className="relative">
+                            FOLLOWING
+                            <span
+                              className={cn(
+                                "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
+                                "group-data-[active=true]:scale-x-100"
+                              )}
+                            />
+                          </span>
+                        </Button>
+                      </Link>
 
-                    <Link href="/book-marks" className="h-full">
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "group relative h-full px-3 text-xs font-mono tracking-tight",
-                          "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
-                          "data-[active=true]:text-foreground"
-                        )}
-                        data-active={pathname === "/book-marks"}
-                      >
-                        <span className="relative">
-                          BOOKMARKS
-                          <span
-                            className={cn(
-                              "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
-                              "group-data-[active=true]:scale-x-100"
-                            )}
-                          />
-                        </span>
-                      </Button>
-                    </Link>
+                      <Link href="/book-marks" className="h-full">
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "group relative h-full px-3 text-xs font-mono tracking-tight",
+                            "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
+                            "data-[active=true]:text-foreground"
+                          )}
+                          data-active={pathname === "/book-marks"}
+                        >
+                          <span className="relative">
+                            BOOKMARKS
+                            <span
+                              className={cn(
+                                "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
+                                "group-data-[active=true]:scale-x-100"
+                              )}
+                            />
+                          </span>
+                        </Button>
+                      </Link>
 
-                    <Link href="/chess" className="h-full">
-                      <Button
-                        variant="ghost"
-                        className={cn(
-                          "group relative h-full px-3 text-xs font-mono tracking-tight",
-                          "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
-                          "data-[active=true]:text-foreground"
-                        )}
-                        data-active={pathname === "/chess"}
-                      >
-                        <span className="relative">
-                          CHESS
-                          <span
-                            className={cn(
-                              "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
-                              "group-data-[active=true]:scale-x-100"
-                            )}
-                          />
-                        </span>
-                      </Button>
-                    </Link>
-                  </nav>
-                  <ScrollBar
-                    orientation="horizontal"
-                    className="h-0"
-                    forceMount
-                  />
-                </ScrollArea>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
+                      <Link href="/chess" className="h-full">
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "group relative h-full px-3 text-xs font-mono tracking-tight",
+                            "text-foreground/60 hover:text-foreground/80 hover:bg-transparent",
+                            "data-[active=true]:text-foreground"
+                          )}
+                          data-active={pathname === "/chess"}
+                        >
+                          <span className="relative">
+                            CHESS
+                            <span
+                              className={cn(
+                                "absolute -bottom-1 left-0 right-0 h-[2px] bg-foreground scale-x-0 transition-transform duration-200",
+                                "group-data-[active=true]:scale-x-100"
+                              )}
+                            />
+                          </span>
+                        </Button>
+                      </Link>
+                    </nav>
+                    <ScrollBar
+                      orientation="horizontal"
+                      className="h-0"
+                      forceMount
+                    />
+                  </ScrollArea>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          ))}
       </motion.div>
     </AnimatePresence>
   );
