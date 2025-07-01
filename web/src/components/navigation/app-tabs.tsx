@@ -7,6 +7,14 @@ import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 export default function AppbarTabs() {
   const pathname = usePathname();
+  
+  // Hide tabs on status pages (/[username]/status/[postid])
+  const segments = pathname.split('/').filter(Boolean);
+  const isStatusPage = segments.length === 3 && segments[1] === 'status';
+  
+  if (isStatusPage) {
+    return null;
+  }
 
   return (
     <>
