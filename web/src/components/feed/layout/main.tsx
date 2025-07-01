@@ -11,7 +11,7 @@ import { ChevronUp } from "lucide-react";
 
 import { LoadingIndicator } from "@/components/loading-indicator";
 import FeedPost from "@/components/feed/post/feed-post";
-import AppBar from "@/app/(feed)/_components/appbar";
+// import AppBar from "@/app/(feed)/_components/appbar";
 // import { FeedPost } from "../feed-post";
 
 export default function MainFeed() {
@@ -55,7 +55,6 @@ export default function MainFeed() {
     <>
       <>
         {/* Navigation bar */}
-        <AppBar />
 
         {/* Posts */}
         {isLoading ? (

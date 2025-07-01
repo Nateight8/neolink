@@ -1,3 +1,4 @@
+import NotFound from "@/app/not-found";
 import ProfileClient from "./_components/client";
 
 interface Props {
@@ -8,7 +9,14 @@ interface Props {
 
 export default async function Page({ params }: Props) {
   const username = (await params).username;
-  console.log(username);
+  const decodedUsername = decodeURIComponent(username);
 
-  return <ProfileClient username={username} />;
+  // Only accept usernames that start with @
+  if (!decodedUsername.startsWith("@")) {
+    return <NotFound />;
+  }
+
+  const actualUsername = decodedUsername.slice(1); // Remove @
+
+  return <ProfileClient username={actualUsername} />;
 }

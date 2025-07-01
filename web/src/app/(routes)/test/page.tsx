@@ -1,30 +1,37 @@
 "use client";
-import React from "react";
 
-import { BottomNav } from "@/components/navigation/mobile/bottom-nav";
-import { AppBar } from "@/components/navigation/mobile/appbar";
-// import ChallengeSwiper from "@/components/navigation/chess/mobile";
-export default function FloatingNavDemo() {
+import { AppBarWithTabs } from "../../../components/navigation/mobile/app-bar";
+
+export default function DemoPage() {
   return (
-    <div className="relative  w-full">
-      <AppBar />
-      <BottomNav />
-      <DummyContent />
-      <DummyContent />
-      <DummyContent />
+    <div className="min-h-screen bg-background">
+      <AppBarWithTabs />
+
+      {/* Demo content to enable scrolling */}
+      <div className="pt-24 px-4 space-y-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <h1 className="text-2xl font-bold">Twitter-Style Navigation Demo</h1>
+          <p className="text-muted-foreground">
+            Scroll down to see the tabs slide under the main app bar, just like
+            Twitter&apos;s navigation.
+          </p>
+
+          {/* Generate content for scrolling */}
+          {Array.from({ length: 20 }, (_, i) => (
+            <div key={i} className="p-6 border rounded-lg bg-card">
+              <h2 className="text-lg font-semibold mb-2">
+                Content Block {i + 1}
+              </h2>
+              <p className="text-muted-foreground">
+                This is some demo content to enable scrolling. Keep scrolling to
+                see the navigation behavior. The tabs will slide up behind the
+                main app bar as you scroll down, creating a smooth Twitter-like
+                navigation experience.
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
-const DummyContent = () => {
-  return (
-    // <div className="grid grid-cols-1 h-[40rem] w-full rounded-md">
-    //   <p className=" text-center text-4xl mt-40 font-bold">
-    //     Scroll back up to reveal Navbar
-    //   </p>
-    //   <div className="inset-0 absolute bg-grid-black/[0.1] dark:bg-grid-white/[0.2]" />
-
-    // </div>
-    // <ChallengeSwiper />
-    <div className=""></div>
-  );
-};

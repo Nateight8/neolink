@@ -30,6 +30,9 @@ export default function UserData({ post }: UserDataProps) {
     router.push(`/echo-net/${loggedInUser}-${participantId}`);
   };
 
+  const profileUrl = `/@${username}`;
+  // TODO: Add support for uppercase letters in username
+
   return (
     <HoverCard>
       <div className="flex items-center w-full">
@@ -38,7 +41,7 @@ export default function UserData({ post }: UserDataProps) {
             className="flex items-center w-fit min-w-0 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/${username}`);
+              router.push(profileUrl);
             }}
           >
             <div className="flex items-center min-w-0">

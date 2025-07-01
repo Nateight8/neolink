@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { LoadingScreen } from "@/components/loading-screen";
 import AlliesRecommendation from "@/components/alies/alies";
-import FeedClient from "@/components/feed/client";
+// import FeedClient from "@/components/feed/client";
+import MainFeed from "@/components/feed/layout/main";
 
 export default function Home() {
   const { user, isLoading, isAuthenticated } = useAuth();
@@ -46,5 +47,9 @@ export default function Home() {
     return <AlliesRecommendation />;
   }
 
-  return <FeedClient />;
+  return (
+    <div className="pt-12">
+      <MainFeed />
+    </div>
+  );
 }

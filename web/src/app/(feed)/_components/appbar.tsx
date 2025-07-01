@@ -4,7 +4,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function AppBar() {
+export default function AppBarTabs() {
   const pathname = usePathname();
   return (
     <>
