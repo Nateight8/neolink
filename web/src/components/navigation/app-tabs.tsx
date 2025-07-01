@@ -11,7 +11,7 @@ export default function AppbarTabs() {
   return (
     <>
       <>
-        <div className="bg-background sticky top-0 backdrop-blur-3xl z-50 border-b border-cyan-600">
+        <div className="bg-background hidden md:block sticky top-0 backdrop-blur-3xl z-50 border-b border-cyan-600">
           <ScrollArea className="w-full border-b border-foreground/10">
             <nav className="flex items-center justify-start h-9 w-max">
               <Link href="/" className="h-full">
