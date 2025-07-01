@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserIcon } from "@phosphor-icons/react";
 import { Check, CheckCheck, Clock, Pin } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -71,7 +72,7 @@ export function ConversationList({ conversations }: ConversationListProps) {
                     className="object-cover"
                   />
                   <AvatarFallback className="bg-black text-cyan-400 text-xs md:text-sm">
-                    {conversation.user.name.substring(0, 2)}
+                    <UserIcon className="h-4 w-4 text-cyan-400" />
                   </AvatarFallback>
                 </Avatar>
                 <div

@@ -1,6 +1,6 @@
 "use client";
 
-import { AppBarWithTabs } from "../../../components/navigation/mobile/app-bar";
+import { AppBarWithTabs } from "../../../../components/navigation/mobile/app-bar";
 
 export default function DemoPage() {
   return (

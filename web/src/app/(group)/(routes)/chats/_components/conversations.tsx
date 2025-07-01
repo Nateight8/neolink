@@ -71,9 +71,9 @@ export default function Conversations() {
   return (
     <div className="flex flex-col h-full bg-black md:border-r border-cyan-900 text-white">
       {/* Header */}
-      <div className="p-4 md:border-b md:border-cyan-900/50 opacity-0 md:opacity-100 ">
-        <h1 className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-          Echo Net
+      <div className="p-4 md:border-b md:border-cyan-900/50 ">
+        <h1 className="text-lg font-mono font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+          MESSAGES
         </h1>
       </div>
 

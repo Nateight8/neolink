@@ -109,19 +109,31 @@ export const BottomNav = ({ className }: { className?: string }) => {
                 "flex flex-col items-center justify-center transition-colors"
               )}
             >
-              <HouseSimpleIcon className="size-6 text-muted-foreground" />
+              <HouseSimpleIcon
+                className={cn(
+                  "size-6",
+                  pathname === "/" ? "text-cyan-500" : "text-muted-foreground"
+                )}
+              />
               {/* <span className="text-xs text-muted-foreground">{name}</span> */}
             </Link>
           </div>
           {/* Search */}
           <div className="flex-1">
             <Link
-              href="#"
+              href="/explore"
               className={cn(
                 "flex flex-col items-center justify-center transition-colors"
               )}
             >
-              <MagnifyingGlassIcon className="size-6 text-muted-foreground" />
+              <MagnifyingGlassIcon
+                className={cn(
+                  "size-6",
+                  pathname === "/search"
+                    ? "text-cyan-500"
+                    : "text-muted-foreground"
+                )}
+              />
               {/* <span className="text-xs text-muted-foreground">{name}</span> */}
             </Link>
           </div>
@@ -142,7 +154,14 @@ export const BottomNav = ({ className }: { className?: string }) => {
                 "flex flex-col items-center justify-center transition-colors"
               )}
             >
-              <ChatCenteredIcon className="size-6 text-muted-foreground" />
+              <ChatCenteredIcon
+                className={cn(
+                  "size-6",
+                  pathname.startsWith("/chats")
+                    ? "text-cyan-500"
+                    : "text-muted-foreground"
+                )}
+              />
               {/* <span className="text-xs text-muted-foreground">{name}</span> */}
             </Link>
           </div>

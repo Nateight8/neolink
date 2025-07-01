@@ -5,11 +5,8 @@ import { ThemeProvider } from "next-themes";
 import { Montserrat, Audiowide } from "next/font/google";
 
 import QueryClientProviderWrapper from "@/components/provider/query-client-wraper";
-import { FloatingDock } from "@/components/navigation/floating-dock";
 import { TransitionProvider } from "@/components/provider/page-transition-provider";
 import { AuthProvider } from "@/contexts/auth-context";
-import { BottomNav } from "@/components/navigation/mobile/bottom-nav";
-import { AppBarWithTabs } from "../components/navigation/mobile/app-bar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -43,17 +40,7 @@ export default function RootLayout({
         >
           <QueryClientProviderWrapper>
             <TransitionProvider>
-              <AuthProvider>
-                <main className="relative ">
-                  <AppBarWithTabs />
-                  <BottomNav />
-                  <div className="pt-6 pb-14 md:pt-0 md:pb-0">{children}</div>
-                  <FloatingDock
-                    desktopClassName="fixed bottom-6 right-6 z-50"
-                    mobileClassName="fixed bottom-6 right-6 z-50"
-                  />
-                </main>
-              </AuthProvider>
+              <AuthProvider>{children}</AuthProvider>
             </TransitionProvider>
           </QueryClientProviderWrapper>
         </ThemeProvider>

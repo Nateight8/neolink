@@ -48,7 +48,7 @@ export default function Home() {
   }
 
   return (
-    <div className="pt-12">
+    <div className="pt-16 md:pt-0 pb-14 md:pb-0">
       <MainFeed />
     </div>
   );

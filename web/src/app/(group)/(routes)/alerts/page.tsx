@@ -197,7 +197,7 @@ export default function AlertsPage() {
   });
 
   // Count unread alerts
-  const unreadCount = alerts.filter((alert) => !alert.isRead).length;
+  // const unreadCount = alerts.filter((alert) => !alert.isRead).length;
 
   // Simulate neural link fluctuations
   useEffect(() => {
@@ -268,12 +268,17 @@ export default function AlertsPage() {
         {/* Main content */}
         <main className="flex-1 container max-w-3xl mx-auto">
           {/* Page header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-black/80 backdrop-blur-2xl border-gray-800">
+          <div className="p-4 md:border-b md:border-cyan-900/50 ">
+            <h1 className="text-lg font-mono font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
+              ALERTS
+            </h1>
+          </div>
+          <div className="hidden top-0 z-10 items-center justify-between p-4 bg-black/80 backdrop-blur-2xl border-gray-800">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-sm bg-cyan-950/50 border border-cyan-500 flex items-center justify-center">
+              <div className="h-10 w-10 flex rounded-sm bg-cyan-950/50 border border-cyan-500 items-center justify-center">
                 <Bell className="h-5 w-5 text-cyan-400" />
               </div>
-              <div>
+              {/* <div>
                 <h1 className="text-xl md:text-2xl font-bold text-white">
                   NEURAL ALERTS
                 </h1>
@@ -282,7 +287,7 @@ export default function AlertsPage() {
                     ? `${unreadCount} unread notifications`
                     : "No unread notifications"}
                 </p>
-              </div>
+              </div> */}
             </div>
 
             {/* Neural link toggle */}

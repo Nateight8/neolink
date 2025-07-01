@@ -52,7 +52,7 @@ import {
   AllyMentionPopover,
   type Ally,
 } from "@/components/chats/mention-ally-popover";
-import CreateChess from "@/app/(feed)/chess/_components/create-chess";
+import CreateChess from "@/app/(group)/(feed)/chess/_components/create-chess";
 
 // Define the form schema with Zod
 const postFormSchema = z.object({
