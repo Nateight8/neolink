@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${montserrat.variable} ${audiowide.variable}`}>
+    <html lang="en" className={`${montserrat.className} ${audiowide.variable}`}>
       <body>
         <ThemeProvider
           attribute="class"
